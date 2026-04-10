@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Cuentas guardadas localmente
+cuentas.txt
+users.txt

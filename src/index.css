@@ -119,13 +119,17 @@ body {
   cursor: pointer;
 }
 
-/* ── HERO ── */
 .hero {
   padding: 4rem 2rem 3.5rem;
   background: var(--bg-primary);
   position: relative;
   overflow: hidden;
   border-bottom: .5px solid var(--border-soft);
+  flex: 1;
+  /* Ocupa el espacio dinámicamente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-grid {
@@ -135,8 +139,7 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.25;
-  /* Adjusted opacity for readability, you can change this if you want it more opaque */
+  opacity: 0.15;
 }
 
 .hero-accent {
@@ -912,6 +915,97 @@ h1 span {
   color: var(--text-secondary);
 }
 
+
+/* ── SPEAKERS PORTION ── */
+.speakers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.speaker-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  border: .5px solid var(--border-soft);
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.speaker-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-med);
+}
+
+.speaker-avatar {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.2rem;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.speaker-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.speaker-role {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 1.2rem;
+}
+
+.speaker-tag {
+  display: inline-block;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+}
+
+.speakers-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 2rem;
+}
+
+.speakers-header-badge {
+  background: rgba(33, 150, 243, 0.15);
+  color: #64b5f6;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.speakers-header h2 {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   .nav-links {
@@ -936,5 +1030,134 @@ h1 span {
 
   .track {
     display: none;
+  }
+
+  .speakers-grid, .steps-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── AGENDA PORTION ── */
+.agenda-list-item {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-soft);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.agenda-list-item:hover {
+  border-color: var(--border-med);
+  transform: translateX(6px);
+}
+
+.agenda-time {
+  flex: 0 0 120px;
+  color: #64b5f6;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.agenda-content {
+  flex: 1;
+}
+
+.agenda-content h3 {
+  margin: 0 0 6px 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.agenda-content p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.agenda-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-soft);
+  color: var(--text-primary);
+}
+
+/* ── PAYMENT PAGE ── */
+.payment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.payment-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  transition: transform 0.2s ease;
+}
+
+.payment-card.featured {
+  border-color: var(--blue);
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.1);
+}
+
+.payment-card h3 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 1.5rem 0 1rem 0;
+}
+
+.payment-card p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.payment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.payment-list li {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.payment-list li::before {
+  content: '→';
+  color: var(--blue);
+  font-weight: bold;
+}
+
+.info-banner {
+  margin-top: 3rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .payment-grid {
+    grid-template-columns: 1fr;
   }
 }
