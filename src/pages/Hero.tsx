@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 // 1. Aquí importas tu imagen. 
 // (Asegúrate de tener un archivo llamado así en la carpeta assets, o cambia el nombre)

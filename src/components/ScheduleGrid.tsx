@@ -1,4 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+
+interface Taller {
+  id: number;
+  sala: number;
+  nombre: string;
+  inicio: number;
+  fin: number;
+  ponente: string;
+}
 
 // Constantes de configuración
 const START_H = 8, END_H = 19, LUNCH_S = 13, LUNCH_E = 14;
@@ -29,13 +38,13 @@ const TALLERES = [
 ];
 
 export default function ScheduleGrid() {
-  const [selectedTalleres, setSelectedTalleres] = useState([]);
+  const [selectedTalleres, setSelectedTalleres] = useState<Taller[]>([]);
   const [conflictMsg, setConflictMsg] = useState(false);
 
   // Función auxiliar para detectar cruces de horario
-  const overlaps = (a, b) => a.inicio < b.fin && a.fin > b.inicio;
+  const overlaps = (a: Taller, b: Taller) => a.inicio < b.fin && a.fin > b.inicio;
 
-  const toggleTaller = (taller) => {
+  const toggleTaller = (taller: Taller) => {
     const isSelected = selectedTalleres.some((s) => s.id === taller.id);
 
     if (isSelected) {
@@ -56,7 +65,7 @@ export default function ScheduleGrid() {
     }
   };
 
-  const getTallerStatus = (taller) => {
+  const getTallerStatus = (taller: Taller) => {
     const isSelected = selectedTalleres.some((s) => s.id === taller.id);
     if (isSelected) return 'selected';
     
@@ -103,7 +112,7 @@ export default function ScheduleGrid() {
             const isLunch = hour >= LUNCH_S && hour < LUNCH_E;
 
             return (
-              <React.Fragment key={hour}>
+              <div key={hour} style={{ display: 'contents' }}>
                 {/* Celda de la Hora */}
                 <div style={{ fontSize: '10px', fontWeight: 600, color: '#6b6b68', height: `${SLOT_H}px`, padding: '0 4px', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', borderRight: '0.5px solid rgba(0,0,0,0.1)', borderBottom: '0.5px solid rgba(0,0,0,0.1)', background: isLunch ? '#f5f5f3' : 'transparent' }}>
                   {hour}:00
@@ -163,7 +172,7 @@ export default function ScheduleGrid() {
                   
                   return null; // La celda está cubierta por el span de un taller anterior
                 })}
-              </React.Fragment>
+              </div>
             );
           })}
         </div>

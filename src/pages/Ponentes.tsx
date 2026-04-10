@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SpeakerModal from '../components/SpeakerModal';
 
 export interface Speaker {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import AgendaModal, { type AgendaItem } from '../components/AgendaModal';
 import { mockSpeakers } from './Ponentes';
 
