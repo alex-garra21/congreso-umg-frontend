@@ -1,13 +1,21 @@
-import { useState } from 'react';
-import { validatePaymentInSession, getCurrentUser } from '../utils/auth';
+import { useState, useEffect } from 'react';
+import { validatePaymentInSession, sendPaymentProofInSession, getCurrentUser, type UserData } from '../utils/auth';
 import ModuleTitle from '../components/ModuleTitle';
 
 export default function PaymentModule() {
   const [activeTab, setActiveTab] = useState<'efectivo' | 'transferencia'>('efectivo');
   const [codigo, setCodigo] = useState('');
   const [archivo, setArchivo] = useState<File | null>(null);
-  const user = getCurrentUser();
+  const [user, setUser] = useState<UserData | null>(getCurrentUser());
+
+  useEffect(() => {
+    const handleUpdate = () => setUser(getCurrentUser());
+    window.addEventListener('sessionUpdate', handleUpdate);
+    return () => window.removeEventListener('sessionUpdate', handleUpdate);
+  }, []);
+
   const isPaid = user?.pagoValidado;
+  const isSent = user?.pagoEnviado;
 
   const handleSendPayment = () => {
     if (activeTab === 'efectivo') {
@@ -22,15 +30,16 @@ export default function PaymentModule() {
       }
     }
 
-    // Validar pago en sesión
-    validatePaymentInSession();
+    // Registrar envío en sesión
+    sendPaymentProofInSession();
     
-    // Notificar a otros componentes (Layout, Sidebar) que la sesión cambió
+    // Notificar cambio
     window.dispatchEvent(new Event('sessionUpdate'));
-    
-    // El componente se re-renderizará porque isPaid cambiará (si lo leemos de nuevo)
-    // Pero para ser inmediatos, podemos usar un estado local también o simplemente
-    // confiar en que el usuario verá el cambio en los badges.
+  };
+
+  const handleSimulateValidation = () => {
+    validatePaymentInSession();
+    window.dispatchEvent(new Event('sessionUpdate'));
   };
 
   if (isPaid) {
@@ -38,16 +47,46 @@ export default function PaymentModule() {
       <div className="payment-module">
         <ModuleTitle title="Realizar pago" />
         <section className="dashboard-section" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem', color: '#2e7d32', display: 'flex', justifyContent: 'center' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width: '64px', height: '64px'}}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+          <div style={{ fontSize: '4rem', marginBottom: '1.5rem', color: '#40c057', display: 'flex', justifyContent: 'center' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width: '80px', height: '80px'}}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
           </div>
-          <h2 style={{ fontFamily: 'Syne', fontWeight: 800 }}>¡Tu pago ha sido validado!</h2>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto 2rem' }}>
-            Ya tienes acceso completo a la selección de talleres y confirmación de playera.
+          <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '32px', marginBottom: '1rem' }}>¡Pago Completado!</h2>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2.5rem', fontSize: '16px', lineHeight: '1.6' }}>
+            Tu inscripción ha sido validada exitosamente. Ya puedes disfrutar de todos los beneficios del congreso, elegir tus talleres y confirmar tu talla de playera.
           </p>
-          <button className="btn-lg btn-lg-primary" onClick={() => window.location.href = '/dashboard'}>
+          <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none' }} onClick={() => window.location.href = '/dashboard'}>
             Ir al Inicio
           </button>
+        </section>
+      </div>
+    );
+  }
+
+  if (isSent) {
+    return (
+      <div className="payment-module">
+        <ModuleTitle title="Realizar pago" />
+        <section className="dashboard-section" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1.5rem', color: '#ff922b', display: 'flex', justifyContent: 'center' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width: '80px', height: '80px'}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '32px', marginBottom: '1rem' }}>Pago en Proceso</h2>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2.5rem', fontSize: '16px', lineHeight: '1.6' }}>
+            Hemos recibido tu comprobante. Nuestro equipo administrativo lo revisará en un plazo de 24 a 48 horas hábiles. Te notificaremos cuando tu inscripción esté activada.
+          </p>
+          
+          <div style={{ background: '#fff9db', border: '1px solid #ffe066', borderRadius: '12px', padding: '1.5rem', maxWidth: '450px', margin: '0 auto' }}>
+            <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#f08c00', marginBottom: '1rem' }}>
+              MODO DEMO: Puedes simular la validación administrativa para ver los cambios en el dashboard.
+            </p>
+            <button 
+              className="btn-lg" 
+              style={{ background: '#f08c00', color: '#fff', border: 'none', width: '100%' }}
+              onClick={handleSimulateValidation}
+            >
+              Simular Validación Admin
+            </button>
+          </div>
         </section>
       </div>
     );
@@ -58,8 +97,8 @@ export default function PaymentModule() {
       <ModuleTitle title="Realizar pago" />
       <section className="dashboard-section">
         <div className="section-header">
-          <h2>Realizar pago</h2>
-          <p>Elige tu método de pago para activar tu inscripción. Sin pago validado no podrás seleccionar talleres ni confirmar tu playera.</p>
+          <h2>Información de Pago</h2>
+          <p>Elige tu método de pago para activar tu inscripción. Sin pago validado no podrás finalizar la selección de talleres ni confirmar tu playera.</p>
         </div>
 
         {/* Selector de Pestañas */}
@@ -88,8 +127,8 @@ export default function PaymentModule() {
         <div className="payment-tab-content">
           {activeTab === 'efectivo' ? (
             <div className="payment-method-view">
-              <h3>Código de pago en efectivo</h3>
-              <p className="method-desc">Acércate a la caja autorizada, realiza tu pago y recibirás un código único personal. Ingrésalo aquí para activar tu cuenta.</p>
+              <h3>Pago en Ventanilla</h3>
+              <p className="method-desc">Realiza tu pago en la caja del campus y obtén tu código de activación. Ingrésalo aquí para que podamos validarlo.</p>
               
               <div className="form-group" style={{ marginTop: '1.5rem' }}>
                 <label>CÓDIGO DE PAGO</label>
@@ -104,8 +143,8 @@ export default function PaymentModule() {
             </div>
           ) : (
             <div className="payment-method-view">
-              <h3>Comprobante de transferencia</h3>
-              <p className="method-desc">Transfiere al número de cuenta oficial y sube el comprobante. Un administrador lo revisará en 24-48 horas.</p>
+              <h3>Transferencia / Depósito</h3>
+              <p className="method-desc">Transfiere al número de cuenta oficial y sube el comprobante digital para su revisión.</p>
               
               <div className="bank-info-box">
                 <span className="info-title">Datos bancarios</span>
@@ -123,9 +162,9 @@ export default function PaymentModule() {
                     onChange={(e) => setArchivo(e.target.files?.[0] || null)}
                   />
                   <label htmlFor="comprobante" className="file-upload-label">
-                    {archivo ? 'Archivo seleccionado' : 'Choose File'}
+                    {archivo ? 'Archivo seleccionado' : 'Sube tu comprobante'}
                   </label>
-                  <span className="file-name">{archivo ? archivo.name : 'No file chosen'}</span>
+                  <span className="file-name">{archivo ? archivo.name : 'No se ha seleccionado archivo'}</span>
                 </div>
               </div>
             </div>
@@ -134,11 +173,11 @@ export default function PaymentModule() {
           <div className="payment-actions" style={{ marginTop: '2.5rem' }}>
             <button 
               className="btn-lg btn-lg-primary"
+              style={{ background: 'var(--blue)', border: 'none' }}
               onClick={handleSendPayment}
             >
-              Enviar pago
+              Enviar comprobante
             </button>
-            <p className="demo-text">Demo: simula pago validado inmediatamente.</p>
           </div>
         </div>
       </section>

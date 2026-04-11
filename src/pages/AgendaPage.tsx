@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import AgendaModal from '../components/AgendaModal';
 import { agendaCompleta, type AgendaItem } from '../data/agendaData';
+import WorkshopBadge from '../components/workshops/WorkshopBadge';
+import AgendaModal from '../components/AgendaModal';
 
 export default function AgendaPage() {
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<'Mañana' | 'Tarde'>('Mañana');
@@ -67,16 +68,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <span
-                  className="agenda-badge"
-                  style={{
-                    background: charla.speaker?.tagBgColor || (charla.id.startsWith('reg') || charla.id === 'cierre' ? '#f5f5f5' : '#fff3e0'),
-                    color: charla.speaker?.tagTextColor || (charla.id.startsWith('reg') || charla.id === 'cierre' ? '#616161' : '#e65100'),
-                    border: 'none'
-                  }}
-                >
-                  {charla.tag}
-                </span>
+                <WorkshopBadge tag={charla.tag} />
               </div>
             </div>
           ))}

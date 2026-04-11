@@ -10,12 +10,16 @@ export default function DashboardLayout() {
   const { title } = useDashboardTitle();
 
   useEffect(() => {
-    if (!user) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
       navigate('/');
+      return;
     }
+    setUser(currentUser);
 
     const handleUpdate = () => {
-      setUser(getCurrentUser());
+      const updatedUser = getCurrentUser();
+      if (updatedUser) setUser(updatedUser);
     };
 
     window.addEventListener('sessionUpdate', handleUpdate);
@@ -23,7 +27,7 @@ export default function DashboardLayout() {
     return () => {
       window.removeEventListener('sessionUpdate', handleUpdate);
     };
-  }, [user, navigate]);
+  }, [navigate]); // No necesitamos user aquí para evitar el loop, handleUpdate lo mantiene sincronizado
 
   if (!user) return null;
 

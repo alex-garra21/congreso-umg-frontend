@@ -1,4 +1,5 @@
 import type { Speaker } from "../data/agendaData";
+import WorkshopBadge from "./workshops/WorkshopBadge";
 
 export interface AgendaItem {
   id: string;
@@ -25,10 +26,8 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
       <div className="modal" style={{ maxWidth: '600px', padding: '2.5rem 2rem' }} onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <span className="speakers-header-badge" style={{ background: 'rgba(33, 150, 243, 0.15)', color: '#64b5f6', marginBottom: '10px', display: 'inline-block' }}>
-            {item.tag}
-          </span>
+        <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+          <WorkshopBadge tag={item.tag} />
           <h3 style={{ fontSize: '26px', marginBottom: '8px', lineHeight: '1.2' }}>{item.title}</h3>
 
           <div style={{ display: 'flex', gap: '15px', color: 'var(--text-secondary)', fontSize: '14px', alignItems: 'center', marginTop: '15px', flexWrap: 'wrap' }}>

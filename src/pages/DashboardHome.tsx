@@ -4,16 +4,27 @@ import ModuleTitle from '../components/ModuleTitle';
 
 export default function DashboardHome() {
   const [user, setUser] = useState<UserData | null>(getCurrentUser());
+  const [workshopsCount, setWorkshopsCount] = useState(0);
 
   useEffect(() => {
-    const handleUpdate = () => {
+    const updateData = () => {
       setUser(getCurrentUser());
+      const saved = localStorage.getItem(`workshops_${getCurrentUser()?.correo}`);
+      if (saved) {
+        setWorkshopsCount(JSON.parse(saved).length);
+      } else {
+        setWorkshopsCount(0);
+      }
     };
-    window.addEventListener('sessionUpdate', handleUpdate);
-    return () => window.removeEventListener('sessionUpdate', handleUpdate);
+
+    updateData();
+    window.addEventListener('sessionUpdate', updateData);
+    return () => window.removeEventListener('sessionUpdate', updateData);
   }, []);
 
   const isPaid = user?.pagoValidado;
+  const isSent = user?.pagoEnviado;
+  const hasShirt = !!user?.talla;
 
   const Icons = {
     Check: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,
@@ -22,43 +33,76 @@ export default function DashboardHome() {
     CreditCard: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>,
     Calendar: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
     Shirt: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>,
-    Layout: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
+    Layout: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>,
+    Clock: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
   };
+
+  const getStepStatus = (type: 'pago' | 'talleres' | 'playera') => {
+    if (type === 'pago') {
+      if (isPaid) return { class: 'completed', label: 'Completado', badge: 'success' };
+      if (isSent) return { class: 'in-progress', label: 'En proceso', badge: 'warning' };
+      return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
+    }
+    if (type === 'talleres') {
+      if (workshopsCount > 0 && isPaid) return { class: 'completed', label: 'Completado', badge: 'success' };
+      if (workshopsCount > 0) return { class: 'in-progress', label: 'En proceso', badge: 'warning' };
+      return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
+    }
+    if (type === 'playera') {
+      if (hasShirt && isPaid) return { class: 'completed', label: 'Completado', badge: 'success' };
+      if (hasShirt) return { class: 'in-progress', label: 'En proceso', badge: 'warning' };
+      return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
+    }
+    return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
+  };
+
+  const pagoStatus = getStepStatus('pago');
+  const talleresStatus = getStepStatus('talleres');
+  const playeraStatus = getStepStatus('playera');
 
   return (
     <div className="dashboard-home">
       <ModuleTitle title="Inicio" />
+
       {/* Top Status Cards */}
       <div className="status-grid">
         <div className="status-card">
-          <span className="card-label">ESTADO</span>
+          <span className="card-label">ESTADO DE PAGO</span>
           {isPaid ? (
             <div className="card-value success">
               <span className="icon"><Icons.CheckCircle /></span>
               <span>Validado</span>
             </div>
-          ) : (
+          ) : isSent ? (
             <div className="card-value warning">
+              <span className="icon"><Icons.Clock /></span>
+              <span>En revisión</span>
+            </div>
+          ) : (
+            <div className="card-value danger">
               <span className="icon"><Icons.AlertTriangle /></span>
               <span>Pendiente</span>
             </div>
           )}
-          <span className="card-sub">{isPaid ? 'Pago confirmado' : 'Falta validar pago'}</span>
+          <span className="card-sub">{isPaid ? 'Inscripción activa' : isSent ? 'Validando comprobante' : 'Pago requerido'}</span>
         </div>
+
         <div className="status-card">
           <span className="card-label">TALLERES</span>
           <div className="card-value">
-            <span className="number">0</span>
+            <span className="number">{workshopsCount}</span>
           </div>
-          <span className="card-sub">Seleccionados</span>
+          <span className="card-sub">{workshopsCount === 1 ? 'Taller seleccionado' : 'Talleres seleccionados'}</span>
         </div>
+
         <div className="status-card">
           <span className="card-label">PLAYERA</span>
           <div className="card-value">
-            <span className="text">Sin definir</span>
+            <span className="text">{user?.talla ? `Talla ${user.talla}` : 'Sin definir'}</span>
           </div>
-          <span className="card-sub">Talla y género</span>
+          <span className="card-sub">{user?.sexo ? `Corte ${user.sexo}` : 'Elige tu talla'}</span>
         </div>
+
         <div className="status-card highlight">
           <span className="card-label">EVENTO</span>
           <div className="card-value">
@@ -71,49 +115,55 @@ export default function DashboardHome() {
       {/* Subscription Status Section */}
       <section className="dashboard-section">
         <div className="section-header">
-          <h2>Estado de tu inscripción</h2>
-          <p>Completa los pasos para confirmar tu lugar en el Congreso 2026.</p>
+          <h2>Resumen de Inscripción</h2>
+          <p>Sigue el progreso de tu registro para asegurar tu participación en el Congreso 2026.</p>
         </div>
 
         <div className="steps-vertical">
+          {/* Step 1: Cuenta */}
           <div className="step-item completed">
             <div className="step-check"><Icons.Check /></div>
             <div className="step-content">
               <h3>Cuenta creada</h3>
-              <p>Registro completado</p>
+              <p>Registro exitoso en la plataforma</p>
             </div>
             <span className="step-badge success">Completado</span>
           </div>
 
-          <div className={`step-item ${isPaid ? 'completed' : 'active'}`}>
+          {/* Step 2: Pago */}
+          <div className={`step-item ${pagoStatus.class}`}>
             <div className={isPaid ? 'step-check' : 'step-icon'}>
               {isPaid ? <Icons.Check /> : <Icons.CreditCard />}
             </div>
             <div className="step-content">
-              <h3>Pago</h3>
-              <p>{isPaid ? 'Pago confirmado' : 'Pendiente de validar'}</p>
+              <h3>Validación de Pago</h3>
+              <p>{isPaid ? 'Inscripción activada correctamente' : isSent ? 'Comprobante recibido, en revisión' : 'Pendiente de realizar pago'}</p>
             </div>
-            <span className={`step-badge ${isPaid ? 'success' : 'warning'}`}>
-              {isPaid ? 'Completado' : 'En progreso'}
-            </span>
+            <span className={`step-badge ${pagoStatus.badge}`}>{pagoStatus.label}</span>
           </div>
 
-          <div className="step-item pending">
-            <div className="step-icon"><Icons.Layout /></div>
-            <div className="step-content">
-              <h3>Talleres</h3>
-              <p>Elige tus sesiones</p>
+          {/* Step 3: Talleres */}
+          <div className={`step-item ${talleresStatus.class}`}>
+            <div className={workshopsCount > 0 && isPaid ? 'step-check' : 'step-icon'}>
+              {workshopsCount > 0 && isPaid ? <Icons.Check /> : <Icons.Layout />}
             </div>
-            <span className="step-badge neutral">Pendiente</span>
+            <div className="step-content">
+              <h3>Selección de Talleres</h3>
+              <p>{workshopsCount > 0 ? `${workshopsCount} talleres en tu agenda` : 'Elige los talleres de tu interés'}</p>
+            </div>
+            <span className={`step-badge ${talleresStatus.badge}`}>{talleresStatus.label}</span>
           </div>
 
-          <div className="step-item pending">
-            <div className="step-icon"><Icons.Shirt /></div>
-            <div className="step-content">
-              <h3>Playera</h3>
-              <p>Selecciona tu talla</p>
+          {/* Step 4: Playera */}
+          <div className={`step-item ${playeraStatus.class}`}>
+            <div className={hasShirt && isPaid ? 'step-check' : 'step-icon'}>
+              {hasShirt && isPaid ? <Icons.Check /> : <Icons.Shirt />}
             </div>
-            <span className="step-badge neutral">Pendiente</span>
+            <div className="step-content">
+              <h3>Talla de Playera</h3>
+              <p>{hasShirt ? `Talla ${user?.talla} seleccionada` : 'Confirma tu talla oficial'}</p>
+            </div>
+            <span className={`step-badge ${playeraStatus.badge}`}>{playeraStatus.label}</span>
           </div>
         </div>
       </section>
@@ -126,6 +176,28 @@ export default function DashboardHome() {
           <p>Campus Central UMG · Guatemala · 8:00 AM - 7:00 PM</p>
         </div>
       </div>
+
+      <style>{`
+        .step-item.in-progress {
+          border-left: 2px solid #ff922b;
+          background: #fff9f0;
+        }
+        .step-item.in-progress .step-icon {
+          background: #ff922b;
+          color: #fff;
+        }
+        .step-badge.warning {
+          background: #fff4e6;
+          color: #f76707;
+          border: 1px solid #ffe8cc;
+        }
+        .status-card .card-value.warning {
+          color: #f76707;
+        }
+        .status-card .card-value.danger {
+          color: #fa5252;
+        }
+      `}</style>
     </div>
   );
 }

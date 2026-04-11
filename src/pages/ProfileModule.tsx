@@ -80,6 +80,7 @@ export default function ProfileModule() {
         <div className="profile-header">
           <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '24px' }}>Información personal</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Estos datos se usarán para tu identificación en el evento.</p>
+          <br />
         </div>
 
         <form onSubmit={handleSave} className="profile-form">

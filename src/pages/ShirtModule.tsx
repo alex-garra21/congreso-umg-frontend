@@ -36,6 +36,7 @@ export default function ShirtModule() {
       setIsSuccessModalOpen(true);
       setIsEditing(false);
       setUser(getCurrentUser());
+      window.dispatchEvent(new Event('sessionUpdate'));
     }
   };
 

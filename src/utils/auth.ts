@@ -7,12 +7,14 @@ export interface UserData {
   contrasena: string;
   telefono?: string;
   pagoValidado?: boolean;
+  pagoEnviado?: boolean;
   tipoParticipante?: 'alumno' | 'externo';
   carnet?: string;
   ciclo?: string;
 }
 
 const STORAGE_KEY = 'congreso_users';
+const SESSION_KEY = 'congreso_current_user';
 
 export function getRegisteredUsers(): UserData[] {
   const usersStr = localStorage.getItem(STORAGE_KEY);
@@ -49,10 +51,8 @@ export function loginUser(correo: string, contrasena: string): { success: boolea
     return { success: false, message: 'Contraseña incorrecta.' };
   }
 
-  return { success: true, message: 'Inicio de sesión exitoso. ¡Bienvenido ' + user.nombres + '!', user };
+  return { success: true, message: `Inicio de sesión exitoso. ¡Bienvenido ${user.nombres}!`, user };
 }
-
-const SESSION_KEY = 'congreso_current_user';
 
 export function setCurrentUser(user: UserData) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(user));
@@ -65,7 +65,7 @@ export function getCurrentUser(): UserData | null {
   try {
     const user = JSON.parse(userStr) as UserData & { nombre?: string };
     
-    // Migración automática para usuarios antiguos (nombre -> nombres/apellidos)
+    // Migración automática para datos de versiones previas
     if (user.nombre && !user.nombres) {
       const parts = user.nombre.trim().split(' ');
       user.nombres = parts[0] || '';
@@ -87,7 +87,6 @@ export function updateUserData(updatedData: UserData): { success: boolean; messa
   const index = users.findIndex(u => u.correo === updatedData.correo);
   
   if (index !== -1) {
-    // Mantener la contraseña si no viene en el update (aunque debería venir)
     if (!updatedData.contrasena) {
       updatedData.contrasena = users[index].contrasena;
     }
@@ -108,6 +107,14 @@ export function changePassword(newPassword: string): { success: boolean; message
     return updateUserData(user);
   }
   return { success: false, message: 'No hay una sesión activa.' };
+}
+
+export function sendPaymentProofInSession() {
+  const user = getCurrentUser();
+  if (user) {
+    user.pagoEnviado = true;
+    updateUserData(user);
+  }
 }
 
 export function validatePaymentInSession() {

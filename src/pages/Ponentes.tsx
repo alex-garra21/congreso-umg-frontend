@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import SpeakerModal from '../components/SpeakerModal';
 import { mockSpeakers, type Speaker } from '../data/agendaData';
+import WorkshopBadge from '../components/workshops/WorkshopBadge';
 
 export default function PonentesPage() {
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
@@ -29,12 +30,7 @@ export default function PonentesPage() {
               </div>
               <h3 className="speaker-name">{speaker.name}</h3>
               <p className="speaker-role">{speaker.role}</p>
-              <span
-                className="speaker-tag"
-                style={{ background: speaker.tagBgColor, color: speaker.tagTextColor }}
-              >
-                {speaker.tag}
-              </span>
+              <WorkshopBadge tag={speaker.tag} className="speaker-tag-component" />
             </div>
           ))}
         </div>
