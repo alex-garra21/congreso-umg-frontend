@@ -1,9 +1,15 @@
 export interface UserData {
-  nombre: string;
+  nombres: string;
+  apellidos: string;
   talla: string;
   sexo: string;
   correo: string;
   contrasena: string;
+  telefono?: string;
+  pagoValidado?: boolean;
+  tipoParticipante?: 'alumno' | 'externo';
+  carnet?: string;
+  ciclo?: string;
 }
 
 const STORAGE_KEY = 'congreso_users';
@@ -21,7 +27,6 @@ export function getRegisteredUsers(): UserData[] {
 export function registerUser(user: UserData): { success: boolean; message: string } {
   const users = getRegisteredUsers();
 
-  // Check if email already exists
   const exists = users.some(u => u.correo === user.correo);
   if (exists) {
     return { success: false, message: 'El correo electrónico ya está registrado.' };
@@ -29,10 +34,6 @@ export function registerUser(user: UserData): { success: boolean; message: strin
 
   users.push(user);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-
-  // Opcional: También podríamos descargar este JSON como un archivo .txt en el navegador 
-  // si realmente se quiere un archivo físico, pero localStorage es mejor para pruebas.
-
   return { success: true, message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
 }
 
@@ -48,5 +49,71 @@ export function loginUser(correo: string, contrasena: string): { success: boolea
     return { success: false, message: 'Contraseña incorrecta.' };
   }
 
-  return { success: true, message: 'Inicio de sesión exitoso. ¡Bienvenido ' + user.nombre + '!', user };
+  return { success: true, message: 'Inicio de sesión exitoso. ¡Bienvenido ' + user.nombres + '!', user };
+}
+
+const SESSION_KEY = 'congreso_current_user';
+
+export function setCurrentUser(user: UserData) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  window.dispatchEvent(new Event('sessionUpdate'));
+}
+
+export function getCurrentUser(): UserData | null {
+  const userStr = localStorage.getItem(SESSION_KEY);
+  if (!userStr) return null;
+  try {
+    const user = JSON.parse(userStr) as UserData & { nombre?: string };
+    
+    // Migración automática para usuarios antiguos (nombre -> nombres/apellidos)
+    if (user.nombre && !user.nombres) {
+      const parts = user.nombre.trim().split(' ');
+      user.nombres = parts[0] || '';
+      user.apellidos = parts.slice(1).join(' ') || '';
+    }
+    
+    return user;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function logout() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+export function updateUserData(updatedData: UserData): { success: boolean; message: string } {
+  const users = getRegisteredUsers();
+  const index = users.findIndex(u => u.correo === updatedData.correo);
+  
+  if (index !== -1) {
+    // Mantener la contraseña si no viene en el update (aunque debería venir)
+    if (!updatedData.contrasena) {
+      updatedData.contrasena = users[index].contrasena;
+    }
+    
+    users[index] = { ...users[index], ...updatedData };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    setCurrentUser(users[index]);
+    return { success: true, message: 'Datos actualizados correctamente.' };
+  }
+  
+  return { success: false, message: 'Error al actualizar: Usuario no encontrado.' };
+}
+
+export function changePassword(newPassword: string): { success: boolean; message: string } {
+  const user = getCurrentUser();
+  if (user) {
+    user.contrasena = newPassword;
+    return updateUserData(user);
+  }
+  return { success: false, message: 'No hay una sesión activa.' };
+}
+
+export function validatePaymentInSession() {
+  const user = getCurrentUser();
+  if (user) {
+    user.pagoValidado = true;
+    updateUserData(user);
+  }
 }

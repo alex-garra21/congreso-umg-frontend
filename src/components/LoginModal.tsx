@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { loginUser } from '../utils/auth';
+import { useNavigate } from 'react-router-dom';
+import { loginUser, setCurrentUser } from '../utils/auth';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -10,16 +11,18 @@ interface LoginModalProps {
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const result = loginUser(correo, contrasena);
     
-    if (result.success) {
-      alert(result.message);
+    if (result.success && result.user) {
+      setCurrentUser(result.user);
       setCorreo('');
       setContrasena('');
-      onClose(); // Cerrar modal si el login es exitoso
+      onClose(); 
+      navigate('/dashboard'); // Redirigir al dashboard
     } else {
       alert(result.message);
     }

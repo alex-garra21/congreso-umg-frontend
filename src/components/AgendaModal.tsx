@@ -1,4 +1,4 @@
-import type { Speaker } from '../pages/Ponentes';
+import type { Speaker } from "../data/agendaData";
 
 export interface AgendaItem {
   id: string;
@@ -30,7 +30,7 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
             {item.tag}
           </span>
           <h3 style={{ fontSize: '26px', marginBottom: '8px', lineHeight: '1.2' }}>{item.title}</h3>
-          
+
           <div style={{ display: 'flex', gap: '15px', color: 'var(--text-secondary)', fontSize: '14px', alignItems: 'center', marginTop: '15px', flexWrap: 'wrap' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -51,16 +51,16 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
 
         {item.speaker && (
           <div style={{ display: 'flex', gap: '15px', alignItems: 'center', background: 'var(--bg-primary)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-soft)' }}>
-             <div 
-                className="speaker-avatar" 
-                style={{ background: item.speaker.bgColor, color: item.speaker.textColor, width: '50px', height: '50px', fontSize: '18px', margin: 0, flexShrink: 0 }}
-             >
-                {item.speaker.initials}
-             </div>
-             <div>
-                <h4 style={{ margin: 0, fontSize: '16px' }}>{item.speaker.name}</h4>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>{item.speaker.role}</p>
-             </div>
+            <div
+              className="speaker-avatar"
+              style={{ background: item.speaker.bgColor, color: item.speaker.textColor, width: '50px', height: '50px', fontSize: '18px', margin: 0, flexShrink: 0 }}
+            >
+              {item.speaker.initials}
+            </div>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '16px' }}>{item.speaker.name}</h4>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>{item.speaker.role}</p>
+            </div>
           </div>
         )}
 

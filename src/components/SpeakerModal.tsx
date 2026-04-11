@@ -1,4 +1,4 @@
-import type { Speaker } from '../pages/Ponentes';
+import type { Speaker } from '../data/agendaData';
 
 interface SpeakerModalProps {
   speaker: Speaker | null;
