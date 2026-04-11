@@ -29,7 +29,6 @@ export default function Navbar() {
           <li><Link to="/ponentes">Ponentes</Link></li>
           <li><Link to="/inscripcion">Cómo inscribirse</Link></li>
           <li><Link to="/pago">Pago</Link></li>
-          <li><Link to="/talleres">Talleres</Link></li>
         </ul>
 
         <div className="nav-right">
