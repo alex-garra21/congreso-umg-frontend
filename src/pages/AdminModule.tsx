@@ -86,9 +86,8 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     }
   };
 
-  const handleValidateUser = (user: UserData) => {
+  const handleValidateUser = async (user: UserData) => {
     const updated = { ...user, pagoValidado: true };
-    updateUserData(updated);
     await updateUserData(updated);
     setUsers(await getAllUsersCloud());
     alert(`Pago validado para ${user.nombres} ${user.apellidos}`);

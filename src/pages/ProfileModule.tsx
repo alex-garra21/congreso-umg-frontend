@@ -67,7 +67,7 @@ export default function ProfileModule() {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
@@ -79,7 +79,7 @@ export default function ProfileModule() {
       ciclo: formData.tipoParticipante === 'alumno' ? formData.ciclo : ''
     };
 
-    const result = updateUserData(updatedUser);
+    const result = await updateUserData(updatedUser);
     if (result.success) {
       setIsSuccessModalOpen(true);
       setUser(getCurrentUser());

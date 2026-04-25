@@ -13,14 +13,14 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwords.newPassword !== passwords.confirmPassword) {
       alert('Las contraseñas no coinciden.');
       return;
     }
 
-    const result = changePassword(passwords.newPassword);
+    const result = await changePassword(passwords.newPassword);
     if (result.success) {
       setShowSuccess(true);
       setPasswords({ newPassword: '', confirmPassword: '' });

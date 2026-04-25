@@ -30,7 +30,7 @@ export default function DiplomaModule() {
     setFormData(prev => ({ ...prev, correoDiploma: value }));
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || user.diplomaEditado) return;
 
@@ -41,7 +41,7 @@ export default function DiplomaModule() {
       diplomaEditado: true
     };
 
-    const result = updateUserData(updatedUser);
+    const result = await updateUserData(updatedUser);
     if (result.success) {
       setIsSuccessModalOpen(true);
       setUser(getCurrentUser());
