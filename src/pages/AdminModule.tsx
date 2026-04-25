@@ -9,6 +9,7 @@ import {
   type AgendaItem, type Speaker, type CategoryStyle
 } from '../utils/agendaStore';
 import ModuleTitle from '../components/ModuleTitle';
+import ConfirmModal from '../components/ConfirmModal';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -54,6 +55,35 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   const [tempGrace, setTempGrace] = useState<number>(10);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
+  // Modal de confirmación
+  const [confirmModalState, setConfirmModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isDestructive?: boolean;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
+  const openConfirm = (title: string, message: string, onConfirm: () => void, isDestructive = false, confirmText = 'Confirmar') => {
+    setConfirmModalState({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: async () => {
+        await onConfirm();
+        setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+      },
+      isDestructive,
+      confirmText
+    });
+  };
+
   useEffect(() => {
     getAllUsersCloud().then(setUsers);
     getTokens().then(setTokens);
@@ -80,10 +110,10 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   };
 
   const handleDeleteToken = async (code: string) => {
-    if (confirm('¿Estás seguro de eliminar este token?')) {
+    openConfirm('Eliminar Token', '¿Estás seguro de eliminar este token?', async () => {
       await deleteToken(code);
       setTokens(await getTokens());
-    }
+    }, true, 'Eliminar');
   };
 
   const handleValidateUser = async (user: UserData) => {
@@ -94,35 +124,35 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   };
 
   const handleDeactivateUser = async (user: UserData) => {
-    if (confirm(`¿Estás seguro de desactivar a ${user.nombres} ${user.apellidos}? No aparecerá en los informes y reportes.`)) {
+    openConfirm('Desactivar Usuario', `¿Estás seguro de desactivar a ${user.nombres} ${user.apellidos}? No aparecerá en los informes y reportes.`, async () => {
       const updated = { ...user, desactivado: true };
       await updateUserData(updated);
       setUsers(await getAllUsersCloud());
-    }
+    }, true, 'Desactivar');
   };
 
   const handleActivateUser = async (user: UserData) => {
-    if (confirm(`¿Estás seguro de activar nuevamente a ${user.nombres} ${user.apellidos}?`)) {
+    openConfirm('Activar Usuario', `¿Estás seguro de activar nuevamente a ${user.nombres} ${user.apellidos}?`, async () => {
       const updated = { ...user, desactivado: false };
       await updateUserData(updated);
       setUsers(await getAllUsersCloud());
-    }
+    }, false, 'Activar');
   };
 
   const handlePromoteToAdmin = async (user: UserData) => {
-    if (confirm(`¿Estás seguro de promover a ${user.nombres} ${user.apellidos} a Administrador?`)) {
+    openConfirm('Promover a Administrador', `¿Estás seguro de promover a ${user.nombres} ${user.apellidos} a Administrador?`, async () => {
       const updated = { ...user, rol: 'admin' as const };
       await updateUserData(updated);
       setUsers(await getAllUsersCloud());
-    }
+    }, false, 'Promover');
   };
 
   const handleDemoteToUser = async (user: UserData) => {
-    if (confirm(`¿Estás seguro de degradar a ${user.nombres} ${user.apellidos} a Usuario participante?`)) {
+    openConfirm('Degradar a Usuario', `¿Estás seguro de degradar a ${user.nombres} ${user.apellidos} a Usuario participante?`, async () => {
       const updated = { ...user, rol: 'usuario' as const };
       await updateUserData(updated);
       setUsers(await getAllUsersCloud());
-    }
+    }, true, 'Degradar');
   };
 
   const getWorkshopTitle = (id: string) => {
@@ -299,11 +329,11 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   };
 
   const handleDeleteAgendaItem = (id: string) => {
-    if (confirm('¿Eliminar taller de la agenda?')) {
+    openConfirm('Eliminar Taller', '¿Eliminar taller de la agenda?', () => {
       const newAgenda = agenda.filter(a => a.id !== id);
       setAgenda(newAgenda);
       saveAgenda(newAgenda);
-    }
+    }, true, 'Eliminar');
   };
 
   // HANDLERS SPEAKERS
@@ -339,11 +369,11 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   };
 
   const handleDeleteRoom = (roomName: string) => {
-    if (confirm(`¿Eliminar la sala "${roomName}"?`)) {
+    openConfirm('Eliminar Sala', `¿Eliminar la sala "${roomName}"?`, () => {
       const newRooms = rooms.filter(r => r !== roomName);
       setRooms(newRooms);
       saveRooms(newRooms);
-    }
+    }, true, 'Eliminar');
   };
 
   const handleUpdateGracePeriod = (workshopId: string) => {
@@ -369,11 +399,11 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   };
 
   const handleDeleteSpeaker = (id: number) => {
-    if (confirm('¿Eliminar ponente?')) {
+    openConfirm('Eliminar Ponente', '¿Eliminar ponente?', () => {
       const newSpeakers = speakers.filter(s => s.id !== id);
       setSpeakers(newSpeakers);
       saveSpeakers(newSpeakers);
-    }
+    }, true, 'Eliminar');
   };
 
   // HANDLERS CATEGORIES
@@ -387,12 +417,12 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   };
 
   const handleDeleteCategory = (name: string) => {
-    if (confirm('¿Eliminar categoría?')) {
+    openConfirm('Eliminar Categoría', '¿Eliminar categoría?', () => {
       const newCategories = { ...categories };
       delete newCategories[name];
       setCategories(newCategories);
       saveCategories(newCategories);
-    }
+    }, true, 'Eliminar');
   };
 
   return (
@@ -1046,6 +1076,11 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        {...confirmModalState}
+        onCancel={() => setConfirmModalState(p => ({ ...p, isOpen: false }))}
+      />
 
       <style>{`
         .admin-module { padding: 0.5rem; }
