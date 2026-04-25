@@ -212,6 +212,11 @@ export async function registerUser(user: UserData): Promise<{ success: boolean; 
 
   if (profileError) {
     console.error("Supabase Profile Insert Error:", profileError);
+    
+    if (profileError.message.includes('duplicate key value') || profileError.code === '23505') {
+      return { success: false, message: 'Este correo electrónico ya se encuentra registrado.' };
+    }
+
     // Podríamos borrar el usuario de auth aquí si falla el perfil, 
     // pero requeriría privilegios de admin. Por ahora mostramos error.
     return { success: false, message: `Error al guardar el perfil: ${profileError.message}. Verifica las columnas y los permisos (RLS).` };
