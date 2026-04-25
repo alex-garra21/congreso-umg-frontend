@@ -150,6 +150,55 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     );
   };
 
+  const [selectedWorkshops, setSelectedWorkshops] = useState<string[]>([]);
+  const [selectedSpeakers, setSelectedSpeakers] = useState<number[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+
+  useEffect(() => {
+    setSelectedWorkshops([]);
+    setSelectedSpeakers([]);
+    setSelectedCategories([]);
+    setSelectedRooms([]);
+  }, [agendaTab, defaultTab]);
+
+  const handleDeleteSelectedWorkshops = () => {
+    openConfirm('Eliminar Talleres', `¿Eliminar los ${selectedWorkshops.length} talleres seleccionados?`, () => {
+      const newAgenda = agenda.filter(a => !selectedWorkshops.includes(a.id));
+      setAgenda(newAgenda);
+      saveAgenda(newAgenda);
+      setSelectedWorkshops([]);
+    }, true, 'Eliminar Seleccionados');
+  };
+
+  const handleDeleteSelectedSpeakers = () => {
+    openConfirm('Eliminar Ponentes', `¿Eliminar los ${selectedSpeakers.length} ponentes seleccionados?`, () => {
+      const newSpeakers = speakers.filter(s => !selectedSpeakers.includes(s.id));
+      setSpeakers(newSpeakers);
+      saveSpeakers(newSpeakers);
+      setSelectedSpeakers([]);
+    }, true, 'Eliminar Seleccionados');
+  };
+
+  const handleDeleteSelectedCategories = () => {
+    openConfirm('Eliminar Categorías', `¿Eliminar las ${selectedCategories.length} categorías seleccionadas?`, () => {
+      const newCategories = { ...categories };
+      for (const name of selectedCategories) delete newCategories[name];
+      setCategories(newCategories);
+      saveCategories(newCategories);
+      setSelectedCategories([]);
+    }, true, 'Eliminar Seleccionadas');
+  };
+
+  const handleDeleteSelectedRooms = () => {
+    openConfirm('Eliminar Salas', `¿Eliminar las ${selectedRooms.length} salas seleccionadas?`, () => {
+      const newRooms = rooms.filter(r => !selectedRooms.includes(r));
+      setRooms(newRooms);
+      saveRooms(newRooms);
+      setSelectedRooms([]);
+    }, true, 'Eliminar Seleccionadas');
+  };
+
   const handleDeleteToken = async (code: string) => {
     openConfirm('Eliminar Token', '¿Estás seguro de eliminar este token?', async () => {
       await deleteToken(code);
@@ -731,7 +780,12 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
           {agendaTab === 'schedule' && (
             <div className="tab-content-agenda">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '1rem', alignItems: 'center' }}>
+                {selectedWorkshops.length > 0 && (
+                  <button className="btn-lg" style={{ backgroundColor: '#fff5f5', color: '#e03131', border: '1px solid #ffe3e3' }} onClick={handleDeleteSelectedWorkshops}>
+                    Eliminar ({selectedWorkshops.length})
+                  </button>
+                )}
                 <button className="btn-lg btn-lg-primary" onClick={() => { 
                   const today = new Date().toISOString().split('T')[0];
                   setEditingItem({ id: `w-${Date.now()}`, title: '', time: '8:00 AM', endTime: '10:00 AM', description: '', tag: 'IA', period: 'Mañana', location: 'SALA A', room: 'SALA A', date: today }); 
@@ -742,11 +796,33 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
               </div>
               <table className="admin-table">
                 <thead>
-                  <tr><th>Título</th><th>Horario</th><th>Sala</th><th>Categoría</th><th style={{ textAlign: 'right' }}>Acciones</th></tr>
+                  <tr>
+                    <th style={{ width: '40px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={agenda.length > 0 && selectedWorkshops.length === agenda.length} 
+                        onChange={(e) => setSelectedWorkshops(e.target.checked ? agenda.map(a => a.id) : [])} 
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </th>
+                    <th>Título</th>
+                    <th>Horario</th>
+                    <th>Sala</th>
+                    <th>Categoría</th>
+                    <th style={{ textAlign: 'right' }}>Acciones</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {agenda.map(item => (
                     <tr key={item.id}>
+                      <td>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedWorkshops.includes(item.id)} 
+                          onChange={() => setSelectedWorkshops(prev => prev.includes(item.id) ? prev.filter(i => i !== item.id) : [...prev, item.id])} 
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </td>
                       <td><strong>{item.title}</strong><br /><small>{item.speaker?.name || 'General'}</small></td>
                       <td>{item.time} - {item.endTime}</td>
                       <td>{item.room}</td>
@@ -764,18 +840,44 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
           {agendaTab === 'speakers' && (
             <div className="tab-content-agenda">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '1rem', alignItems: 'center' }}>
+                {selectedSpeakers.length > 0 && (
+                  <button className="btn-lg" style={{ backgroundColor: '#fff5f5', color: '#e03131', border: '1px solid #ffe3e3' }} onClick={handleDeleteSelectedSpeakers}>
+                    Eliminar ({selectedSpeakers.length})
+                  </button>
+                )}
                 <button className="btn-lg btn-lg-primary" onClick={() => { setEditingSpeaker({ id: Date.now(), name: '', initials: '', role: '', tag: '', bio: '', bgColor: '#ffffff', textColor: '#01579b' }); setIsSpeakerModalOpen(true); }}>
                   + Nuevo Ponente
                 </button>
               </div>
               <table className="admin-table">
                 <thead>
-                  <tr><th>Nombre</th><th>Cargo</th><th>Bio</th><th style={{ textAlign: 'right' }}>Acciones</th></tr>
+                  <tr>
+                    <th style={{ width: '40px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={speakers.length > 0 && selectedSpeakers.length === speakers.length} 
+                        onChange={(e) => setSelectedSpeakers(e.target.checked ? speakers.map(s => s.id) : [])} 
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </th>
+                    <th>Nombre</th>
+                    <th>Cargo</th>
+                    <th>Bio</th>
+                    <th style={{ textAlign: 'right' }}>Acciones</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {speakers.map(s => (
                     <tr key={s.id}>
+                      <td>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedSpeakers.includes(s.id)} 
+                          onChange={() => setSelectedSpeakers(prev => prev.includes(s.id) ? prev.filter(i => i !== s.id) : [...prev, s.id])} 
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </td>
                       <td><strong>{s.name}</strong> ({s.initials})</td>
                       <td>{s.role}</td>
                       <td style={{ maxWidth: '300px', fontSize: '12px' }}>{s.bio.substring(0, 80)}...</td>
@@ -792,18 +894,43 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
           {agendaTab === 'categories' && (
             <div className="tab-content-agenda">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '1rem', alignItems: 'center' }}>
+                {selectedCategories.length > 0 && (
+                  <button className="btn-lg" style={{ backgroundColor: '#fff5f5', color: '#e03131', border: '1px solid #ffe3e3' }} onClick={handleDeleteSelectedCategories}>
+                    Eliminar ({selectedCategories.length})
+                  </button>
+                )}
                 <button className="btn-lg btn-lg-primary" onClick={() => { setEditingCategory({ name: '', style: { bg: 'rgba(0,0,0,0.05)', text: '#333' } }); setIsCategoryModalOpen(true); }}>
                   + Nueva Categoría
                 </button>
               </div>
               <table className="admin-table">
                 <thead>
-                  <tr><th>Nombre</th><th>Vista Previa</th><th style={{ textAlign: 'right' }}>Acciones</th></tr>
+                  <tr>
+                    <th style={{ width: '40px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={Object.keys(categories).length > 0 && selectedCategories.length === Object.keys(categories).length} 
+                        onChange={(e) => setSelectedCategories(e.target.checked ? Object.keys(categories) : [])} 
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </th>
+                    <th>Nombre</th>
+                    <th>Vista Previa</th>
+                    <th style={{ textAlign: 'right' }}>Acciones</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {Object.entries(categories).map(([name, style]) => (
                     <tr key={name}>
+                      <td>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedCategories.includes(name)} 
+                          onChange={() => setSelectedCategories(prev => prev.includes(name) ? prev.filter(i => i !== name) : [...prev, name])} 
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </td>
                       <td><strong>{name}</strong></td>
                       <td><span className="tag-pill" style={{ backgroundColor: style.bg, color: style.text }}>{name}</span></td>
                       <td style={{ textAlign: 'right' }}>
@@ -819,18 +946,42 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
           {agendaTab === 'rooms' && (
             <div className="tab-content-agenda">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '1rem', alignItems: 'center' }}>
+                {selectedRooms.length > 0 && (
+                  <button className="btn-lg" style={{ backgroundColor: '#fff5f5', color: '#e03131', border: '1px solid #ffe3e3' }} onClick={handleDeleteSelectedRooms}>
+                    Eliminar ({selectedRooms.length})
+                  </button>
+                )}
                 <button className="btn-lg btn-lg-primary" onClick={() => { setEditingRoom({ oldName: '', newName: '' }); setIsRoomModalOpen(true); }}>
                   + Nueva Sala
                 </button>
               </div>
               <table className="admin-table">
                 <thead>
-                  <tr><th>Nombre de la Sala</th><th style={{ textAlign: 'right' }}>Acciones</th></tr>
+                  <tr>
+                    <th style={{ width: '40px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={rooms.length > 0 && selectedRooms.length === rooms.length} 
+                        onChange={(e) => setSelectedRooms(e.target.checked ? [...rooms] : [])} 
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </th>
+                    <th>Nombre de la Sala</th>
+                    <th style={{ textAlign: 'right' }}>Acciones</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {rooms.map(roomName => (
                     <tr key={roomName}>
+                      <td>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedRooms.includes(roomName)} 
+                          onChange={() => setSelectedRooms(prev => prev.includes(roomName) ? prev.filter(i => i !== roomName) : [...prev, roomName])} 
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </td>
                       <td><strong>{roomName}</strong></td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => { setEditingRoom({ oldName: roomName, newName: roomName }); setIsRoomModalOpen(true); }} className="btn-edit-sm">Editar</button>
