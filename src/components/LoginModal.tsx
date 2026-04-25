@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser, setCurrentUser } from '../utils/auth';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -30,6 +32,10 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const handleSwitch = () => {
     clearFields();
     if (onSwitchToRegister) onSwitchToRegister();
+  };
+
+  const handleForgotPassword = () => {
+    setIsForgotOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,10 +114,17 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
           <button type="submit" className="submit-btn" style={{ marginBottom: '1rem' }}>Ingresar</button>
         </form>
 
-        <p className="switch-link" style={{ marginTop: '1.5rem' }}>
+        <p className="switch-link" style={{ marginTop: '1.5rem', marginBottom: '0.5rem', fontSize: '13px' }}>
+          ¿Olvidaste tu contraseña? <span onClick={handleForgotPassword} style={{ cursor: 'pointer', fontWeight: 600, color: '#1a365d' }}>Recupérala aquí</span>
+        </p>
+        <p className="switch-link" style={{ fontSize: '13px' }}>
           ¿Aún no tienes cuenta? <span onClick={handleSwitch} style={{ cursor: 'pointer', fontWeight: 600, color: '#1a365d' }}>Regístrate aquí</span>
         </p>
       </div>
+
+      {isForgotOpen && (
+        <ForgotPasswordModal onClose={() => setIsForgotOpen(false)} />
+      )}
     </div>
   );
 }

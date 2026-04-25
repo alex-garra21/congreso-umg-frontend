@@ -413,3 +413,47 @@ export async function validatePaymentInSession() {
     await updateUserData(user);
   }
 }
+
+export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; message: string }> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  if (error) {
+    console.error("Error sending reset email:", error);
+    return { success: false, message: `Error: ${error.message}` };
+  }
+  return { success: true, message: 'Código enviado a tu correo' };
+}
+
+export async function resetPasswordWithOTP(email: string, token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  // Primero verificamos el OTP
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'recovery'
+  });
+
+  if (error) {
+    console.error("Error verifying OTP:", error);
+    return { success: false, message: 'Código inválido o expirado' };
+  }
+
+  // Si el OTP es válido, la sesión se establece automáticamente temporalmente.
+  // Procedemos a actualizar la contraseña.
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: newPassword
+  });
+
+  if (updateError) {
+    console.error("Error updating password:", updateError);
+    return { success: false, message: `Error al actualizar: ${updateError.message}` };
+  }
+
+  // Actualizamos también el localStorage si el usuario existía allí
+  const users = getRegisteredUsers();
+  const index = users.findIndex(u => u.correo === email);
+  if (index !== -1) {
+    users[index].contrasena = newPassword;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }
+
+  return { success: true, message: 'Contraseña actualizada con éxito' };
+}
