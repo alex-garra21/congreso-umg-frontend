@@ -134,7 +134,7 @@ export default function AttendancePage() {
       asistencias: [...(user.asistencias || []), { workshopId: workshop.id, timestamp }]
     };
 
-    const updateResult = updateUserData(updatedUser);
+    const updateResult = await updateUserData(updatedUser);
     if (updateResult.success) {
       setConfirmedUser(updatedUser);
       setConfirmationTime(timestamp);
