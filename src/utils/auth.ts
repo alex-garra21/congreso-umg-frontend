@@ -303,23 +303,26 @@ export async function updateUserData(updatedData: UserData): Promise<{ success: 
     }
   }
 
-  // 2. Fallback / Sincronización Local
+  // 2. Sincronización Local (MUY IMPORTANTE)
+  // Actualizar el objeto en el almacenamiento local para que la UI se refresque
   const users = getRegisteredUsers();
   const index = users.findIndex(u => u.correo === updatedData.correo);
   
   if (index !== -1) {
     users[index] = { ...users[index], ...updatedData };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-    
-    // Si es el usuario actual, actualizar la sesión
-    const current = getCurrentUser();
-    if (current && current.correo === updatedData.correo) {
-      setCurrentUser(users[index]);
-    }
-    return { success: true, message: 'Datos actualizados correctamente.' };
   }
   
-  return { success: true, message: 'Datos actualizados en la nube.' };
+  // Actualizar la sesión actual
+  const current = getCurrentUser();
+  if (current && current.correo === updatedData.correo) {
+    const finalData = { ...current, ...updatedData };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(finalData));
+    // Disparar evento para que otros componentes se enteren
+    window.dispatchEvent(new Event('sessionUpdate'));
+  }
+
+  return { success: true, message: 'Datos actualizados correctamente.' };
 }
 
 export async function changePassword(newPassword: string): Promise<{ success: boolean; message: string }> {
