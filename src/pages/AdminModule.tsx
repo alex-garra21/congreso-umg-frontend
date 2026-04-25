@@ -56,7 +56,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
   useEffect(() => {
     setUsers(getRegisteredUsers());
-    setTokens(getTokens());
+    getTokens().then(setTokens);
     setAgenda(getAgenda());
     setSpeakers(getSpeakers());
     setCategories(getCategories());
@@ -64,25 +64,25 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     setPage(1);
   }, [defaultTab]);
 
-  const handleGenerateToken = () => {
-    generateToken();
-    setTokens(getTokens());
+  const handleGenerateToken = async () => {
+    await generateToken();
+    setTokens(await getTokens());
     setPage(1);
   };
 
-  const handleMassGenerate = () => {
+  const handleMassGenerate = async () => {
     for (let i = 0; i < massQuantity; i++) {
-      generateToken();
+      await generateToken();
     }
-    setTokens(getTokens());
+    setTokens(await getTokens());
     setIsMassModalOpen(false);
     setPage(1);
   };
 
-  const handleDeleteToken = (code: string) => {
+  const handleDeleteToken = async (code: string) => {
     if (confirm('¿Estás seguro de eliminar este token?')) {
-      deleteToken(code);
-      setTokens(getTokens());
+      await deleteToken(code);
+      setTokens(await getTokens());
     }
   };
 

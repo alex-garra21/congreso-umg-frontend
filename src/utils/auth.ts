@@ -32,42 +32,95 @@ const STORAGE_KEY = 'congreso_users';
 const SESSION_KEY = 'congreso_current_user';
 const TOKENS_KEY = 'congreso_tokens';
 
-export function getTokens(): TokenData[] {
-  const tokensStr = localStorage.getItem(TOKENS_KEY);
-  if (!tokensStr) return [];
-  try {
-    const raw = JSON.parse(tokensStr);
-    // Migración automática: si el token es un string, convertirlo a objeto
-    return raw.map((t: any) => typeof t === 'string' ? { code: t, used: false } : t);
-  } catch (e) {
-    return [];
-  }
+export async function getTokens(): Promise<TokenData[]> {
+  const { data, error } = await supabase
+    .from('tokens_pago')
+    .select(`
+      codigo, 
+      usado, 
+      usado_por,
+      usuarios (correo)
+    `);
+  if (error || !data) return [];
+  
+  return data.map(d => ({
+    code: d.codigo,
+    used: d.usado,
+    usedBy: d.usuarios ? (d.usuarios as any).correo : undefined
+  }));
 }
 
-export function generateToken(): string {
-  const tokens = getTokens();
-  const code = `CONG-2026-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-  tokens.push({ code, used: false });
-  localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
+// Función auxiliar para generar bloques de caracteres aleatorios
+function generateRandomBlock(length: number): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+export async function generateToken(): Promise<string> {
+  const PROHIBITED_CODE = 'C2026-aBcD-1xYz-9QkL';
+  let code = '';
+  let success = false;
+
+  while (!success) {
+    code = `C2026-${generateRandomBlock(4)}-${generateRandomBlock(4)}-${generateRandomBlock(4)}`;
+    
+    // Regla estricta: Nunca generar el código de ejemplo del placeholder
+    if (code === PROHIBITED_CODE) continue;
+
+    // Intentar insertarlo en Supabase
+    const { error } = await supabase.from('tokens_pago').insert({ codigo: code });
+    
+    if (!error) {
+      success = true; // Se insertó correctamente
+    } else if (error.code !== '23505') {
+      // 23505 es el código de Postgres para "llave duplicada" (colisión).
+      // Si el error es otro (ej. sin internet), salimos del bucle para no quedarnos atrapados.
+      console.error("Error inesperado al generar token:", error);
+      break;
+    }
+  }
+  
   return code;
 }
 
-export function deleteToken(code: string) {
-  const tokens = getTokens();
-  const filtered = tokens.filter(t => t.code !== code);
-  localStorage.setItem(TOKENS_KEY, JSON.stringify(filtered));
+export async function deleteToken(code: string): Promise<void> {
+  await supabase.from('tokens_pago').delete().eq('codigo', code);
 }
 
-export function validateToken(code: string): boolean {
-  const tokens = getTokens();
-  const token = tokens.find(t => t.code === code && !t.used);
-  if (token) {
-    token.used = true;
-    token.usedBy = getCurrentUser()?.correo;
-    localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
-    return true;
-  }
-  return false;
+export async function validateToken(code: string): Promise<boolean> {
+  const user = getCurrentUser();
+  if (!user || !user.id) return false;
+
+  // Verificar si existe y no está usado
+  const { data, error } = await supabase
+    .from('tokens_pago')
+    .select('*')
+    .eq('codigo', code)
+    .eq('usado', false)
+    .single();
+
+  if (error || !data) return false;
+
+  // Marcar como usado
+  const { error: updateError } = await supabase
+    .from('tokens_pago')
+    .update({ 
+      usado: true, 
+      usado_por: user.id,
+      fecha_uso: new Date().toISOString()
+    })
+    .eq('codigo', code);
+
+  if (updateError) return false;
+
+  // Actualizar también al usuario
+  await supabase.from('usuarios').update({ pago_validado: true }).eq('id', user.id);
+  
+  return true;
 }
 
 export function getRegisteredUsers(): UserData[] {

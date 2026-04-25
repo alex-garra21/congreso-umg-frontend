@@ -14,13 +14,14 @@ export default function PaymentModule() {
 
   const isPaid = user?.pagoValidado;
 
-  const handleSendPayment = () => {
+  const handleSendPayment = async () => {
     if (!codigo.trim()) {
       alert('Por favor, ingresa el código de pago.');
       return;
     }
 
-    if (validateToken(codigo)) {
+    const isValid = await validateToken(codigo);
+    if (isValid) {
       validatePaymentInSession();
       window.dispatchEvent(new Event('sessionUpdate'));
       alert('¡Código validado exitosamente! Tu inscripción ha sido activada.');
@@ -63,7 +64,7 @@ export default function PaymentModule() {
               <label>CÓDIGO DE PAGO</label>
               <input
                 type="text"
-                placeholder="Ej: CONG-2026-XXXX"
+                placeholder="Ej: C2026-aBcD-1xYz-9QkL"
                 className="dashboard-input"
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value)}
