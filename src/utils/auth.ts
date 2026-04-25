@@ -201,6 +201,7 @@ export async function registerUser(user: UserData): Promise<{ success: boolean; 
     apellidos: user.apellidos,
     sexo: user.sexo,
     correo: user.correo,
+    contrasena: 'auth_managed', // Para satisfacer la restricción NOT NULL si existe
     rol: 'participante',
     pago_validado: false,
     tipo_participante: user.tipoParticipante,
