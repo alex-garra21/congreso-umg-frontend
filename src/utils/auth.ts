@@ -293,7 +293,8 @@ export async function updateUserData(updatedData: UserData): Promise<{ success: 
         carnet: updatedData.carnet,
         ciclo: updatedData.ciclo,
         telefono: updatedData.telefono,
-        correo_diploma: updatedData.correoDiploma
+        correo_diploma: updatedData.correoDiploma,
+        diploma_editado: updatedData.diplomaEditado
       })
       .eq('id', updatedData.id);
 
