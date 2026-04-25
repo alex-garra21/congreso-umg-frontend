@@ -30,7 +30,6 @@ export interface TokenData {
 
 const STORAGE_KEY = 'congreso_users';
 const SESSION_KEY = 'congreso_current_user';
-const TOKENS_KEY = 'congreso_tokens';
 
 export async function getTokens(): Promise<TokenData[]> {
   const { data, error } = await supabase
@@ -42,7 +41,7 @@ export async function getTokens(): Promise<TokenData[]> {
       usuarios (correo)
     `);
   if (error || !data) return [];
-  
+
   return data.map(d => ({
     code: d.codigo,
     used: d.usado,
@@ -67,13 +66,13 @@ export async function generateToken(): Promise<string> {
 
   while (!success) {
     code = `C2026-${generateRandomBlock(4)}-${generateRandomBlock(4)}-${generateRandomBlock(4)}`;
-    
+
     // Regla estricta: Nunca generar el código de ejemplo del placeholder
     if (code === PROHIBITED_CODE) continue;
 
     // Intentar insertarlo en Supabase
     const { error } = await supabase.from('tokens_pago').insert({ codigo: code });
-    
+
     if (!error) {
       success = true; // Se insertó correctamente
     } else if (error.code !== '23505') {
@@ -83,7 +82,7 @@ export async function generateToken(): Promise<string> {
       break;
     }
   }
-  
+
   return code;
 }
 
@@ -108,8 +107,8 @@ export async function validateToken(code: string): Promise<boolean> {
   // Marcar como usado
   const { error: updateError } = await supabase
     .from('tokens_pago')
-    .update({ 
-      usado: true, 
+    .update({
+      usado: true,
       usado_por: user.id,
       fecha_uso: new Date().toISOString()
     })
@@ -119,14 +118,14 @@ export async function validateToken(code: string): Promise<boolean> {
 
   // Actualizar también al usuario
   await supabase.from('usuarios').update({ pago_validado: true }).eq('id', user.id);
-  
+
   return true;
 }
 
 export function getRegisteredUsers(): UserData[] {
   const usersStr = localStorage.getItem(STORAGE_KEY);
   let users: UserData[] = [];
-  
+
   if (usersStr) {
     try {
       users = JSON.parse(usersStr);
@@ -164,11 +163,11 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     // Si falla Supabase, intentamos fallback a LocalStorage por si hay usuarios viejos
     const users = getRegisteredUsers();
     const localUser = users.find(u => u.correo === correo && u.contrasena === contrasena);
-    
+
     if (localUser) {
       return { success: true, message: `Inicio de sesión exitoso (Local). ¡Bienvenido ${localUser.nombres}!`, user: localUser };
     }
-    
+
     return { success: false, message: 'Credenciales inválidas o usuario no encontrado.' };
   }
 
@@ -181,9 +180,9 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
 
   if (userError || !userData) {
     console.error("Supabase Profile Error:", userError);
-    return { 
-      success: false, 
-      message: `Error al obtener datos del perfil: ${userError?.message || 'Usuario no encontrado en la tabla'}` 
+    return {
+      success: false,
+      message: `Error al obtener datos del perfil: ${userError?.message || 'Usuario no encontrado en la tabla'}`
     };
   }
 
@@ -222,14 +221,14 @@ export function getCurrentUser(): UserData | null {
   if (!userStr) return null;
   try {
     const user = JSON.parse(userStr) as UserData & { nombre?: string };
-    
+
     // Migración automática para datos de versiones previas
     if (user.nombre && !user.nombres) {
       const parts = user.nombre.trim().split(' ');
       user.nombres = parts[0] || '';
       user.apellidos = parts.slice(1).join(' ') || '';
     }
-    
+
     return user;
   } catch (e) {
     return null;
@@ -243,18 +242,18 @@ export function logout() {
 export function updateUserData(updatedData: UserData): { success: boolean; message: string } {
   const users = getRegisteredUsers();
   const index = users.findIndex(u => u.correo === updatedData.correo);
-  
+
   if (index !== -1) {
     if (!updatedData.contrasena) {
       updatedData.contrasena = users[index].contrasena;
     }
-    
+
     users[index] = { ...users[index], ...updatedData };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
     setCurrentUser(users[index]);
     return { success: true, message: 'Datos actualizados correctamente.' };
   }
-  
+
   return { success: false, message: 'Error al actualizar: Usuario no encontrado.' };
 }
 
