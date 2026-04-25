@@ -23,7 +23,15 @@ import DiplomaModule from './pages/DiplomaModule';
 import AdminModule from './pages/AdminModule';
 import { DashboardTitleProvider } from './utils/DashboardTitleContext';
 
+import { useEffect } from 'react';
+import { syncFromCloud } from './utils/agendaStore';
+
 function App() {
+  useEffect(() => {
+    // Sincronizar desde Supabase al cargar la app
+    syncFromCloud();
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

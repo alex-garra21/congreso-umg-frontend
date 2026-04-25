@@ -125,7 +125,11 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     .single();
 
   if (userError || !userData) {
-    return { success: false, message: 'Error al obtener datos del perfil.' };
+    console.error("Supabase Profile Error:", userError);
+    return { 
+      success: false, 
+      message: `Error al obtener datos del perfil: ${userError?.message || 'Usuario no encontrado en la tabla'}` 
+    };
   }
 
   const user: UserData = {
