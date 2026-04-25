@@ -15,8 +15,7 @@ export default function PagoPage() {
           <h2>Métodos de pago aceptados</h2>
         </div>
 
-        <div className="payment-grid">
-          {/* Tarjeta Efectivo */}
+        <div className="payment-grid" style={{ display: 'flex', justifyContent: 'center' }}>
           <div className="payment-card">
             <h3 style={{ margin: '10px 0' }}>Efectivo — Código de pago</h3>
             <p>Obtén un código único al realizar tu pago en efectivo en caja.</p>
@@ -26,19 +25,6 @@ export default function PagoPage() {
               <li>Recibirás un código único personal</li>
               <li>Ingrésalo en tu perfil del sistema</li>
               <li>El sistema valida y activa tu inscripción al instante</li>
-            </ul>
-          </div>
-
-          {/* Tarjeta Transferencia */}
-          <div className="payment-card">
-            <h3 style={{ margin: '10px 0' }}>Transferencia bancaria</h3>
-            <p>Transfiere y sube tu comprobante para revisión por un administrador.</p>
-
-            <ul className="payment-list">
-              <li>Realiza la transferencia al número de cuenta oficial</li>
-              <li>Sube foto o PDF del comprobante</li>
-              <li>Un administrador valida el pago (24-48h)</li>
-              <li>Recibirás notificación de aprobación</li>
             </ul>
           </div>
         </div>
