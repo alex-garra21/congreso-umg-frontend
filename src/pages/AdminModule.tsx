@@ -109,6 +109,47 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     setPage(1);
   };
 
+  const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
+  
+  useEffect(() => {
+    setSelectedTokens([]);
+  }, [defaultTab, page]);
+
+  const currentTokensOnPage = tokens.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const handleSelectToken = (code: string) => {
+    setSelectedTokens(prev => 
+      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+    );
+  };
+
+  const handleSelectAllTokens = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const allCodesOnPage = currentTokensOnPage.map(t => t.code);
+      const newSelected = new Set([...selectedTokens, ...allCodesOnPage]);
+      setSelectedTokens(Array.from(newSelected));
+    } else {
+      const allCodesOnPage = currentTokensOnPage.map(t => t.code);
+      setSelectedTokens(prev => prev.filter(code => !allCodesOnPage.includes(code)));
+    }
+  };
+
+  const handleDeleteSelectedTokens = () => {
+    openConfirm(
+      'Eliminar Tokens',
+      `¿Estás seguro de eliminar los ${selectedTokens.length} tokens seleccionados?`,
+      async () => {
+        for (const code of selectedTokens) {
+          await deleteToken(code);
+        }
+        setTokens(await getTokens());
+        setSelectedTokens([]);
+      },
+      true,
+      'Eliminar Todos'
+    );
+  };
+
   const handleDeleteToken = async (code: string) => {
     openConfirm('Eliminar Token', '¿Estás seguro de eliminar este token?', async () => {
       await deleteToken(code);
@@ -431,7 +472,12 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
         <section className="dashboard-section">
           <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
             <ModuleTitle title="Tokens de Activación" />
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              {selectedTokens.length > 0 && (
+                <button className="btn-lg" style={{ backgroundColor: '#fff5f5', color: '#e03131', border: '1px solid #ffe3e3' }} onClick={handleDeleteSelectedTokens}>
+                  Eliminar ({selectedTokens.length})
+                </button>
+              )}
               <button className="btn-lg btn-lg-primary" onClick={handleGenerateToken}>+ Generar Token</button>
               <button className="btn-lg btn-outline" onClick={() => setIsMassModalOpen(true)}>Generación Masiva</button>
               <button className="btn-lg btn-success" onClick={exportTokensToExcel}>Exportar Excel</button>
@@ -440,11 +486,32 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
-                <tr><th>Código</th><th>Estado</th><th>Usuario</th><th style={{ textAlign: 'right' }}>Acciones</th></tr>
+                <tr>
+                  <th style={{ width: '40px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))} 
+                      onChange={handleSelectAllTokens} 
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </th>
+                  <th>Código</th>
+                  <th>Estado</th>
+                  <th>Usuario</th>
+                  <th style={{ textAlign: 'right' }}>Acciones</th>
+                </tr>
               </thead>
               <tbody>
-                {tokens.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map(t => (
+                {currentTokensOnPage.map(t => (
                   <tr key={t.code}>
+                    <td>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTokens.includes(t.code)} 
+                        onChange={() => handleSelectToken(t.code)} 
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </td>
                     <td style={{ fontWeight: 700, color: 'var(--blue)' }}>{t.code}</td>
                     <td><span className={`badge ${t.used ? 'used' : 'avail'}`}>{t.used ? 'UTILIZADO' : 'DISPONIBLE'}</span></td>
                     <td>{t.usedBy || '-'}</td>
