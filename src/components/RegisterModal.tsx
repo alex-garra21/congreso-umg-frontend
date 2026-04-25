@@ -58,6 +58,27 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     }
   };
 
+  const clearFields = () => {
+    setFormData({
+      nombres: '', apellidos: '', sexo: '', correo: '', contrasena: '', confirmarContrasena: '',
+      tipoParticipante: 'externo', carnet: '', ciclo: ''
+    });
+    setError(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setIsRegistered(false);
+  };
+
+  const handleClose = () => {
+    clearFields();
+    onClose();
+  };
+
+  const handleSwitch = () => {
+    clearFields();
+    if (onSwitchToLogin) onSwitchToLogin();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -95,7 +116,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   return (
     <div className="modal-bg open" style={{ zIndex: 9999 }}>
       <div className="modal" style={{ maxWidth: '440px', padding: '2.5rem 2rem' }} onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>✕</button>
+        <button className="modal-close" onClick={handleClose}>✕</button>
 
         {isRegistered ? (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
@@ -112,9 +133,8 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
             <button
               className="submit-btn"
               onClick={() => {
-                setIsRegistered(false);
-                if (onSwitchToLogin) onSwitchToLogin();
-                else onClose();
+                if (onSwitchToLogin) handleSwitch();
+                else handleClose();
               }}
             >
               Ir al inicio de sesión
@@ -289,7 +309,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
             </form>
 
             <p className="switch-link" style={{ marginTop: '1.5rem' }}>
-              ¿Ya tienes cuenta? <span onClick={onSwitchToLogin} style={{ cursor: 'pointer' }}>Inicia sesión aquí</span>
+              ¿Ya tienes cuenta? <span onClick={handleSwitch} style={{ cursor: 'pointer' }}>Inicia sesión aquí</span>
             </p>
           </>
         )}

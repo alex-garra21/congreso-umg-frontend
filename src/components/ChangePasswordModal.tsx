@@ -16,6 +16,19 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const clearFields = () => {
+    setPasswords({ newPassword: '', confirmPassword: '' });
+    setError(null);
+    setShowSuccess(false);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const handleClose = () => {
+    clearFields();
+    onClose();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -38,7 +51,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   return (
     <div className="modal-bg open" style={{ zIndex: 10001 }}>
       <div className="modal" style={{ maxWidth: '400px', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>✕</button>
+        <button className="modal-close" onClick={handleClose}>✕</button>
 
         {showSuccess ? (
           <div style={{ textAlign: 'center' }}>
@@ -50,7 +63,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             </div>
             <h3 style={{ fontSize: '24px', marginBottom: '10px', fontFamily: 'Syne', fontWeight: 800 }}>¡Contraseña Cambiada!</h3>
             <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu contraseña ha sido actualizada con éxito.</p>
-            <button className="submit-btn" onClick={() => { setShowSuccess(false); onClose(); }}>Cerrar</button>
+            <button className="submit-btn" onClick={handleClose}>Cerrar</button>
           </div>
         ) : (
           <>

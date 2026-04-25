@@ -15,6 +15,23 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const clearFields = () => {
+    setCorreo('');
+    setContrasena('');
+    setError(null);
+    setShowPassword(false);
+  };
+
+  const handleClose = () => {
+    clearFields();
+    onClose();
+  };
+
+  const handleSwitch = () => {
+    clearFields();
+    if (onSwitchToRegister) onSwitchToRegister();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -22,8 +39,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
     if (result.success && result.user) {
       setCurrentUser(result.user);
-      setCorreo('');
-      setContrasena('');
+      clearFields();
       onClose();
       navigate('/dashboard'); 
     } else {
@@ -41,7 +57,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
         style={{ maxWidth: '440px', padding: '2.5rem 2rem' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button className="modal-close" onClick={onClose}>✕</button>
+        <button className="modal-close" onClick={handleClose}>✕</button>
 
         <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>Iniciar sesión</h3>
         <p className="modal-sub">Accede para ver tus charlas y estado de pago</p>
@@ -93,7 +109,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
         </form>
 
         <p className="switch-link" style={{ marginTop: '1.5rem' }}>
-          ¿Aún no tienes cuenta? <span onClick={onSwitchToRegister} style={{ cursor: 'pointer' }}>Regístrate aquí</span>
+          ¿Aún no tienes cuenta? <span onClick={handleSwitch} style={{ cursor: 'pointer', fontWeight: 600, color: '#1a365d' }}>Regístrate aquí</span>
         </p>
       </div>
     </div>
