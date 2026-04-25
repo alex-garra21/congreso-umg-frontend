@@ -1,4 +1,7 @@
+import { supabase } from './supabase';
+
 export interface UserData {
+  id?: string;
   nombres: string;
   apellidos: string;
   sexo: string;
@@ -79,20 +82,6 @@ export function getRegisteredUsers(): UserData[] {
     }
   }
 
-  // Asegurar que exista un admin por defecto para pruebas
-  const adminEmail = 'admin@miumg.edu.gt';
-  if (!users.some(u => u.correo === adminEmail)) {
-    users.push({
-      nombres: 'Administrador',
-      apellidos: 'Sistema',
-      sexo: 'M',
-      correo: adminEmail,
-      contrasena: 'admin123',
-      rol: 'admin'
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-  }
-
   return users;
 }
 
@@ -109,17 +98,52 @@ export function registerUser(user: UserData): { success: boolean; message: strin
   return { success: true, message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
 }
 
-export function loginUser(correo: string, contrasena: string): { success: boolean; message: string; user?: UserData } {
-  const users = getRegisteredUsers();
-  const user = users.find(u => u.correo === correo);
+export async function loginUser(correo: string, contrasena: string): Promise<{ success: boolean; message: string; user?: UserData }> {
+  // 1. Intentar Login en Supabase Auth
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email: correo,
+    password: contrasena,
+  });
 
-  if (!user) {
-    return { success: false, message: 'El correo electrónico no está registrado.' };
+  if (authError) {
+    // Si falla Supabase, intentamos fallback a LocalStorage por si hay usuarios viejos
+    const users = getRegisteredUsers();
+    const localUser = users.find(u => u.correo === correo && u.contrasena === contrasena);
+    
+    if (localUser) {
+      return { success: true, message: `Inicio de sesión exitoso (Local). ¡Bienvenido ${localUser.nombres}!`, user: localUser };
+    }
+    
+    return { success: false, message: 'Credenciales inválidas o usuario no encontrado.' };
   }
 
-  if (user.contrasena !== contrasena) {
-    return { success: false, message: 'Contraseña incorrecta.' };
+  // 2. Si el login en Auth fue exitoso, obtener los datos del perfil de public.usuarios
+  const { data: userData, error: userError } = await supabase
+    .from('usuarios')
+    .select('*')
+    .eq('id', authData.user.id)
+    .single();
+
+  if (userError || !userData) {
+    return { success: false, message: 'Error al obtener datos del perfil.' };
   }
+
+  const user: UserData = {
+    id: userData.id,
+    nombres: userData.nombres,
+    apellidos: userData.apellidos,
+    sexo: userData.sexo || 'M',
+    correo: userData.correo,
+    contrasena: 'auth_managed',
+    rol: userData.rol as any,
+    pagoValidado: userData.pago_validado,
+    nombreDiploma: userData.nombre_diploma,
+    tipoParticipante: userData.tipo_participante,
+    carnet: userData.carnet,
+    ciclo: userData.ciclo,
+    telefono: userData.telefono,
+    // ... mapear otros campos si es necesario
+  };
 
   return { success: true, message: `Inicio de sesión exitoso. ¡Bienvenido ${user.nombres}!`, user };
 }

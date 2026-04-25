@@ -13,16 +13,16 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const [contrasena, setContrasena] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = loginUser(correo, contrasena);
+    const result = await loginUser(correo, contrasena);
 
     if (result.success && result.user) {
       setCurrentUser(result.user);
       setCorreo('');
       setContrasena('');
       onClose();
-      navigate('/dashboard'); // Redirigir al dashboard
+      navigate('/dashboard'); 
     } else {
       alert(result.message);
     }
