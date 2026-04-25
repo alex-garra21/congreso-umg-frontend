@@ -213,7 +213,7 @@ export async function registerUser(user: UserData): Promise<{ success: boolean; 
     console.error("Supabase Profile Insert Error:", profileError);
     // Podríamos borrar el usuario de auth aquí si falla el perfil, 
     // pero requeriría privilegios de admin. Por ahora mostramos error.
-    return { success: false, message: 'Cuenta creada, pero hubo un error al guardar el perfil.' };
+    return { success: false, message: `Error al guardar el perfil: ${profileError.message}. Verifica las columnas y los permisos (RLS).` };
   }
 
   // Fallback local (opcional, para compatibilidad)
