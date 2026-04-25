@@ -151,6 +151,8 @@ export function registerUser(user: UserData): { success: boolean; message: strin
   return { success: true, message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
 }
 
+import { getEnrolledWorkshopsCloud, getAttendancesCloud } from './supabaseEnrollment';
+
 export async function loginUser(correo: string, contrasena: string): Promise<{ success: boolean; message: string; user?: UserData }> {
   // 1. Intentar Login en Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -185,6 +187,10 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     };
   }
 
+  // 3. Obtener inscripciones y asistencias de la nube
+  const talleres = await getEnrolledWorkshopsCloud(userData.id);
+  const asistencias = await getAttendancesCloud(userData.id);
+
   const user: UserData = {
     id: userData.id,
     nombres: userData.nombres,
@@ -199,7 +205,8 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     carnet: userData.carnet,
     ciclo: userData.ciclo,
     telefono: userData.telefono,
-    // ... mapear otros campos si es necesario
+    talleres: talleres,
+    asistencias: asistencias,
   };
 
   return { success: true, message: `Inicio de sesión exitoso. ¡Bienvenido ${user.nombres}!`, user };

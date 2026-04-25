@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getAgenda, type AgendaItem, type Speaker } from '../utils/agendaStore';
 import { getRegisteredUsers, updateUserData, type UserData } from '../utils/auth';
+import { markAttendanceCloud } from '../utils/supabaseEnrollment';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
 function parseTimeStr(timeStr: string, baseDate?: string): Date {
   const [time, modifier] = timeStr.trim().split(' ');
   let [hours, minutes] = time.split(':').map(Number);
-  
+
   if (hours === 12) {
     hours = modifier === 'PM' ? 12 : 0;
   } else if (modifier === 'PM') {
@@ -22,7 +23,7 @@ function parseTimeStr(timeStr: string, baseDate?: string): Date {
   } else {
     date = new Date();
   }
-  
+
   date.setHours(hours, minutes, 0, 0);
   return date;
 }
@@ -31,7 +32,7 @@ export default function AttendancePage() {
   const { workshopId } = useParams<{ workshopId: string }>();
   const [workshop, setWorkshop] = useState<AgendaItem | null>(null);
   const [speaker, setSpeaker] = useState<Speaker | null>(null);
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -59,17 +60,25 @@ export default function AttendancePage() {
     return () => window.removeEventListener('agendaUpdate', loadWorkshop);
   }, [workshopId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleConfirmAttendance = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!workshop) return;
+    if (!workshop) {
+      setError('Taller no encontrado.');
+      return;
+    }
 
-    // 1. Verificación de Credenciales
+    if (!email || !password) {
+      setError('Por favor, ingresa tus credenciales.');
+      return;
+    }
+
+    // 1. Verificación de Usuario
     const users = getRegisteredUsers();
     const user = users.find(u => u.correo.toLowerCase() === email.toLowerCase());
 
-    if (!user) {
+    if (!user || !user.id) {
       setError('Usuario no encontrado. Verifica tu correo.');
       return;
     }
@@ -90,7 +99,7 @@ export default function AttendancePage() {
     const now = new Date();
     const startTime = parseTimeStr(workshop.time, workshop.date);
     const endTime = parseTimeStr(workshop.endTime, workshop.date);
-    
+
     // Usar el tiempo de gracia configurado o 10 minutos por defecto
     const graceMinutes = workshop.gracePeriod !== undefined ? workshop.gracePeriod : 10;
     endTime.setMinutes(endTime.getMinutes() + graceMinutes);
@@ -98,7 +107,7 @@ export default function AttendancePage() {
     // Para evitar bloqueos durante pruebas de desarrollo, si el evento es en el futuro/pasado, 
     // en producción debería restringirse estrictamente. Aquí lo implementamos según los requisitos.
     if (now < startTime || now > endTime) {
-      setError(`La confirmación de asistencia solo está disponible durante el horario del taller (${workshop.time} - ${workshop.endTime}) y hasta 10 minutos después.`);
+      setError(`La confirmación de asistencia solo está disponible durante el horario del taller (${workshop.time} - ${workshop.endTime}) y hasta ${graceMinutes} minutos después.`);
       return;
     }
 
@@ -111,7 +120,14 @@ export default function AttendancePage() {
       return;
     }
 
-    // 5. Registrar asistencia
+    // 5. Registrar asistencia en la NUBE
+    const { success } = await markAttendanceCloud(user.id, workshop.id);
+    if (!success) {
+      setError('Error de conexión al registrar la asistencia en la nube.');
+      return;
+    }
+
+    // 6. Registrar asistencia local
     const timestamp = new Date().toISOString();
     const updatedUser: UserData = {
       ...user,
@@ -124,7 +140,7 @@ export default function AttendancePage() {
       setConfirmationTime(timestamp);
       setIsSuccess(true);
     } else {
-      setError('Error al registrar la asistencia.');
+      setError('Error al actualizar registro local.');
     }
   };
 
@@ -154,14 +170,14 @@ export default function AttendancePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem 1rem', fontFamily: 'Inter, sans-serif' }}>
-      
+
       {/* Tarjeta del Taller */}
-      <div style={{ 
-        width: '100%', 
-        maxWidth: '400px', 
-        backgroundColor: '#0a2540', 
-        borderRadius: '16px', 
-        padding: '2rem', 
+      <div style={{
+        width: '100%',
+        maxWidth: '400px',
+        backgroundColor: '#0a2540',
+        borderRadius: '16px',
+        padding: '2rem',
         color: 'white',
         marginBottom: '1rem',
         position: 'relative',
@@ -170,7 +186,7 @@ export default function AttendancePage() {
       }}>
         {/* Decoración circular */}
         <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
-        
+
         <div style={{ position: 'relative', zIndex: 1 }}>
           <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1px', color: '#63b3ed', textTransform: 'uppercase', marginBottom: '8px' }}>
             Taller en curso
@@ -178,7 +194,7 @@ export default function AttendancePage() {
           <h1 style={{ fontSize: '28px', fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             {workshop.title}
           </h1>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '1.5rem', fontSize: '14px', color: '#e2e8f0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '12px' }}>🕒</span>
@@ -197,12 +213,12 @@ export default function AttendancePage() {
       </div>
 
       {/* Formulario / Estado de Éxito */}
-      <div style={{ 
-        width: '100%', 
-        maxWidth: '400px', 
-        backgroundColor: 'white', 
-        borderRadius: '16px', 
-        padding: '2rem', 
+      <div style={{
+        width: '100%',
+        maxWidth: '400px',
+        backgroundColor: 'white',
+        borderRadius: '16px',
+        padding: '2rem',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
       }}>
         {!isSuccess ? (
@@ -220,13 +236,13 @@ export default function AttendancePage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <form onSubmit={handleConfirmAttendance} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4a5568', marginBottom: '6px', textTransform: 'uppercase' }}>
                   Correo electrónico
                 </label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="correo@ejemplo.com"
@@ -239,8 +255,8 @@ export default function AttendancePage() {
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4a5568', marginBottom: '6px', textTransform: 'uppercase' }}>
                   Contraseña
                 </label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Tu contraseña"
@@ -249,17 +265,17 @@ export default function AttendancePage() {
                 />
               </div>
 
-              <button 
-                type="submit" 
-                style={{ 
-                  width: '100%', 
-                  padding: '14px', 
-                  backgroundColor: '#1971c2', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '8px', 
-                  fontSize: '16px', 
-                  fontWeight: 600, 
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  backgroundColor: '#1971c2',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: 600,
                   cursor: 'pointer',
                   marginTop: '0.5rem',
                   transition: 'background-color 0.2s'
@@ -273,7 +289,7 @@ export default function AttendancePage() {
           </>
         ) : (
           <div style={{ textAlign: 'center' }}>
-            
+
             {/* Header del usuario */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #edf2f7' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#eef6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1971c2', fontWeight: 700, fontSize: '18px' }}>
@@ -285,9 +301,9 @@ export default function AttendancePage() {
               </div>
             </div>
 
-            <div style={{ 
-              backgroundColor: '#f0f9ff', 
-              borderRadius: '16px', 
+            <div style={{
+              backgroundColor: '#f0f9ff',
+              borderRadius: '16px',
               padding: '2rem 1.5rem',
               display: 'flex',
               flexDirection: 'column',
@@ -298,9 +314,9 @@ export default function AttendancePage() {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              
+
               <h2 style={{ fontSize: '24px', fontFamily: 'Syne', fontWeight: 800, color: '#1a365d', marginBottom: '1rem', lineHeight: 1.2 }}>
-                ¡Ya confirmaste tu<br/>asistencia!
+                ¡Ya confirmaste tu<br />asistencia!
               </h2>
               <p style={{ color: '#4a5568', fontSize: '14px', marginBottom: '2rem', lineHeight: 1.5 }}>
                 Tu presencia en este taller ya fue registrada correctamente.

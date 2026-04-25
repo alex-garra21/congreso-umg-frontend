@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, updateUserData } from '../utils/auth';
 import ModuleTitle from '../components/ModuleTitle';
 import { getAgenda, getRooms } from '../utils/agendaStore';
+import { syncUserEnrollmentsCloud } from '../utils/supabaseEnrollment';
 import type { AgendaItem } from '../data/agendaData';
 
 export default function WorkshopsModule() {
@@ -135,19 +136,29 @@ export default function WorkshopsModule() {
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setSaveStatus('saving');
-    setTimeout(() => {
-      if (user) {
+    
+    if (user && user.id) {
+      // 1. Guardar en la nube
+      const { success } = await syncUserEnrollmentsCloud(user.id, enrolledIds);
+      
+      if (success) {
+        // 2. Actualizar estado local
         updateUserData({ ...user, talleres: enrolledIds });
-        localStorage.setItem(`workshops_${user.correo}`, JSON.stringify(enrolledIds));
         localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
+        
+        setIsConfirmed(true);
+        setShowSuccessModal(true);
+        setSaveStatus('saved');
+        window.dispatchEvent(new Event('sessionUpdate'));
+      } else {
+        alert("Hubo un error al guardar tus inscripciones en la nube.");
+        setSaveStatus('idle');
       }
-      setIsConfirmed(true);
-      setShowSuccessModal(true);
-      setSaveStatus('saved');
-      window.dispatchEvent(new Event('sessionUpdate'));
-    }, 800);
+    } else {
+      setSaveStatus('idle');
+    }
   };
 
   const handleEdit = () => {
