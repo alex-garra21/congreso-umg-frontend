@@ -14,7 +14,6 @@ export default function ProfileModule() {
     ciclo: '',
     telefono: '',
     sexo: '',
-    nombreDiploma: ''
   });
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -31,7 +30,6 @@ export default function ProfileModule() {
         ciclo: user.ciclo || '',
         telefono: user.telefono || '',
         sexo: user.sexo || '',
-        nombreDiploma: user.nombreDiploma || ''
       });
     }
   }, [user]);
@@ -90,7 +88,7 @@ export default function ProfileModule() {
     }
   };
 
-  const isDiplomaNameTooLong = formData.nombreDiploma.length > 25;
+
 
   if (!user) return null;
 
@@ -116,23 +114,10 @@ export default function ProfileModule() {
             </div>
           </div>
 
-          <div className="form-row">
+          <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
             <div className="form-group" style={{ flex: 3 }}>
-              <label>NOMBRE CON EL QUE APARECERÁ EN LOS DIPLOMAS</label>
-              <input
-                type="text"
-                name="nombreDiploma"
-                value={formData.nombreDiploma}
-                onChange={handleChange}
-                placeholder="Nombre como aparecerá en diplomas"
-                required
-                style={{ borderColor: isDiplomaNameTooLong ? '#d32f2f' : undefined }}
-              />
-              {isDiplomaNameTooLong && (
-                <span style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px', display: 'block', fontWeight: 500 }}>
-                  El nombre es demasiado largo (máximo 25 caracteres).
-                </span>
-              )}
+              <label>CORREO ELECTRÓNICO AL QUE SE ENVIARÁN LOS DIPLOMAS</label>
+              <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@miumg.edu.gt" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label>SEXO</label>
@@ -145,11 +130,6 @@ export default function ProfileModule() {
           </div>
 
           <div className="form-group">
-            <label>CORREO ELECTRÓNICO AL QUE SE ENVIARÁN LOS DIPLOMAS</label>
-            <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@miumg.edu.gt" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
-          </div>
-
-          <div className="form-group">
             <label>TIPO DE PARTICIPANTE</label>
             <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required>
               <option value="externo">Participante externo</option>
@@ -158,8 +138,8 @@ export default function ProfileModule() {
           </div>
 
           {formData.tipoParticipante === 'alumno' && (
-            <div className="form-row">
-              <div className="form-group" style={{ flex: 2 }}>
+            <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
+              <div className="form-group" style={{ flex: 3 }}>
                 <label>NÚMERO DE CARNET</label>
                 <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="20230001234" required />
               </div>
@@ -196,10 +176,7 @@ export default function ProfileModule() {
               style={{
                 width: 'auto',
                 padding: '12px 24px',
-                opacity: isDiplomaNameTooLong ? 0.6 : 1,
-                cursor: isDiplomaNameTooLong ? 'not-allowed' : 'pointer'
               }}
-              disabled={isDiplomaNameTooLong}
             >
               Guardar cambios
             </button>

@@ -13,6 +13,10 @@ export interface UserData {
   ciclo?: string;
   rol?: 'usuario' | 'admin';
   talleres?: string[];
+  diplomaEditado?: boolean;
+  correoDiploma?: string;
+  desactivado?: boolean;
+  asistencias?: { workshopId: string; timestamp: string }[];
 }
 
 export interface TokenData {

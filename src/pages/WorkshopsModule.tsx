@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, updateUserData } from '../utils/auth';
 import ModuleTitle from '../components/ModuleTitle';
-import { getAgenda } from '../utils/agendaStore';
+import { getAgenda, getRooms } from '../utils/agendaStore';
 import type { AgendaItem } from '../data/agendaData';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
   const [agenda, setAgenda] = useState<AgendaItem[]>([]);
+  const [rooms, setRooms] = useState<string[]>([]);
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -17,8 +18,12 @@ export default function WorkshopsModule() {
 
   useEffect(() => {
     setAgenda(getAgenda());
+    setRooms(getRooms());
     
-    const handleAgendaUpdate = () => setAgenda(getAgenda());
+    const handleAgendaUpdate = () => {
+      setAgenda(getAgenda());
+      setRooms(getRooms());
+    };
     window.addEventListener('agendaUpdate', handleAgendaUpdate);
     return () => window.removeEventListener('agendaUpdate', handleAgendaUpdate);
   }, []);
@@ -50,25 +55,54 @@ export default function WorkshopsModule() {
     }
   }, [user?.correo]);
 
-  const ROOMS = ['SALA A', 'SALA B', 'SALA C', 'SALA D', 'SALA E'];
-  const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-
   const parseTime = (timeStr: string) => {
-    const [time, modifier] = timeStr.split(' ');
-    let [hours] = time.split(':').map(Number);
+    if (!timeStr) return 8; // fallback
+    const [time, modifier] = timeStr.trim().split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
     if (modifier === 'PM' && hours < 12) hours += 12;
     if (modifier === 'AM' && hours === 12) hours = 0;
-    return hours;
+    return hours + (minutes / 60); // Permite posiciones fraccionarias
   };
 
-  const getWorkshopStyles = (w: AgendaItem) => {
-    const startRow = parseTime(w.time) - 7; 
-    const endRow = parseTime(w.endTime) - 7;
-    const colIndex = ROOMS.indexOf(w.room) + 2; 
+  // Determinar los límites de hora dinámicamente
+  let minHour = 8;
+  let maxHour = 18;
+  if (agenda.length > 0) {
+    const startHours = agenda.map(w => Math.floor(parseTime(w.time)));
+    const endHours = agenda.map(w => Math.ceil(parseTime(w.endTime)));
+    minHour = Math.min(...startHours);
+    maxHour = Math.max(...endHours);
+  }
+  
+  const HOURS = [];
+  for (let i = minHour; i <= maxHour; i++) HOURS.push(i);
+
+  const roomColors = [
+    { bg: 'rgba(33, 150, 243, 0.1)', hoverBg: 'rgba(33, 150, 243, 0.05)', border: 'rgba(33, 150, 243, 0.1)', text: '#1976d2' },
+    { bg: 'rgba(76, 175, 80, 0.1)', hoverBg: 'rgba(76, 175, 80, 0.05)', border: 'rgba(76, 175, 80, 0.1)', text: '#388e3c' },
+    { bg: 'rgba(156, 39, 176, 0.1)', hoverBg: 'rgba(156, 39, 176, 0.05)', border: 'rgba(156, 39, 176, 0.1)', text: '#7b1fa2' },
+    { bg: 'rgba(255, 87, 34, 0.1)', hoverBg: 'rgba(255, 87, 34, 0.05)', border: 'rgba(255, 87, 34, 0.1)', text: '#e64a19' },
+    { bg: 'rgba(255, 193, 7, 0.1)', hoverBg: 'rgba(255, 193, 7, 0.05)', border: 'rgba(255, 193, 7, 0.1)', text: '#ffa000' },
+    { bg: 'rgba(0, 188, 212, 0.1)', hoverBg: 'rgba(0, 188, 212, 0.05)', border: 'rgba(0, 188, 212, 0.1)', text: '#0097a6' },
+    { bg: 'rgba(233, 30, 99, 0.1)', hoverBg: 'rgba(233, 30, 99, 0.05)', border: 'rgba(233, 30, 99, 0.1)', text: '#c2185b' }
+  ];
+
+  const getWorkshopStyles = (w: AgendaItem, isSelected: boolean) => {
+    const startRow = (parseTime(w.time) - minHour) + 1; 
+    const endRow = (parseTime(w.endTime) - minHour) + 1;
+    const roomIndex = rooms.indexOf(w.room);
+    const colIndex = roomIndex !== -1 ? roomIndex + 2 : 2; 
+    
+    const colorTheme = roomColors[(colIndex - 2) % roomColors.length];
     
     return {
       gridRow: `${startRow} / ${endRow}`,
       gridColumn: colIndex,
+      ...(isSelected ? {} : {
+        backgroundColor: colorTheme.hoverBg,
+        color: colorTheme.text,
+        borderColor: colorTheme.border
+      })
     };
   };
 
@@ -148,22 +182,25 @@ export default function WorkshopsModule() {
       )}
 
       <div className={`calendar-container ${isConfirmed ? 'confirmed' : ''}`}>
-        <div className="calendar-grid">
+        <div className="calendar-grid" style={{ gridTemplateColumns: `80px repeat(${rooms.length}, 1fr)`, gridTemplateRows: `60px repeat(${HOURS.length}, 80px)` }}>
           <div className="grid-header time-label">HORA</div>
-          {ROOMS.map(room => (
-            <div key={room} className={`grid-header room-label ${room.replace(' ', '-').toLowerCase()}`}>
-              {room}
-            </div>
-          ))}
+          {rooms.map((room, idx) => {
+            const colorTheme = roomColors[idx % roomColors.length];
+            return (
+              <div key={room} className="grid-header room-label" style={{ backgroundColor: colorTheme.bg, color: colorTheme.text }}>
+                {room}
+              </div>
+            );
+          })}
 
           {HOURS.map(hour => (
-            <div key={hour} className="hour-row-label" style={{ gridRow: hour - 7 }}>
+            <div key={hour} className="hour-row-label" style={{ gridRow: hour - minHour + 1 }}>
               {hour > 12 ? `${hour - 12}:00` : `${hour}:00`}
             </div>
           ))}
 
           {HOURS.map(hour => (
-            <div key={`line-${hour}`} className="hour-grid-line" style={{ gridRow: hour - 7 }}></div>
+            <div key={`line-${hour}`} className="hour-grid-line" style={{ gridRow: hour - minHour + 1 }}></div>
           ))}
 
           {agenda.filter(w => w.speaker).map(workshop => {
@@ -174,13 +211,13 @@ export default function WorkshopsModule() {
               <div 
                 key={workshop.id} 
                 className={`calendar-workshop ${isSelected ? 'selected' : ''} ${isBlocked ? 'blocked' : ''}`}
-                style={getWorkshopStyles(workshop)}
+                style={getWorkshopStyles(workshop, isSelected)}
                 onClick={() => toggleEnroll(workshop)}
               >
                 <div className="workshop-content">
                   <span className="w-title">{workshop.title}</span>
                   <span className="w-time">{workshop.time.replace(' AM', '').replace(' PM', '')} - {workshop.endTime.replace(' AM', '').replace(' PM', '')}</span>
-                  <span className="w-speaker">{workshop.speaker?.name}</span>
+                  <span className="w-speaker">{workshop.speaker?.name || 'General'}</span>
                 </div>
                 {isSelected && <div className="selected-check">✓</div>}
               </div>
@@ -190,12 +227,15 @@ export default function WorkshopsModule() {
       </div>
 
       <div className="calendar-legend">
-        {ROOMS.map(room => (
-          <div key={room} className="legend-item">
-            <span className={`legend-dot ${room.replace(' ', '-').toLowerCase()}`}></span>
-            {room}
-          </div>
-        ))}
+        {rooms.map((room, idx) => {
+          const colorTheme = roomColors[idx % roomColors.length];
+          return (
+            <div key={room} className="legend-item">
+              <span className="legend-dot" style={{ backgroundColor: colorTheme.text }}></span>
+              {room}
+            </div>
+          );
+        })}
       </div>
 
       {isPaid && (
@@ -238,8 +278,7 @@ export default function WorkshopsModule() {
 
         .calendar-grid {
           display: grid;
-          grid-template-columns: 80px repeat(5, 1fr);
-          grid-template-rows: 60px repeat(11, 80px);
+          /* Grid dimensions are now set dynamically inline via React */
           min-width: 1000px;
           position: relative;
         }
@@ -256,12 +295,6 @@ export default function WorkshopsModule() {
 
         .time-label { color: var(--text-secondary); }
         .room-label { padding: 10px; border-radius: 8px 8px 0 0; }
-        
-        .sala-a { background: rgba(33, 150, 243, 0.1); color: #1976d2; }
-        .sala-b { background: rgba(76, 175, 80, 0.1); color: #388e3c; }
-        .sala-c { background: rgba(156, 39, 176, 0.1); color: #7b1fa2; }
-        .sala-d { background: rgba(255, 87, 34, 0.1); color: #e64a19; }
-        .sala-e { background: rgba(255, 193, 7, 0.1); color: #ffa000; }
 
         .hour-row-label {
           grid-column: 1;
@@ -298,12 +331,6 @@ export default function WorkshopsModule() {
           box-shadow: 0 8px 20px rgba(0,0,0,0.1);
           z-index: 10;
         }
-
-        .grid-header.sala-a ~ .calendar-workshop[style*="grid-column: 2"] { background: rgba(33, 150, 243, 0.05); color: #1976d2; border-color: rgba(33, 150, 243, 0.1); }
-        .grid-header.sala-b ~ .calendar-workshop[style*="grid-column: 3"] { background: rgba(76, 175, 80, 0.05); color: #388e3c; border-color: rgba(76, 175, 80, 0.1); }
-        .grid-header.sala-c ~ .calendar-workshop[style*="grid-column: 4"] { background: rgba(156, 39, 176, 0.05); color: #7b1fa2; border-color: rgba(156, 39, 176, 0.1); }
-        .grid-header.sala-d ~ .calendar-workshop[style*="grid-column: 5"] { background: rgba(255, 87, 34, 0.05); color: #e64a19; border-color: rgba(255, 87, 34, 0.1); }
-        .grid-header.sala-e ~ .calendar-workshop[style*="grid-column: 6"] { background: rgba(255, 193, 7, 0.05); color: #ffa000; border-color: rgba(255, 193, 7, 0.1); }
 
         .calendar-workshop.selected {
           background: var(--blue) !important;

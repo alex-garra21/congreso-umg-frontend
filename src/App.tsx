@@ -11,6 +11,7 @@ import AgendaPage from './pages/AgendaPage';
 import PonentesPage from './pages/Ponentes';
 import InscripcionPage from './pages/InscripcionPage';
 import PagoPage from './pages/PagoPage';
+import AttendancePage from './pages/AttendancePage';
 
 // Importar Dashboard components
 import DashboardLayout from './components/DashboardLayout';
@@ -18,6 +19,7 @@ import DashboardHome from './pages/DashboardHome';
 import PaymentModule from './pages/PaymentModule';
 import ProfileModule from './pages/ProfileModule';
 import WorkshopsModule from './pages/WorkshopsModule';
+import DiplomaModule from './pages/DiplomaModule';
 import AdminModule from './pages/AdminModule';
 import { DashboardTitleProvider } from './utils/DashboardTitleContext';
 
@@ -32,6 +34,7 @@ function App() {
           <Route path="ponentes" element={<PonentesPage />} />
           <Route path="inscripcion" element={<InscripcionPage />} />
           <Route path="pago" element={<PagoPage />} />
+          <Route path="asistencia/:workshopId" element={<AttendancePage />} />
           <Route path="*" element={<div style={{ padding: '4rem 2rem', color: 'var(--text-primary)' }}><h2>Página no encontrada</h2></div>} />
         </Route>
 
@@ -46,9 +49,11 @@ function App() {
           <Route path="pago" element={<PaymentModule />} />
           <Route path="perfil" element={<ProfileModule />} />
           <Route path="talleres" element={<WorkshopsModule />} />
+          <Route path="diploma" element={<DiplomaModule />} />
           <Route path="admin" element={<AdminModule defaultTab="tokens" />} />
           <Route path="admin-tokens" element={<AdminModule defaultTab="tokens" />} />
           <Route path="admin-usuarios" element={<AdminModule defaultTab="users" />} />
+          <Route path="admin-asistencia" element={<AdminModule defaultTab="attendance" />} />
           <Route path="admin-reportes" element={<AdminModule defaultTab="reports" />} />
           <Route path="admin-agenda" element={<AdminModule defaultTab="agenda" />} />
 

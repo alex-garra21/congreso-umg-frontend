@@ -26,3 +26,6 @@ dist-ssr
 # Cuentas guardadas localmente
 cuentas.txt
 users.txt
+
+# Supabase
+supabase_schema.sql

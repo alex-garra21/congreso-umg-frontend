@@ -166,6 +166,8 @@ export interface AgendaItem {
   period: 'Mañana' | 'Tarde';
   location: string;
   room: string;
+  date?: string; // Format "YYYY-MM-DD"
+  gracePeriod?: number; // Minutes
 }
 
 export function generarAgenda(): AgendaItem[] {
@@ -252,3 +254,5 @@ export function generarAgenda(): AgendaItem[] {
 }
 
 export const agendaCompleta = generarAgenda();
+
+export const initialRooms: string[] = ['SALA A', 'SALA B', 'SALA C', 'SALA D', 'SALA E', 'GENERAL'];
