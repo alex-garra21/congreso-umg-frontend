@@ -304,7 +304,7 @@ export default function DiplomaModule() {
 
       {/* Modal de Éxito */}
       {isSuccessModalOpen && (
-        <div className="modal-bg open" onClick={() => setIsSuccessModalOpen(false)} style={{ zIndex: 10000 }}>
+        <div className="modal-bg open" style={{ zIndex: 10000 }}>
           <div className="modal" style={{ maxWidth: '400px', textAlign: 'center', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="#7ed321" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '64px', height: '64px' }}>

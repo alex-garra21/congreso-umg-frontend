@@ -32,7 +32,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   if (!isOpen) return null;
 
   return (
-    <div className="modal-bg open" onClick={onClose} style={{ zIndex: 10001 }}>
+    <div className="modal-bg open" style={{ zIndex: 10001 }}>
       <div className="modal" style={{ maxWidth: '400px', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
 

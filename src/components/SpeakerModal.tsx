@@ -16,7 +16,7 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
   const speakerWorkshops = agendaCompleta.filter(w => w.speaker?.id === speaker.id);
 
   return (
-    <div className="modal-bg open" onClick={onClose} style={{ zIndex: 9999 }}>
+    <div className="modal-bg open" style={{ zIndex: 9999 }}>
       <div
         className="modal"
         style={{ maxWidth: '650px', padding: '2.5rem 2rem', maxHeight: '90vh', overflowY: 'auto' }}

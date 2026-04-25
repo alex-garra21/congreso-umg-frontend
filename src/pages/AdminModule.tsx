@@ -725,7 +725,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {/* MODAL HORARIO (WORKSHOP) */}
       {isAgendaModalOpen && editingItem && (
-        <div className="modal-bg open" onClick={() => setIsAgendaModalOpen(false)}>
+        <div className="modal-bg open">
           <div className="modal agenda-modal" onClick={e => e.stopPropagation()}>
             <h3>{agenda.some(a => a.id === editingItem.id) ? 'Editar Taller' : 'Nuevo Taller'}</h3>
             <form onSubmit={handleSaveAgendaItem} className="admin-form">
@@ -802,7 +802,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {/* MODAL CONFIGURAR GRACIA */}
       {isGraceModalOpen && graceWorkshop && (
-        <div className="modal-bg open" onClick={() => setIsGraceModalOpen(false)}>
+        <div className="modal-bg open">
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <h3 style={{ fontFamily: 'Syne', marginBottom: '1rem' }}>Tiempo de Gracia</h3>
             <p style={{ fontSize: '14px', color: '#666', marginBottom: '1.5rem' }}>
@@ -828,7 +828,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {/* MODAL ÉXITO (Diseño solicitado) */}
       {isSuccessModalOpen && (
-        <div className="modal-bg open" onClick={() => setIsSuccessModalOpen(false)}>
+        <div className="modal-bg open">
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px', textAlign: 'center', padding: '3rem 2rem' }}>
             <div style={{ 
               width: '80px', 
@@ -860,7 +860,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {/* MODAL PONENTE */}
       {isSpeakerModalOpen && editingSpeaker && (
-        <div className="modal-bg open" onClick={() => setIsSpeakerModalOpen(false)}>
+        <div className="modal-bg open">
           <div className="modal agenda-modal" onClick={e => e.stopPropagation()}>
             <h3>{speakers.some(s => s.id === editingSpeaker.id) ? 'Editar Ponente' : 'Nuevo Ponente'}</h3>
             <form onSubmit={handleSaveSpeaker} className="admin-form">
@@ -919,7 +919,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {/* MODAL CATEGORÍA */}
       {isCategoryModalOpen && editingCategory && (
-        <div className="modal-bg open" onClick={() => setIsCategoryModalOpen(false)}>
+        <div className="modal-bg open">
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>{categories[editingCategory.name] ? 'Editar Categoría' : 'Nueva Categoría'}</h3>
             <form onSubmit={handleSaveCategory} className="admin-form">
@@ -949,7 +949,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {/* MODAL SALA */}
       {isRoomModalOpen && editingRoom && (
-        <div className="modal-bg open" onClick={() => setIsRoomModalOpen(false)}>
+        <div className="modal-bg open">
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <h3 style={{ fontFamily: 'Syne', marginBottom: '1rem' }}>{editingRoom.oldName ? 'Editar Sala' : 'Nueva Sala'}</h3>
             <form onSubmit={handleSaveRoom} className="admin-form">
@@ -975,7 +975,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {/* MODAL ÉXITO (Diseño solicitado) */}
       {isSuccessModalOpen && (
-        <div className="modal-bg open" onClick={() => setIsSuccessModalOpen(false)}>
+        <div className="modal-bg open">
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px', textAlign: 'center', padding: '3rem 2rem' }}>
             <div style={{ 
               width: '80px', 
@@ -1007,7 +1007,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {/* MODAL MASIVO TOKENS */}
       {isMassModalOpen && (
-        <div className="modal-bg open" onClick={() => setIsMassModalOpen(false)}>
+        <div className="modal-bg open">
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <h3>Generación Masiva</h3>
             <div className="form-group">

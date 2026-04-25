@@ -88,7 +88,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const showPasswordError = formData.confirmarContrasena.length > 0 && !passwordsMatch;
 
   return (
-    <div className="modal-bg open" onClick={onClose} style={{ zIndex: 9999 }}>
+    <div className="modal-bg open" style={{ zIndex: 9999 }}>
       <div className="modal" style={{ maxWidth: '440px', padding: '2.5rem 2rem' }} onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
 

@@ -266,7 +266,7 @@ export default function WorkshopsModule() {
       )}
 
       {showSuccessModal && (
-        <div className="modal-bg open" onClick={() => setShowSuccessModal(false)}>
+        <div className="modal-bg open">
           <div className="modal success-modal" onClick={e => e.stopPropagation()}>
             <div className="success-icon">✓</div>
             <h3>¡Inscripción Exitosa!</h3>

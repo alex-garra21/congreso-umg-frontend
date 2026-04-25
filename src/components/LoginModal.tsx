@@ -31,7 +31,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   if (!isOpen) return null;
 
   return (
-    <div className="modal-bg open" onClick={onClose} style={{ zIndex: 9999 }}>
+    <div className="modal-bg open" style={{ zIndex: 9999 }}>
       {/* Detenemos la propagación para no cerrar al hacer click dentro del modal */}
       <div
         className="modal"

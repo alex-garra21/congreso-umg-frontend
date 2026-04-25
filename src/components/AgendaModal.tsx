@@ -22,7 +22,7 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
   if (!isOpen || !item) return null;
 
   return (
-    <div className="modal-bg open" onClick={onClose} style={{ zIndex: 9999 }}>
+    <div className="modal-bg open" style={{ zIndex: 9999 }}>
       <div className="modal" style={{ maxWidth: '600px', padding: '2.5rem 2rem' }} onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
 
