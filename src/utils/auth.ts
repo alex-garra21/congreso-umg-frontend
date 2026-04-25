@@ -175,16 +175,52 @@ export async function getAllUsersCloud(): Promise<UserData[]> {
   return finalUsers;
 }
 
-export function registerUser(user: UserData): { success: boolean; message: string } {
-  const users = getRegisteredUsers();
+export async function registerUser(user: UserData): Promise<{ success: boolean; message: string }> {
+  // 1. Crear el usuario en Supabase Auth
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: user.correo,
+    password: user.contrasena,
+  });
 
-  const exists = users.some(u => u.correo === user.correo);
-  if (exists) {
-    return { success: false, message: 'El correo electrónico ya está registrado.' };
+  if (authError) {
+    console.error("Supabase SignUp Error:", authError);
+    if (authError.message.includes('already registered') || authError.status === 422) {
+      return { success: false, message: 'El correo electrónico ya está registrado en el sistema.' };
+    }
+    return { success: false, message: `Error al crear cuenta: ${authError.message}` };
   }
 
-  users.push(user);
+  if (!authData.user) {
+    return { success: false, message: 'No se pudo crear el usuario. Inténtalo de nuevo.' };
+  }
+
+  // 2. Insertar el perfil en public.usuarios
+  const { error: profileError } = await supabase.from('usuarios').insert({
+    id: authData.user.id,
+    nombres: user.nombres,
+    apellidos: user.apellidos,
+    sexo: user.sexo,
+    correo: user.correo,
+    rol: 'participante',
+    pago_validado: false,
+    tipo_participante: user.tipoParticipante,
+    carnet: user.carnet,
+    ciclo: user.ciclo,
+    desactivado: false
+  });
+
+  if (profileError) {
+    console.error("Supabase Profile Insert Error:", profileError);
+    // Podríamos borrar el usuario de auth aquí si falla el perfil, 
+    // pero requeriría privilegios de admin. Por ahora mostramos error.
+    return { success: false, message: 'Cuenta creada, pero hubo un error al guardar el perfil.' };
+  }
+
+  // Fallback local (opcional, para compatibilidad)
+  const users = getRegisteredUsers();
+  users.push({ ...user, id: authData.user.id });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+
   return { success: true, message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
 }
 
