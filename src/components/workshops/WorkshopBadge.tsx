@@ -1,12 +1,14 @@
-import { categoryStyles } from '../../data/agendaData';
+import { getCategories } from '../../utils/agendaStore';
+import { categoryStyles as fallbackStyles } from '../../data/agendaData';
 
 interface WorkshopBadgeProps {
   tag: string;
-  className?: string; // Permitir clases personalizadas (ej: para la página de ponentes)
+  className?: string;
 }
 
 export default function WorkshopBadge({ tag, className = "" }: WorkshopBadgeProps) {
-  const style = categoryStyles[tag] || categoryStyles['General'];
+  const dynamicCategories = getCategories();
+  const style = dynamicCategories[tag] || fallbackStyles[tag] || fallbackStyles['General'];
 
   return (
     <span 

@@ -13,8 +13,8 @@ export default function ProfileModule() {
     carnet: '',
     ciclo: '',
     telefono: '',
-    talla: '',
-    sexo: ''
+    sexo: '',
+    nombreDiploma: ''
   });
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -30,8 +30,8 @@ export default function ProfileModule() {
         carnet: user.carnet || '',
         ciclo: user.ciclo || '',
         telefono: user.telefono || '',
-        talla: user.talla || '',
-        sexo: user.sexo || ''
+        sexo: user.sexo || '',
+        nombreDiploma: user.nombreDiploma || ''
       });
     }
   }, [user]);
@@ -45,9 +45,28 @@ export default function ProfileModule() {
     }
   }, [formData.correo]);
 
+  const formatCarnet = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    let formatted = '';
+    if (digits.length > 0) {
+      formatted += digits.substring(0, 4);
+      if (digits.length > 4) {
+        formatted += '-' + digits.substring(4, 6);
+        if (digits.length > 6) {
+          formatted += '-' + digits.substring(6, 12);
+        }
+      }
+    }
+    return formatted;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'carnet') {
+      setFormData(prev => ({ ...prev, [name]: formatCarnet(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -71,6 +90,8 @@ export default function ProfileModule() {
     }
   };
 
+  const isDiplomaNameTooLong = formData.nombreDiploma.length > 25;
+
   if (!user) return null;
 
   return (
@@ -79,7 +100,7 @@ export default function ProfileModule() {
       <section className="dashboard-section profile-container">
         <div className="profile-header">
           <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '24px' }}>Información personal</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Estos datos se usarán para tu identificación en el evento.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Estos datos se usarán para tu identificación en el evento y para la generación de tus diplomas.</p>
           <br />
         </div>
 
@@ -87,17 +108,45 @@ export default function ProfileModule() {
           <div className="form-row">
             <div className="form-group">
               <label>PRIMER NOMBRE</label>
-              <input type="text" name="nombres" value={formData.nombres} onChange={handleChange} placeholder="Nombres" required />
+              <input type="text" name="nombres" value={formData.nombres} onChange={handleChange} placeholder="Nombres" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
             </div>
             <div className="form-group">
               <label>PRIMER APELLIDO</label>
-              <input type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} placeholder="Apellidos" required />
+              <input type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} placeholder="Apellidos" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group" style={{ flex: 3 }}>
+              <label>NOMBRE CON EL QUE APARECERÁ EN LOS DIPLOMAS</label>
+              <input
+                type="text"
+                name="nombreDiploma"
+                value={formData.nombreDiploma}
+                onChange={handleChange}
+                placeholder="Nombre como aparecerá en diplomas"
+                required
+                style={{ borderColor: isDiplomaNameTooLong ? '#d32f2f' : undefined }}
+              />
+              {isDiplomaNameTooLong && (
+                <span style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px', display: 'block', fontWeight: 500 }}>
+                  El nombre es demasiado largo (máximo 25 caracteres).
+                </span>
+              )}
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>SEXO</label>
+              <select name="sexo" value={formData.sexo} onChange={handleChange} required>
+                <option value="">Selecciona una opción</option>
+                <option value="M">Hombre</option>
+                <option value="F">Mujer</option>
+              </select>
             </div>
           </div>
 
           <div className="form-group">
-            <label>CORREO ELECTRÓNICO</label>
-            <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@miumg.edu.gt" required />
+            <label>CORREO ELECTRÓNICO AL QUE SE ENVIARÁN LOS DIPLOMAS</label>
+            <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@miumg.edu.gt" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
           </div>
 
           <div className="form-group">
@@ -138,8 +187,22 @@ export default function ProfileModule() {
             <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="+(502) 0000-0000" />
           </div>
 
+
+
           <div className="profile-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-            <button type="submit" className="submit-btn" style={{ width: 'auto', padding: '12px 24px' }}>Guardar cambios</button>
+            <button
+              type="submit"
+              className="submit-btn"
+              style={{
+                width: 'auto',
+                padding: '12px 24px',
+                opacity: isDiplomaNameTooLong ? 0.6 : 1,
+                cursor: isDiplomaNameTooLong ? 'not-allowed' : 'pointer'
+              }}
+              disabled={isDiplomaNameTooLong}
+            >
+              Guardar cambios
+            </button>
             <button
               type="button"
               className="btn-ghost"

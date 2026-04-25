@@ -12,7 +12,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
-    talla: '',
     sexo: '',
     correo: '',
     contrasena: '',
@@ -31,9 +30,28 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     }
   }, [formData.correo]);
 
+  const formatCarnet = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    let formatted = '';
+    if (digits.length > 0) {
+      formatted += digits.substring(0, 4);
+      if (digits.length > 4) {
+        formatted += '-' + digits.substring(4, 6);
+        if (digits.length > 6) {
+          formatted += '-' + digits.substring(6, 12);
+        }
+      }
+    }
+    return formatted;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'carnet') {
+      setFormData(prev => ({ ...prev, [name]: formatCarnet(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,7 +63,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     const result = registerUser({
       nombres: formData.nombres,
       apellidos: formData.apellidos,
-      talla: formData.talla,
       sexo: formData.sexo,
       correo: formData.correo,
       contrasena: formData.contrasena,
@@ -57,7 +74,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     if (result.success) {
       setIsRegistered(true);
       setFormData({
-        nombres: '', apellidos: '', talla: '', sexo: '', correo: '', contrasena: '', confirmarContrasena: '',
+        nombres: '', apellidos: '', sexo: '', correo: '', contrasena: '', confirmarContrasena: '',
         tipoParticipante: 'externo', carnet: '', ciclo: ''
       });
     } else {
@@ -148,30 +165,17 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 </div>
               )}
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Talla de Playera</label>
-                  <select name="talla" value={formData.talla} onChange={handleChange} required>
-                    <option value="">Selección</option>
-                    <option value="S">S - Pequeña</option>
-                    <option value="M">M - Mediana</option>
-                    <option value="L">L - Grande</option>
-                    <option value="XL">XL - Extra Grande</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Sexo</label>
-                  <select name="sexo" value={formData.sexo} onChange={handleChange} required>
-                    <option value="">Selección</option>
-                    <option value="Hombre">Hombre</option>
-                    <option value="Mujer">Mujer</option>
-                  </select>
-                </div>
+              <div className="form-group">
+                <label>Sexo</label>
+                <select name="sexo" value={formData.sexo} onChange={handleChange} required>
+                  <option value="">Selección</option>
+                  <option value="M">Hombre</option>
+                  <option value="F">Mujer</option>
+                </select>
               </div>
 
               <div className="form-group">
-                <label>Correo Electrónico</label>
+                <label>Correo Electrónico al que se enviarán los diplomas</label>
                 <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@ejemplo.com" required />
               </div>
 

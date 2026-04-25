@@ -24,7 +24,6 @@ export default function DashboardHome() {
 
   const isPaid = user?.pagoValidado;
   const isSent = user?.pagoEnviado;
-  const hasShirt = !!user?.talla;
 
   const Icons = {
     Check: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,
@@ -32,7 +31,6 @@ export default function DashboardHome() {
     AlertTriangle: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
     CreditCard: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>,
     Calendar: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
-    Shirt: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>,
     Layout: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>,
     Clock: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
   };
@@ -48,17 +46,11 @@ export default function DashboardHome() {
       if (workshopsCount > 0) return { class: 'in-progress', label: 'En proceso', badge: 'warning' };
       return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
     }
-    if (type === 'playera') {
-      if (hasShirt && isPaid) return { class: 'completed', label: 'Completado', badge: 'success' };
-      if (hasShirt) return { class: 'in-progress', label: 'En proceso', badge: 'warning' };
-      return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
-    }
     return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
   };
 
   const pagoStatus = getStepStatus('pago');
   const talleresStatus = getStepStatus('talleres');
-  const playeraStatus = getStepStatus('playera');
 
   return (
     <div className="dashboard-home">
@@ -95,20 +87,18 @@ export default function DashboardHome() {
           <span className="card-sub">{workshopsCount === 1 ? 'Taller seleccionado' : 'Talleres seleccionados'}</span>
         </div>
 
-        <div className="status-card">
-          <span className="card-label">PLAYERA</span>
-          <div className="card-value">
-            <span className="text">{user?.talla ? `Talla ${user.talla}` : 'Sin definir'}</span>
-          </div>
-          <span className="card-sub">{user?.sexo ? `Corte ${user.sexo}` : 'Elige tu talla'}</span>
-        </div>
 
-        <div className="status-card highlight">
+
+        <div 
+          className="status-card highlight" 
+          style={{ cursor: 'pointer' }} 
+          onClick={() => window.open('https://www.google.com/calendar/render?action=TEMPLATE&text=CONGRESO+2026+UMG+SISTEMAS+COBÁN&dates=20260523T140000Z/20260523T230000Z&details=El+evento+académico+más+importante+del+año.&location=Hotel+Alcazar+doña+Victoria,+Cobán', '_blank')}
+        >
           <span className="card-label">EVENTO</span>
           <div className="card-value">
-            <span className="text">Oct 15</span>
+            <span className="text">Mayo 23</span>
           </div>
-          <span className="card-sub">Campus UMG</span>
+          <span className="card-sub">Recordatorio Calendar</span>
         </div>
       </div>
 
@@ -154,26 +144,20 @@ export default function DashboardHome() {
             <span className={`step-badge ${talleresStatus.badge}`}>{talleresStatus.label}</span>
           </div>
 
-          {/* Step 4: Playera */}
-          <div className={`step-item ${playeraStatus.class}`}>
-            <div className={hasShirt && isPaid ? 'step-check' : 'step-icon'}>
-              {hasShirt && isPaid ? <Icons.Check /> : <Icons.Shirt />}
-            </div>
-            <div className="step-content">
-              <h3>Talla de Playera</h3>
-              <p>{hasShirt ? `Talla ${user?.talla} seleccionada` : 'Confirma tu talla oficial'}</p>
-            </div>
-            <span className={`step-badge ${playeraStatus.badge}`}>{playeraStatus.label}</span>
-          </div>
+
         </div>
       </section>
 
       {/* Info Banner */}
-      <div className="info-banner">
-        <span className="banner-icon"><Icons.Calendar /></span>
+      <div 
+        className="info-banner" 
+        style={{ cursor: 'pointer' }}
+        onClick={() => window.open('https://maps.app.goo.gl/drwTJp68mjcYne5S9', '_blank')}
+      >
+        <span className="banner-icon">📍</span>
         <div className="banner-text">
-          <h3>Congreso 2026 — 15 al 17 de octubre</h3>
-          <p>Campus Central UMG · Guatemala · 8:00 AM - 7:00 PM</p>
+          <h3>Hotel Alcazar doña Victoria — 23 de mayo, 2026</h3>
+          <p>Hotel Alcazar doña Victoria, Cobán · Clic para ver ubicación</p>
         </div>
       </div>
 

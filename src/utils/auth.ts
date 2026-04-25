@@ -1,29 +1,95 @@
 export interface UserData {
   nombres: string;
   apellidos: string;
-  talla: string;
   sexo: string;
   correo: string;
   contrasena: string;
+  nombreDiploma?: string;
   telefono?: string;
   pagoValidado?: boolean;
   pagoEnviado?: boolean;
   tipoParticipante?: 'alumno' | 'externo';
   carnet?: string;
   ciclo?: string;
+  rol?: 'usuario' | 'admin';
+  talleres?: string[];
+}
+
+export interface TokenData {
+  code: string;
+  used: boolean;
+  usedBy?: string;
 }
 
 const STORAGE_KEY = 'congreso_users';
 const SESSION_KEY = 'congreso_current_user';
+const TOKENS_KEY = 'congreso_tokens';
 
-export function getRegisteredUsers(): UserData[] {
-  const usersStr = localStorage.getItem(STORAGE_KEY);
-  if (!usersStr) return [];
+export function getTokens(): TokenData[] {
+  const tokensStr = localStorage.getItem(TOKENS_KEY);
+  if (!tokensStr) return [];
   try {
-    return JSON.parse(usersStr);
+    const raw = JSON.parse(tokensStr);
+    // Migración automática: si el token es un string, convertirlo a objeto
+    return raw.map((t: any) => typeof t === 'string' ? { code: t, used: false } : t);
   } catch (e) {
     return [];
   }
+}
+
+export function generateToken(): string {
+  const tokens = getTokens();
+  const code = `CONG-2026-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  tokens.push({ code, used: false });
+  localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
+  return code;
+}
+
+export function deleteToken(code: string) {
+  const tokens = getTokens();
+  const filtered = tokens.filter(t => t.code !== code);
+  localStorage.setItem(TOKENS_KEY, JSON.stringify(filtered));
+}
+
+export function validateToken(code: string): boolean {
+  const tokens = getTokens();
+  const token = tokens.find(t => t.code === code && !t.used);
+  if (token) {
+    token.used = true;
+    token.usedBy = getCurrentUser()?.correo;
+    localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
+    return true;
+  }
+  return false;
+}
+
+export function getRegisteredUsers(): UserData[] {
+  const usersStr = localStorage.getItem(STORAGE_KEY);
+  let users: UserData[] = [];
+  
+  if (usersStr) {
+    try {
+      users = JSON.parse(usersStr);
+    } catch (e) {
+      users = [];
+    }
+  }
+
+  // Asegurar que exista un admin por defecto para pruebas
+  const adminEmail = 'admin@miumg.edu.gt';
+  if (!users.some(u => u.correo === adminEmail)) {
+    users.push({
+      nombres: 'Administrador',
+      apellidos: 'Sistema',
+      sexo: 'M',
+      correo: adminEmail,
+      contrasena: 'admin123',
+      rol: 'admin'
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }
+
+  return users;
 }
 
 export function registerUser(user: UserData): { success: boolean; message: string } {
