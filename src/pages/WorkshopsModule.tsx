@@ -1,18 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser } from '../utils/auth';
+import { getCurrentUser, updateUserData } from '../utils/auth';
 import ModuleTitle from '../components/ModuleTitle';
-import { agendaCompleta, type AgendaItem } from '../data/agendaData';
-import WorkshopCard from '../components/workshops/WorkshopCard';
+import { getAgenda } from '../utils/agendaStore';
+import type { AgendaItem } from '../data/agendaData';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
+  const [agenda, setAgenda] = useState<AgendaItem[]>([]);
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const isPaid = user?.pagoValidado;
+
+  useEffect(() => {
+    setAgenda(getAgenda());
+    
+    const handleAgendaUpdate = () => setAgenda(getAgenda());
+    window.addEventListener('agendaUpdate', handleAgendaUpdate);
+    return () => window.removeEventListener('agendaUpdate', handleAgendaUpdate);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -41,150 +50,166 @@ export default function WorkshopsModule() {
     }
   }, [user?.correo]);
 
-  const allWorkshops = agendaCompleta.filter(item => item.speaker);
-  const timeSlots = Array.from(new Set(allWorkshops.map(w => w.time)));
+  const ROOMS = ['SALA A', 'SALA B', 'SALA C', 'SALA D', 'SALA E'];
+  const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+
+  const parseTime = (timeStr: string) => {
+    const [time, modifier] = timeStr.split(' ');
+    let [hours] = time.split(':').map(Number);
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+    return hours;
+  };
+
+  const getWorkshopStyles = (w: AgendaItem) => {
+    const startRow = parseTime(w.time) - 7; 
+    const endRow = parseTime(w.endTime) - 7;
+    const colIndex = ROOMS.indexOf(w.room) + 2; 
+    
+    return {
+      gridRow: `${startRow} / ${endRow}`,
+      gridColumn: colIndex,
+    };
+  };
+
+  const isTimeCollision = (workshop: AgendaItem) => {
+    const start = parseTime(workshop.time);
+    const end = parseTime(workshop.endTime);
+    
+    return enrolledIds.some(id => {
+      const other = agenda.find(a => a.id === id);
+      if (!other || other.id === workshop.id) return false;
+      const oStart = parseTime(other.time);
+      const oEnd = parseTime(other.endTime);
+      
+      return (start < oEnd) && (oStart < end);
+    });
+  };
 
   const toggleEnroll = (workshop: AgendaItem) => {
     if (!isPaid || isConfirmed) return;
     setSaveStatus('idle');
 
-    let newEnrolled;
     if (enrolledIds.includes(workshop.id)) {
-      newEnrolled = enrolledIds.filter(id => id !== workshop.id);
+      setEnrolledIds(prev => prev.filter(id => id !== workshop.id));
     } else {
-      const sameTimeId = enrolledIds.find(id => {
-        const item = allWorkshops.find(w => w.id === id);
-        return item?.time === workshop.time;
-      });
-
-      if (sameTimeId) {
-        newEnrolled = enrolledIds.filter(id => id !== sameTimeId);
-        newEnrolled.push(workshop.id);
-      } else {
-        newEnrolled = [...enrolledIds, workshop.id];
+      if (isTimeCollision(workshop)) {
+        alert('Este taller tiene un traslape de horario con uno que ya seleccionaste.');
+        return;
       }
-    }
-    const newEnrolledIds = newEnrolled;
-    setEnrolledIds(newEnrolledIds);
-
-    // Guardar estado actual (aunque no esté confirmado) para que el Dashboard lo vea
-    if (user?.correo) {
-      localStorage.setItem(`workshops_${user.correo}`, JSON.stringify(newEnrolledIds));
-      window.dispatchEvent(new Event('sessionUpdate'));
+      setEnrolledIds(prev => [...prev, workshop.id]);
     }
   };
 
   const handleConfirm = () => {
     setSaveStatus('saving');
     setTimeout(() => {
-      localStorage.setItem(`workshops_${user?.correo}`, JSON.stringify(enrolledIds));
-      localStorage.setItem(`workshops_confirmed_${user?.correo}`, 'true');
-      setSaveStatus('saved');
+      if (user) {
+        updateUserData({ ...user, talleres: enrolledIds });
+        localStorage.setItem(`workshops_${user.correo}`, JSON.stringify(enrolledIds));
+        localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
+      }
       setIsConfirmed(true);
       setShowSuccessModal(true);
+      setSaveStatus('saved');
       window.dispatchEvent(new Event('sessionUpdate'));
     }, 800);
   };
 
   const handleEdit = () => {
     setIsConfirmed(false);
-    localStorage.setItem(`workshops_confirmed_${user?.correo}`, 'false');
     setSaveStatus('idle');
+    if (user) {
+      localStorage.setItem(`workshops_confirmed_${user.correo}`, 'false');
+    }
     window.dispatchEvent(new Event('sessionUpdate'));
   };
 
-  const isTimeOccupied = (time: string) => enrolledIds.some(id => {
-    const item = allWorkshops.find(w => w.id === id);
-    return item?.time === time;
-  });
-
   return (
     <div className="workshops-module">
-      <ModuleTitle title="Mis talleres" />
+      <ModuleTitle title="Inscripción de Talleres" />
 
       {!isPaid && (
         <div className="alert-banner warning">
-          <div className="alert-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-          </div>
+          <div className="alert-icon">⚠️</div>
           <div className="alert-text">
-            <strong>Pago pendiente</strong>. Valida tu pago para inscribirte. Solo puedes elegir un taller por horario.
+            <strong>Pago pendiente</strong>. Valida tu pago para inscribirte. No puedes seleccionar talleres con traslape de horario.
           </div>
         </div>
       )}
 
-      {isConfirmed && isPaid && (
+      {isConfirmed && (
         <div className="alert-banner success">
-          <div className="alert-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-          </div>
+          <div className="alert-icon">✅</div>
           <div className="alert-text">
-            <strong>Talleres confirmados ✅</strong>. Tu selección está guardada. Si deseas realizar cambios, usa el botón al final de la página.
+            <strong>Talleres confirmados</strong>. Tu selección ha sido guardada.
           </div>
         </div>
       )}
 
-      <div className={`slots-container ${isConfirmed ? 'confirmed-view' : ''}`}>
-        {timeSlots.map(time => (
-          <div key={time} className="slot-section">
-            <div className="slot-header">
-              <span className="slot-time-badge">{time}</span>
-              <div className="slot-line"></div>
+      <div className={`calendar-container ${isConfirmed ? 'confirmed' : ''}`}>
+        <div className="calendar-grid">
+          <div className="grid-header time-label">HORA</div>
+          {ROOMS.map(room => (
+            <div key={room} className={`grid-header room-label ${room.replace(' ', '-').toLowerCase()}`}>
+              {room}
             </div>
+          ))}
 
-            <div className="workshops-grid-compact">
-              {allWorkshops.filter(w => w.time === time).map(workshop => (
-                <WorkshopCard
-                  key={workshop.id}
-                  workshop={workshop}
-                  isSelected={enrolledIds.includes(workshop.id)}
-                  isConfirmed={isConfirmed}
-                  isPaid={isPaid === true}
-                  showOccupied={!enrolledIds.includes(workshop.id) && isTimeOccupied(time)}
-                  onToggle={toggleEnroll}
-                />
-              ))}
+          {HOURS.map(hour => (
+            <div key={hour} className="hour-row-label" style={{ gridRow: hour - 7 }}>
+              {hour > 12 ? `${hour - 12}:00` : `${hour}:00`}
             </div>
+          ))}
+
+          {HOURS.map(hour => (
+            <div key={`line-${hour}`} className="hour-grid-line" style={{ gridRow: hour - 7 }}></div>
+          ))}
+
+          {agenda.filter(w => w.speaker).map(workshop => {
+            const isSelected = enrolledIds.includes(workshop.id);
+            const isBlocked = !isSelected && (isTimeCollision(workshop) || isConfirmed);
+            
+            return (
+              <div 
+                key={workshop.id} 
+                className={`calendar-workshop ${isSelected ? 'selected' : ''} ${isBlocked ? 'blocked' : ''}`}
+                style={getWorkshopStyles(workshop)}
+                onClick={() => toggleEnroll(workshop)}
+              >
+                <div className="workshop-content">
+                  <span className="w-title">{workshop.title}</span>
+                  <span className="w-time">{workshop.time.replace(' AM', '').replace(' PM', '')} - {workshop.endTime.replace(' AM', '').replace(' PM', '')}</span>
+                  <span className="w-speaker">{workshop.speaker?.name}</span>
+                </div>
+                {isSelected && <div className="selected-check">✓</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="calendar-legend">
+        {ROOMS.map(room => (
+          <div key={room} className="legend-item">
+            <span className={`legend-dot ${room.replace(' ', '-').toLowerCase()}`}></span>
+            {room}
           </div>
         ))}
       </div>
 
       {isPaid && (
-        <div className="confirm-section">
+        <div className="confirm-section-new">
           {isConfirmed ? (
-            <div className="confirmed-summary-box">
-              <h3 style={{ fontFamily: 'Syne', fontWeight: 800, color: 'var(--blue)' }}>Tu agenda está lista</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Has seleccionado {enrolledIds.length} talleres para el congreso.</p>
-              <button className="btn-lg btn-lg-outline" onClick={handleEdit} style={{ minWidth: '220px' }}>
-                Volver a elegir talleres
-              </button>
-            </div>
+            <button className="btn-edit" onClick={handleEdit}>Modificar selección</button>
           ) : (
-            <>
-              <div className="confirm-summary">
-                <span>Talleres seleccionados: <strong>{enrolledIds.length}</strong></span>
-              </div>
-              <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button
-                  className={`btn-lg btn-lg-primary confirm-main-btn ${saveStatus === 'saving' ? 'loading' : ''}`}
-                  onClick={handleConfirm}
-                  disabled={enrolledIds.length === 0 || saveStatus === 'saving'}
-                >
-                  {saveStatus === 'saving' ? 'Guardando...' : 'Confirmar talleres'}
-                </button>
-                <button
-                  className="btn-lg btn-lg-outline confirm-secondary-btn"
-                  onClick={() => {
-                    setEnrolledIds([]);
-                    setSaveStatus('idle');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  style={{ minWidth: '280px', height: '60px' }}
-                >
-                  Volver a elegir talleres
-                </button>
-              </div>
-            </>
+            <button 
+              className={`btn-confirm ${enrolledIds.length === 0 ? 'disabled' : ''} ${saveStatus === 'saving' ? 'loading' : ''}`}
+              onClick={handleConfirm}
+              disabled={enrolledIds.length === 0 || saveStatus === 'saving'}
+            >
+              {saveStatus === 'saving' ? 'Guardando...' : `Confirmar ${enrolledIds.length} talleres`}
+            </button>
           )}
         </div>
       )}
@@ -193,138 +218,175 @@ export default function WorkshopsModule() {
         <div className="modal-bg open" onClick={() => setShowSuccessModal(false)}>
           <div className="modal success-modal" onClick={e => e.stopPropagation()}>
             <div className="success-icon">✓</div>
-            <h2 style={{ fontFamily: 'Syne', fontWeight: 800 }}>¡Talleres confirmados!</h2>
-            <p>Tu inscripción a los talleres ha sido guardada exitosamente. Podrás ver tu horario completo en el inicio.</p>
-            <button className="btn-solid" onClick={() => setShowSuccessModal(false)}>Listo</button>
+            <h3>¡Inscripción Exitosa!</h3>
+            <p>Tus talleres han sido registrados. Puedes ver tu horario en la sección de inicio.</p>
+            <button className="btn-solid" onClick={() => setShowSuccessModal(false)}>Aceptar</button>
           </div>
         </div>
       )}
 
       <style>{`
-        .workshops-module { padding-bottom: 8rem; position: relative; }
-        .confirmed-view .workshop-card-compact:not(.enrolled) { display: none; }
-        .confirmed-view .slot-section:not(:has(.enrolled)) { display: none; }
-
-        .alert-banner.success {
-          background: #e6fffa;
-          border-color: #38b2ac;
-          color: #234e52;
+        .calendar-container {
+          background: #fff;
+          border-radius: 24px;
+          padding: 2rem;
+          border: 1px solid var(--border-soft);
+          overflow-x: auto;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.03);
           margin-bottom: 2rem;
         }
 
-        .confirm-section {
-          margin-top: 5rem;
-          padding: 3rem;
-          background: #fff;
-          border-radius: 20px;
-          border: 1px solid var(--border-soft);
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1.5rem;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-
-        .confirm-summary { font-size: 16px; color: var(--text-secondary); }
-        .confirm-summary strong { color: var(--blue); font-size: 20px; margin-left: 5px; }
-        .confirm-main-btn { min-width: 280px; height: 60px; font-size: 18px; letter-spacing: 0.5px; }
-
-        .success-modal { max-width: 400px; text-align: center; padding: 3rem 2rem; }
-        .success-icon {
-          width: 60px; height: 60px; background: #40c057; color: #fff;
-          border-radius: 50%; display: flex; align-items: center; justifyContent: center;
-          font-size: 30px; margin: 0 auto 1.5rem;
-        }
-
-        .slots-container { display: flex; flex-direction: column; gap: 2.5rem; margin-top: 1rem; }
-        .slot-header { display: flex; align-items: center; gap: 1.2rem; margin-bottom: 1.5rem; }
-        .slot-time-badge {
-          background: var(--blue-dark); color: #fff; padding: 5px 14px;
-          border-radius: 6px; font-size: 12px; font-weight: 700; font-family: 'Syne', sans-serif;
-        }
-        .slot-line { height: 1px; flex: 1; background: var(--border-soft); }
-
-        .workshops-grid-compact {
+        .calendar-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .workshop-card-compact {
-          background: #fff;
-          border-radius: 20px;
-          border: 1px solid var(--border-soft);
-          transition: all 0.2s ease;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+          grid-template-columns: 80px repeat(5, 1fr);
+          grid-template-rows: 60px repeat(11, 80px);
+          min-width: 1000px;
           position: relative;
-          overflow: hidden;
         }
 
-        .card-body-compact {
-          padding: 24px;
+        .grid-header {
           display: flex;
-          flex-direction: column;
-          gap: 16px;
-          height: 100%;
+          align-items: center;
+          justify-content: center;
+          font-family: 'Syne', sans-serif;
+          font-weight: 800;
+          font-size: 14px;
+          border-bottom: 2px solid var(--border-soft);
         }
 
-        .card-header-compact {
+        .time-label { color: var(--text-secondary); }
+        .room-label { padding: 10px; border-radius: 8px 8px 0 0; }
+        
+        .sala-a { background: rgba(33, 150, 243, 0.1); color: #1976d2; }
+        .sala-b { background: rgba(76, 175, 80, 0.1); color: #388e3c; }
+        .sala-c { background: rgba(156, 39, 176, 0.1); color: #7b1fa2; }
+        .sala-d { background: rgba(255, 87, 34, 0.1); color: #e64a19; }
+        .sala-e { background: rgba(255, 193, 7, 0.1); color: #ffa000; }
+
+        .hour-row-label {
+          grid-column: 1;
           display: flex;
-          flex-direction: column;
           align-items: flex-start;
-          gap: 6px;
-          margin-bottom: 12px;
+          justify-content: center;
+          padding-top: 10px;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-secondary);
         }
 
-        .enrolled-status { 
-          font-size: 10px; 
-          font-weight: 500; 
-          color: #40c057; 
-          white-space: nowrap;
+        .hour-grid-line {
+          grid-column: 2 / -1;
+          border-top: 1px solid #f1f3f5;
+          pointer-events: none;
         }
 
-        .workshop-title-small {
+        .calendar-workshop {
+          margin: 4px;
+          padding: 12px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          position: relative;
+          border: 1px solid transparent;
+        }
+
+        .calendar-workshop:hover:not(.blocked) {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+          z-index: 10;
+        }
+
+        .grid-header.sala-a ~ .calendar-workshop[style*="grid-column: 2"] { background: rgba(33, 150, 243, 0.05); color: #1976d2; border-color: rgba(33, 150, 243, 0.1); }
+        .grid-header.sala-b ~ .calendar-workshop[style*="grid-column: 3"] { background: rgba(76, 175, 80, 0.05); color: #388e3c; border-color: rgba(76, 175, 80, 0.1); }
+        .grid-header.sala-c ~ .calendar-workshop[style*="grid-column: 4"] { background: rgba(156, 39, 176, 0.05); color: #7b1fa2; border-color: rgba(156, 39, 176, 0.1); }
+        .grid-header.sala-d ~ .calendar-workshop[style*="grid-column: 5"] { background: rgba(255, 87, 34, 0.05); color: #e64a19; border-color: rgba(255, 87, 34, 0.1); }
+        .grid-header.sala-e ~ .calendar-workshop[style*="grid-column: 6"] { background: rgba(255, 193, 7, 0.05); color: #ffa000; border-color: rgba(255, 193, 7, 0.1); }
+
+        .calendar-workshop.selected {
+          background: var(--blue) !important;
+          color: white !important;
+          border-color: var(--blue-dark);
+          box-shadow: 0 10px 25px rgba(34, 139, 230, 0.3);
+          z-index: 5;
+        }
+
+        .calendar-workshop.blocked {
+          opacity: 0.4;
+          cursor: not-allowed;
+          filter: grayscale(0.5);
+        }
+
+        .workshop-content { display: flex; flex-direction: column; gap: 4px; }
+        .w-title { font-size: 13px; font-weight: 800; font-family: 'Syne', sans-serif; line-height: 1.2; }
+        .w-time { font-size: 11px; font-weight: 600; opacity: 0.8; }
+        .w-speaker { font-size: 10px; font-weight: 500; opacity: 0.7; margin-top: 4px; }
+
+        .selected-check {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: white;
+          color: var(--blue);
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .calendar-legend {
+          display: flex;
+          justify-content: center;
+          gap: 2rem;
+          margin-bottom: 3rem;
+          flex-wrap: wrap;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+        .confirm-section-new { display: flex; justify-content: center; padding: 2rem 0; }
+        .btn-confirm {
+          background: var(--blue);
+          color: white;
+          border: none;
+          padding: 1.25rem 3rem;
+          border-radius: 100px;
           font-family: 'Syne', sans-serif;
           font-weight: 800;
           font-size: 18px;
-          line-height: 1.3;
-          margin: 0;
-          color: var(--text-primary);
+          cursor: pointer;
+          transition: all 0.3s;
+          box-shadow: 0 10px 30px rgba(34, 139, 230, 0.2);
         }
-
-        .card-info-compact { display: flex; flex-direction: column; gap: 4px; }
-        .workshop-speaker-small { font-size: 14px; font-weight: 600; color: var(--blue); margin: 0; }
-        .location-small {
-          font-size: 13px; color: var(--text-secondary); margin: 0;
-          display: flex; align-items: center; gap: 4px;
+        .btn-confirm:hover:not(.disabled) { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(34, 139, 230, 0.3); }
+        .btn-confirm.disabled { background: #adb5bd; cursor: not-allowed; box-shadow: none; }
+        
+        .btn-edit {
+          background: transparent;
+          color: var(--blue);
+          border: 2px solid var(--blue);
+          padding: 1rem 2.5rem;
+          border-radius: 100px;
+          font-family: 'Syne', sans-serif;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.3s;
         }
+        .btn-edit:hover { background: rgba(34, 139, 230, 0.05); }
 
+        .alert-banner { display: flex; gap: 1rem; padding: 1.25rem; border-radius: 16px; margin-bottom: 2rem; align-items: center; }
+        .alert-banner.warning { background: #fff9db; border: 1px solid #ffe066; color: #856404; }
+        .alert-banner.success { background: #ebfbee; border: 1px solid #c3fae8; color: #087f5b; }
 
-        .enrolled-status { font-size: 10px; font-weight: 700; color: #40c057; }
-
-        .enroll-btn-small {
-          margin-top: auto; width: 100%; padding: 12px; border-radius: 10px;
-          border: 1.5px solid var(--blue); background: transparent; color: var(--blue);
-          font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;
-        }
-
-        .enroll-btn-small.active { background: #40c057; border-color: #40c057; color: #fff; }
-        .enroll-btn-small.collision { opacity: 0.5; cursor: not-allowed; border-color: var(--border-soft); color: var(--text-secondary); }
-
-        .workshop-card-compact.enrolled {
-          border-color: #40c057; background: #f8fff9;
-          box-shadow: 0 15px 35px rgba(64, 192, 87, 0.1);
-        }
-
-        .workshop-card-compact.blocked { opacity: 0.5; filter: grayscale(0.2); }
-
-        .alert-banner {
-          display: flex; gap: 1rem; padding: 1rem 1.5rem; border-radius: 12px;
-          margin-bottom: 2rem; background: #fff9db; border: 1px solid #ffe066;
-          color: #856404; font-size: 13px;
+        @media (max-width: 768px) {
+          .calendar-container { padding: 1rem; border-radius: 0; margin: 0 -1.5rem 2rem; }
         }
       `}</style>
     </div>

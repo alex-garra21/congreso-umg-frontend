@@ -25,6 +25,7 @@ export default function Navbar() {
         </Link>
 
         <ul className="nav-links">
+          <li><Link to="/">Inicio</Link></li>
           <li><Link to="/agenda">Agenda</Link></li>
           <li><Link to="/ponentes">Ponentes</Link></li>
           <li><Link to="/inscripcion">Cómo inscribirse</Link></li>

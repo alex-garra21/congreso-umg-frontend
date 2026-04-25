@@ -1,13 +1,21 @@
-import { useState } from 'react';
-import { agendaCompleta, type AgendaItem } from '../data/agendaData';
+import { useState, useEffect } from 'react';
+import { getAgenda } from '../utils/agendaStore';
+import type { AgendaItem } from '../data/agendaData';
 import WorkshopBadge from '../components/workshops/WorkshopBadge';
 import AgendaModal from '../components/AgendaModal';
 
 export default function AgendaPage() {
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<'Mañana' | 'Tarde'>('Mañana');
   const [charlaSeleccionada, setCharlaSeleccionada] = useState<AgendaItem | null>(null);
+  const [agenda, setAgenda] = useState<AgendaItem[]>(getAgenda());
 
-  const charlasMostradas = agendaCompleta.filter(c => c.period === periodoSeleccionado);
+  useEffect(() => {
+    const handleUpdate = () => setAgenda(getAgenda());
+    window.addEventListener('agendaUpdate', handleUpdate);
+    return () => window.removeEventListener('agendaUpdate', handleUpdate);
+  }, []);
+
+  const charlasMostradas = agenda.filter(c => c.period === periodoSeleccionado);
 
   return (
     <div style={{ flex: 1, position: 'relative', minHeight: '100%' }}>
@@ -20,7 +28,7 @@ export default function AgendaPage() {
         <div className="speakers-header" style={{ flexDirection: 'column', textAlign: 'center', justifyContent: 'center', marginBottom: '3.5rem' }}>
           <span className="speakers-header-badge">Programa</span>
           <h2>Agenda del evento</h2>
-          <p style={{ marginTop: '10px', color: 'var(--text-secondary)' }}>Sábado 17 de Octubre — Campus Central UMG</p>
+          <p style={{ marginTop: '10px', color: 'var(--text-secondary)' }}>Sábado 23 de Mayo — Hotel Alcazar doña Victoria, Cobán</p>
         </div>
 
         {/* TABS para Periodos */}
@@ -62,7 +70,7 @@ export default function AgendaPage() {
                 <p>
                   {charla.speaker
                     ? `${charla.speaker.name} — ${charla.speaker.role.substring(0, 40)}...`
-                    : (charla.id.startsWith('reg') ? 'Comité Organizador UMG' : (charla.id === 'almuerzo' ? 'Área de comedores, Campus Central' : 'Clausura General'))
+                    : (charla.id.startsWith('reg') ? 'Comité Organizador UMG' : (charla.id === 'almuerzo' ? 'Hotel Alcázar doña Victoria' : 'Clausura General'))
                   }
                 </p>
               </div>

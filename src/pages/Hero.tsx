@@ -18,9 +18,7 @@ export default function Hero() {
           <div className="hero-badge">
             <span className="badge-dot"></span>
             Inscripciones abiertas
-          </div>
-
-          {/* Contenedor vertical principal para el texto */}
+          </div>      {/* Contenedor vertical principal para el texto */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
             
             {/* Fila 1: Logo y Título Principal */}
@@ -48,8 +46,24 @@ export default function Hero() {
 
             {/* Fila 4: Metadata (Chips de información) */}
             <div className="hero-meta" style={{ margin: '0.5rem 0 1rem 0' }}>
-              <span className="meta-chip">📅 23 de mayo, 2026</span>
-              <span className="meta-chip">📍 Campus Cobán UMG</span>
+              <a 
+                href="https://www.google.com/calendar/render?action=TEMPLATE&text=CONGRESO+2026+UMG+SISTEMAS+COBÁN&dates=20260523T140000Z/20260523T230000Z&details=El+evento+académico+más+importante+del+año.&location=Hotel+Alcazar+doña+Victoria,+Cobán" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="meta-chip" 
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                📅 23 de mayo, 2026
+              </a>
+              <a 
+                href="https://maps.app.goo.gl/drwTJp68mjcYne5S9" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="meta-chip" 
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                📍 Hotel Alcazar doña Victoria, Cobán
+              </a>
               <span
                 className="meta-chip"
                 style={{ cursor: 'pointer' }}

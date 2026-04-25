@@ -17,8 +17,8 @@ import DashboardLayout from './components/DashboardLayout';
 import DashboardHome from './pages/DashboardHome';
 import PaymentModule from './pages/PaymentModule';
 import ProfileModule from './pages/ProfileModule';
-import ShirtModule from './pages/ShirtModule';
 import WorkshopsModule from './pages/WorkshopsModule';
+import AdminModule from './pages/AdminModule';
 import { DashboardTitleProvider } from './utils/DashboardTitleContext';
 
 function App() {
@@ -46,7 +46,12 @@ function App() {
           <Route path="pago" element={<PaymentModule />} />
           <Route path="perfil" element={<ProfileModule />} />
           <Route path="talleres" element={<WorkshopsModule />} />
-          <Route path="playera" element={<ShirtModule />} />
+          <Route path="admin" element={<AdminModule defaultTab="tokens" />} />
+          <Route path="admin-tokens" element={<AdminModule defaultTab="tokens" />} />
+          <Route path="admin-usuarios" element={<AdminModule defaultTab="users" />} />
+          <Route path="admin-reportes" element={<AdminModule defaultTab="reports" />} />
+          <Route path="admin-agenda" element={<AdminModule defaultTab="agenda" />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

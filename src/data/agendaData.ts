@@ -156,109 +156,95 @@ export const mockSpeakers: Speaker[] = [
 
 export interface AgendaItem {
   id: string;
-  time: string;
+  time: string; // Start time format "8:00 AM"
+  endTime: string; // End time format "11:00 AM"
   title: string;
   speaker?: Speaker;
   description: string;
   tag: string;
   period: 'Mañana' | 'Tarde';
   location: string;
+  room: string;
 }
 
 export function generarAgenda(): AgendaItem[] {
   let charlas: AgendaItem[] = [];
 
-  // Registro (Mañana)
-  charlas.push({
-    id: 'reg-manana',
-    time: '8:00 AM',
-    title: 'Registro y bienvenida',
-    description: 'Entrega de gafetes, kits de bienvenida y validación de pagos QR en el lobby principal.',
-    tag: 'General',
-    period: 'Mañana',
-    location: 'Lobby Principal'
+  const getSpeaker = (id: number) => mockSpeakers.find(s => s.id === id);
+
+  // MAÑANA
+  const morningWorkshops = [
+    // SALA A
+    { id: 'm-ia', time: '8:00 AM', endTime: '11:00 AM', room: 'SALA A', speaker: getSpeaker(1), title: 'IA y educación', tag: 'IA & Educación' },
+    { id: 'm-ciber', time: '11:00 AM', endTime: '1:00 PM', room: 'SALA A', speaker: getSpeaker(7), title: 'Ciberseguridad', tag: 'Ciberseguridad' },
+    
+    // SALA B
+    { id: 'm-lider', time: '8:00 AM', endTime: '10:00 AM', room: 'SALA B', speaker: getSpeaker(2), title: 'Liderazgo universitario', tag: 'Liderazgo' },
+    { id: 'm-empren', time: '10:00 AM', endTime: '1:00 PM', room: 'SALA B', speaker: getSpeaker(4), title: 'Emprendimiento social', tag: 'Innovación Social' },
+    
+    // SALA C
+    { id: 'm-invest', time: '8:00 AM', endTime: '1:00 PM', room: 'SALA C', speaker: getSpeaker(4), title: 'Investigación científica', tag: 'Innovación Social' },
+    
+    // SALA D
+    { id: 'm-uxui', time: '8:00 AM', endTime: '11:00 AM', room: 'SALA D', speaker: getSpeaker(10), title: 'Diseño UX/UI', tag: 'UX/UI Design' },
+    { id: 'm-web', time: '11:00 AM', endTime: '1:00 PM', room: 'SALA D', speaker: getSpeaker(3), title: 'Desarrollo web', tag: 'Transformación Digital' },
+    
+    // SALA E
+    { id: 'm-salud', time: '8:00 AM', endTime: '10:00 AM', room: 'SALA E', speaker: getSpeaker(11), title: 'Salud mental', tag: 'Sostenibilidad Tech' },
+    { id: 'm-oratoria', time: '10:00 AM', endTime: '1:00 PM', room: 'SALA E', speaker: getSpeaker(9), title: 'Oratoria', tag: 'Políticas Públicas' },
+  ];
+
+  morningWorkshops.forEach(w => {
+    charlas.push({
+      ...w,
+      description: `Taller intensivo sobre ${w.title}. Impartido por ${w.speaker?.name}.`,
+      period: 'Mañana',
+      location: w.room
+    } as AgendaItem);
   });
 
-  const ponentes = [...mockSpeakers];
-  const locations = ['Salón A', 'Salón B', 'Salón C', 'Auditorio'];
-
-  // MAÑANA - 1 Charla por ponente (12 charlas, agrupadas de a 4 simultáneas)
-  const morningTimes = ['9:00 AM', '10:00 AM', '11:00 AM'];
-  for (let i = 0; i < 12; i++) {
-    const ponente = ponentes[i];
-    const timeIndex = Math.floor(i / 4);
-    const locationIndex = i % 4;
-
-    charlas.push({
-      id: `m-${ponente.id}`,
-      time: morningTimes[timeIndex],
-      title: `${ponente.tag}: Conceptos Fundamentales`,
-      speaker: ponente,
-      description: `Una introducción profunda a los conceptos centrales de ${ponente.tag}. ${ponente.name} explicará las bases técnicas y cómo se aplican en la industria actual.`,
-      tag: ponente.tag,
-      period: 'Mañana',
-      location: locations[locationIndex]
-    });
-  }
-
-  // ALMUERZO (Tarde)
+  // ALMUERZO
   charlas.push({
     id: 'almuerzo',
-    time: '12:30 PM',
-    title: 'Almuerzo y Networking',
-    description: 'Descanso libre en el área de comedores del Campus Central para intercambiar ideas y socializar.',
+    time: '1:00 PM',
+    endTime: '2:00 PM',
+    title: 'Receso y Networking',
+    description: 'Descanso para intercambiar ideas.',
     tag: 'Descanso',
     period: 'Tarde',
-    location: 'Comedor General'
+    location: 'Comedor Central',
+    room: 'GENERAL'
   });
 
-  // TARDE BLOQUE 1 - 1 Charla por ponente (12 charlas, 4 simultáneas)
-  const afternoonTimes1 = ['2:00 PM', '3:00 PM', '4:00 PM'];
-  for (let i = 0; i < 12; i++) {
-    const ponente = ponentes[i];
-    const timeIndex = Math.floor(i / 4);
-    const locationIndex = (i + 1) % 4;
+  // TARDE
+  const afternoonWorkshops = [
+    // SALA A
+    { id: 't-trans', time: '2:00 PM', endTime: '5:00 PM', room: 'SALA A', speaker: getSpeaker(3), title: 'Transformación digital', tag: 'Transformación Digital' },
+    { id: 't-datos', time: '5:00 PM', endTime: '7:00 PM', room: 'SALA A', speaker: getSpeaker(5), title: 'Innovación en datos', tag: 'Big Data' },
 
+    // SALA B
+    { id: 't-agil', time: '2:00 PM', endTime: '4:00 PM', room: 'SALA B', speaker: getSpeaker(2), title: 'Gestión ágil', tag: 'Liderazgo' },
+    { id: 't-finan', time: '4:00 PM', endTime: '7:00 PM', room: 'SALA B', speaker: getSpeaker(6), title: 'Finanzas personales', tag: 'Blockchain' },
+
+    // SALA C
+    { id: 't-redac', time: '2:00 PM', endTime: '4:00 PM', room: 'SALA C', speaker: getSpeaker(12), title: 'Redacción académica', tag: 'DevOps & SRE' },
+    { id: 't-bioet', time: '4:00 PM', endTime: '7:00 PM', room: 'SALA C', speaker: getSpeaker(9), title: 'Bioética y tecnología', tag: 'Políticas Públicas' },
+
+    // SALA D
+    { id: 't-movil', time: '2:00 PM', endTime: '7:00 PM', room: 'SALA D', speaker: getSpeaker(8), title: 'Aplicaciones móviles', tag: 'Realidad Mixta' },
+
+    // SALA E
+    { id: 't-foto', time: '2:00 PM', endTime: '4:00 PM', room: 'SALA E', speaker: getSpeaker(10), title: 'Fotografía', tag: 'UX/UI Design' },
+    { id: 't-digital', time: '4:00 PM', endTime: '7:00 PM', room: 'SALA E', speaker: getSpeaker(11), title: 'Arte digital', tag: 'Sostenibilidad Tech' },
+  ];
+
+  afternoonWorkshops.forEach(w => {
     charlas.push({
-      id: `t1-${ponente.id}`,
-      time: afternoonTimes1[timeIndex],
-      title: `${ponente.tag}: Casos Prácticos y Éxito`,
-      speaker: ponente,
-      description: `Aplicación en la vida real de ${ponente.tag}. ${ponente.name} presentará casos de éxito y retos experimentados en su rol como ${ponente.role}.`,
-      tag: ponente.tag,
+      ...w,
+      description: `Continuación avanzada sobre ${w.title}. Impartido por ${w.speaker?.name}.`,
       period: 'Tarde',
-      location: locations[locationIndex]
-    });
-  }
-
-  // TARDE BLOQUE 2 - 1 Charla por ponente (12 charlas, 4 simultáneas)
-  const afternoonTimes2 = ['5:00 PM', '6:00 PM', '7:00 PM'];
-  for (let i = 0; i < 12; i++) {
-    const ponente = ponentes[i];
-    const timeIndex = Math.floor(i / 4);
-    const locationIndex = (i + 2) % 4;
-
-    charlas.push({
-      id: `t2-${ponente.id}`,
-      time: afternoonTimes2[timeIndex],
-      title: `${ponente.tag}: Mitos, Futuro y Q&A`,
-      speaker: ponente,
-      description: `Discusión abierta sobre el futuro de ${ponente.tag}. Sesión interactiva de preguntas y respuestas entre el público y ${ponente.name}.`,
-      tag: ponente.tag,
-      period: 'Tarde',
-      location: locations[locationIndex]
-    });
-  }
-
-  // CIERRE (Tarde)
-  charlas.push({
-    id: 'cierre',
-    time: '8:00 PM',
-    title: 'Clausura del congreso',
-    description: 'Palabras de cierre por el comité organizador, sorteos para los asistentes y despedida oficial del congreso.',
-    tag: 'General',
-    period: 'Tarde',
-    location: 'Auditorio Principal'
+      location: w.room
+    } as AgendaItem);
   });
 
   return charlas;
