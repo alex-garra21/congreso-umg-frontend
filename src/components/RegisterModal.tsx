@@ -21,6 +21,8 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     ciclo: ''
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   // Auto-detección de dominio institucional
   useEffect(() => {
     if (formData.correo.toLowerCase().endsWith('@miumg.edu.gt')) {
@@ -54,13 +56,14 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     if (formData.contrasena !== formData.confirmarContrasena) {
       return;
     }
 
-    const result = registerUser({
+    const result = await registerUser({
       nombres: formData.nombres,
       apellidos: formData.apellidos,
       sexo: formData.sexo,
@@ -78,7 +81,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
         tipoParticipante: 'externo', carnet: '', ciclo: ''
       });
     } else {
-      alert(result.message);
+      setError(result.message);
     }
   };
 
@@ -119,6 +122,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           <>
             <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>Regístrate aquí</h3>
             <p className="modal-sub">Crea una cuenta para apartar tu lugar en el congreso</p>
+
+            {error && (
+              <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
               <div className="form-row">

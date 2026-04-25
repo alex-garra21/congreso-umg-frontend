@@ -11,10 +11,12 @@ interface LoginModalProps {
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     const result = await loginUser(correo, contrasena);
 
     if (result.success && result.user) {
@@ -24,7 +26,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
       onClose();
       navigate('/dashboard'); 
     } else {
-      alert(result.message);
+      setError(result.message);
     }
   };
 
@@ -42,6 +44,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
         <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>Iniciar sesión</h3>
         <p className="modal-sub">Accede para ver tus charlas y estado de pago</p>
+
+        {error && (
+          <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">

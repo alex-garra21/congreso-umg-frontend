@@ -12,11 +12,13 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     confirmPassword: ''
   });
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     if (passwords.newPassword !== passwords.confirmPassword) {
-      alert('Las contraseñas no coinciden.');
+      setError('Las contraseñas no coinciden.');
       return;
     }
 
@@ -25,7 +27,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
       setShowSuccess(true);
       setPasswords({ newPassword: '', confirmPassword: '' });
     } else {
-      alert(result.message);
+      setError(result.message);
     }
   };
 
@@ -52,6 +54,12 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
           <>
             <h3 style={{ fontSize: '24px', marginBottom: '8px', fontFamily: 'Syne', fontWeight: 800 }}>Cambiar contraseña</h3>
             <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Ingresa tu nueva contraseña a continuación.</p>
+
+            {error && (
+              <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
