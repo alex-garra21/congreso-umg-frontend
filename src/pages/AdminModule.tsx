@@ -109,7 +109,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
         'Participante': u.nombreDiploma || `${u.nombres} ${u.apellidos}`,
         'Correo Electrónico': u.correo,
         'Nombre Completo': `${u.nombres} ${u.apellidos}`,
-        [selectedWorkshopFilter ? 'Taller' : 'Talleres Inscritos']: workshopsText,
+        [selectedWorkshopFilter ? 'Taller' : 'Todos los talleres']: workshopsText,
         'Sexo': u.sexo === 'M' ? 'Hombre' : 'Mujer',
         'Tipo de Participante': u.tipoParticipante === 'alumno' ? 'Estudiante UMG' : (u.tipoParticipante === 'externo' ? 'Externo' : 'N/A'),
         'Carné': u.tipoParticipante === 'alumno' ? (u.carnet || 'N/A') : 'N/A',
@@ -122,7 +122,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Participantes");
-    const workshopSuffix = selectedWorkshopFilter ? ` - ${getWorkshopTitle(selectedWorkshopFilter)}` : '';
+    const workshopSuffix = selectedWorkshopFilter ? ` - ${getWorkshopTitle(selectedWorkshopFilter)}` : ' - Todos los talleres';
     XLSX.writeFile(workbook, `Reporte_Congreso_2026${workshopSuffix}.xlsx`);
   };
 
@@ -497,11 +497,15 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
               <div className="form-row">
                 <div className="form-group">
                   <label>INICIO</label>
-                  <input type="text" value={editingItem.time} onChange={e => setEditingItem({ ...editingItem, time: e.target.value })} placeholder="8:00 AM" required />
+                  <select value={editingItem.time} onChange={e => setEditingItem({ ...editingItem, time: e.target.value })} required>
+                    {['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'].map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>FIN</label>
-                  <input type="text" value={editingItem.endTime} onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })} placeholder="10:00 AM" required />
+                  <select value={editingItem.endTime} onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })} required>
+                    {['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'].map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
                 </div>
               </div>
               <div className="form-group">
@@ -541,14 +545,30 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
                 <label>BIOGRAFÍA</label>
                 <textarea value={editingSpeaker.bio} onChange={e => setEditingSpeaker({ ...editingSpeaker, bio: e.target.value })} required />
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>COLOR FONDO AVATAR</label>
-                  <input type="color" value={editingSpeaker.bgColor} onChange={e => setEditingSpeaker({ ...editingSpeaker, bgColor: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label>COLOR TEXTO AVATAR</label>
-                  <input type="color" value={editingSpeaker.textColor} onChange={e => setEditingSpeaker({ ...editingSpeaker, textColor: e.target.value })} />
+              <div className="form-group">
+                <label>IMAGEN DEL PONENTE (AVATAR)</label>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  {editingSpeaker.avatar && (
+                    <img 
+                      src={editingSpeaker.avatar} 
+                      alt="Avatar Preview" 
+                      style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                    />
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setEditingSpeaker({ ...editingSpeaker, avatar: reader.result as string });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }} 
+                  />
                 </div>
               </div>
               <div className="form-actions">
@@ -575,8 +595,12 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
                 <input type="color" value={editingCategory.style.text} onChange={e => setEditingCategory({ ...editingCategory, style: { ...editingCategory.style, text: e.target.value } })} />
               </div>
               <div className="form-group">
-                <label>FONDO (RGBA/HEX)</label>
-                <input type="text" value={editingCategory.style.bg} onChange={e => setEditingCategory({ ...editingCategory, style: { ...editingCategory.style, bg: e.target.value } })} placeholder="rgba(0,0,0,0.1)" />
+                <label>COLOR DE FONDO</label>
+                <input 
+                  type="color" 
+                  value={editingCategory.style.bg.startsWith('rgb') ? '#ffffff' : editingCategory.style.bg} 
+                  onChange={e => setEditingCategory({ ...editingCategory, style: { ...editingCategory.style, bg: e.target.value } })} 
+                />
               </div>
               <div className="form-actions">
                 <button type="submit" className="btn-solid">Guardar</button>

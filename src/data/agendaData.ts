@@ -29,6 +29,7 @@ export interface Speaker {
   bio: string;
   bgColor: string;
   textColor: string;
+  avatar?: string;
 }
 
 export const mockSpeakers: Speaker[] = [
