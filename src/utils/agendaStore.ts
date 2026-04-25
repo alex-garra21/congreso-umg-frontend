@@ -64,16 +64,13 @@ const ROOMS_KEY = 'congreso_rooms';
 export function getRooms(): string[] {
   const saved = localStorage.getItem(ROOMS_KEY);
   if (!saved) {
-    // initialRooms importado desde agendaData, pero necesitamos añadirlo al import de la línea 1
-    // lo definimos directamente aquí si falla el import, o podemos asegurarnos de que se importe
-    const defaultRooms = ['SALA A', 'SALA B', 'SALA C', 'SALA D', 'SALA E', 'GENERAL'];
-    localStorage.setItem(ROOMS_KEY, JSON.stringify(defaultRooms));
-    return defaultRooms;
+    localStorage.setItem(ROOMS_KEY, JSON.stringify(initialRooms));
+    return initialRooms;
   }
   try {
     return JSON.parse(saved);
   } catch (e) {
-    return ['SALA A', 'SALA B', 'SALA C', 'SALA D', 'SALA E', 'GENERAL'];
+    return initialRooms;
   }
 }
 
