@@ -364,11 +364,32 @@ export async function updateUserData(updatedData: UserData): Promise<{ success: 
 }
 
 export async function changePassword(newPassword: string): Promise<{ success: boolean; message: string }> {
+  // Actualizar contraseña en Supabase Auth
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  
+  if (error) {
+    console.error("Error changing password in Supabase:", error);
+    return { success: false, message: `Error al cambiar contraseña: ${error.message}` };
+  }
+
+  // Fallback local (para mantener el almacenamiento local sincronizado)
   const user = getCurrentUser();
   if (user) {
     user.contrasena = newPassword;
-    return await updateUserData(user);
+    
+    // Solo actualizar localStorage, ya no enviamos la contraseña al UPDATE de public.usuarios
+    const users = getRegisteredUsers();
+    const index = users.findIndex(u => u.correo === user.correo);
+    if (index !== -1) {
+      users[index] = { ...users[index], contrasena: newPassword };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    }
+    
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    window.dispatchEvent(new Event('sessionUpdate'));
+    return { success: true, message: 'Contraseña actualizada correctamente.' };
   }
+
   return { success: false, message: 'No hay una sesión activa.' };
 }
 
