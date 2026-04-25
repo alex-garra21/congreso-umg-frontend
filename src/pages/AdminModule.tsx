@@ -101,6 +101,14 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     }
   };
 
+  const handleActivateUser = async (user: UserData) => {
+    if (confirm(`¿Estás seguro de activar nuevamente a ${user.nombres} ${user.apellidos}?`)) {
+      const updated = { ...user, desactivado: false };
+      await updateUserData(updated);
+      setUsers(await getAllUsersCloud());
+    }
+  };
+
   const handlePromoteToAdmin = async (user: UserData) => {
     if (confirm(`¿Estás seguro de promover a ${user.nombres} ${user.apellidos} a Administrador?`)) {
       const updated = { ...user, rol: 'admin' as const };
@@ -433,7 +441,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
                 </tr>
               </thead>
               <tbody>
-                {users.filter(u => u.rol !== 'admin' && !u.desactivado).filter(u =>
+                {users.filter(u => u.rol !== 'admin').filter(u =>
                   u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   u.correo.toLowerCase().includes(searchTerm.toLowerCase())
@@ -442,21 +450,30 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
                     <td><strong>{u.nombres} {u.apellidos}</strong></td>
                     <td>{u.correo}</td>
                     <td>
-                      <span className={`badge ${u.pagoValidado ? 'paid' : 'pend'}`}>{u.pagoValidado ? 'PAGADO' : 'PENDIENTE'}</span>
+                      <span className={`badge ${u.desactivado ? 'pend' : (u.pagoValidado ? 'paid' : 'pend')}`}>
+                        {u.desactivado ? 'DESACTIVADO' : (u.pagoValidado ? 'PAGADO' : 'PENDIENTE')}
+                      </span>
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      {!u.pagoValidado && (
+                      {!u.desactivado && !u.pagoValidado && (
                         <button className="btn-edit-sm" style={{ backgroundColor: '#e6fcf5', color: '#0ca678' }} onClick={() => handleValidateUser(u)}>Validar Pago</button>
                       )}
-                      <button className="btn-edit-sm" style={{ backgroundColor: '#fff3cd', color: '#856404' }} onClick={() => handlePromoteToAdmin(u)}>Promover a Admin</button>
-                      <button className="btn-delete-sm" onClick={() => handleDeactivateUser(u)}>Desactivar</button>
+                      {!u.desactivado && (
+                        <button className="btn-edit-sm" style={{ backgroundColor: '#fff3cd', color: '#856404' }} onClick={() => handlePromoteToAdmin(u)}>Promover a Admin</button>
+                      )}
+                      
+                      {u.desactivado ? (
+                        <button className="btn-edit-sm" style={{ backgroundColor: '#e7f5ff', color: '#1971c2' }} onClick={() => handleActivateUser(u)}>Activar</button>
+                      ) : (
+                        <button className="btn-delete-sm" onClick={() => handleDeactivateUser(u)}>Desactivar</button>
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <Pagination current={page} total={users.filter(u => u.rol !== 'admin' && !u.desactivado).length} onPageChange={setPage} />
+          <Pagination current={page} total={users.filter(u => u.rol !== 'admin').length} onPageChange={setPage} />
         </section>
       )}
 
