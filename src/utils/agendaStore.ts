@@ -1,4 +1,4 @@
-import { agendaCompleta as initialAgenda, mockSpeakers as initialSpeakers, categoryStyles as initialCategories, initialRooms as defaultRooms, type AgendaItem, type Speaker, type CategoryStyle } from '../data/agendaData';
+import { agendaCompleta as initialAgenda, mockSpeakers as initialSpeakers, categoryStyles as initialCategories, initialRooms, type AgendaItem, type Speaker, type CategoryStyle } from '../data/agendaData';
 export type { AgendaItem, Speaker, CategoryStyle };
 
 const AGENDA_KEY = 'congreso_agenda';

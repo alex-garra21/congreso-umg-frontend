@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getAgenda, getSpeakers, type AgendaItem, type Speaker } from '../utils/agendaStore';
+import { getAgenda, type AgendaItem, type Speaker } from '../utils/agendaStore';
 import { getRegisteredUsers, updateUserData, type UserData } from '../utils/auth';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
