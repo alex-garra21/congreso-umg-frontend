@@ -1,6 +1,6 @@
 // v3 - Added Agenda Sub-tabs (Horario, Ponentes, Categorías)
 import React, { useState, useEffect } from 'react';
-import { getRegisteredUsers, updateUserData, getTokens, generateToken, deleteToken, type UserData, type TokenData } from '../utils/auth';
+import { getAllUsersCloud, updateUserData, getTokens, generateToken, deleteToken, type UserData, type TokenData } from '../utils/auth';
 import {
   getAgenda, saveAgenda,
   getSpeakers, saveSpeakers,
@@ -55,7 +55,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   useEffect(() => {
-    setUsers(getRegisteredUsers());
+    getAllUsersCloud().then(setUsers);
     getTokens().then(setTokens);
     setAgenda(getAgenda());
     setSpeakers(getSpeakers());
@@ -89,23 +89,24 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   const handleValidateUser = (user: UserData) => {
     const updated = { ...user, pagoValidado: true };
     updateUserData(updated);
-    setUsers(getRegisteredUsers());
+    await updateUserData(updated);
+    setUsers(await getAllUsersCloud());
     alert(`Pago validado para ${user.nombres} ${user.apellidos}`);
   };
 
-  const handleDeactivateUser = (user: UserData) => {
+  const handleDeactivateUser = async (user: UserData) => {
     if (confirm(`¿Estás seguro de desactivar a ${user.nombres} ${user.apellidos}? No aparecerá en los informes y reportes.`)) {
       const updated = { ...user, desactivado: true };
-      updateUserData(updated);
-      setUsers(getRegisteredUsers());
+      await updateUserData(updated);
+      setUsers(await getAllUsersCloud());
     }
   };
 
-  const handlePromoteToAdmin = (user: UserData) => {
+  const handlePromoteToAdmin = async (user: UserData) => {
     if (confirm(`¿Estás seguro de promover a ${user.nombres} ${user.apellidos} a Administrador?`)) {
       const updated = { ...user, rol: 'admin' as const };
-      updateUserData(updated);
-      setUsers(getRegisteredUsers());
+      await updateUserData(updated);
+      setUsers(await getAllUsersCloud());
     }
   };
 

@@ -137,6 +137,44 @@ export function getRegisteredUsers(): UserData[] {
   return users;
 }
 
+export async function getAllUsersCloud(): Promise<UserData[]> {
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('*')
+    .order('apellidos', { ascending: true });
+
+  if (error || !data) return [];
+
+  // Mapear los datos básicos
+  const mappedUsers: UserData[] = data.map(userData => ({
+    id: userData.id,
+    nombres: userData.nombres,
+    apellidos: userData.apellidos,
+    sexo: userData.sexo || 'M',
+    correo: userData.correo,
+    contrasena: 'auth_managed',
+    rol: userData.rol as any,
+    pagoValidado: userData.pago_validado,
+    nombreDiploma: userData.nombre_diploma,
+    tipoParticipante: userData.tipo_participante,
+    carnet: userData.carnet,
+    ciclo: userData.ciclo,
+    telefono: userData.telefono,
+    correoDiploma: userData.correo_diploma,
+    desactivado: userData.desactivado || false
+  }));
+
+  // Cargar talleres y asistencias para cada uno (esto es pesado pero necesario para el reporte)
+  // Nota: En una app más grande esto se haría con un Join, pero para este congreso funciona bien así.
+  const finalUsers = await Promise.all(mappedUsers.map(async (u) => {
+    const talleres = await getEnrolledWorkshopsCloud(u.id!);
+    const asistencias = await getAttendancesCloud(u.id!);
+    return { ...u, talleres, asistencias };
+  }));
+
+  return finalUsers;
+}
+
 export function registerUser(user: UserData): { success: boolean; message: string } {
   const users = getRegisteredUsers();
 
@@ -239,45 +277,72 @@ export function logout() {
   localStorage.removeItem(SESSION_KEY);
 }
 
-export function updateUserData(updatedData: UserData): { success: boolean; message: string } {
-  const users = getRegisteredUsers();
-  const index = users.findIndex(u => u.correo === updatedData.correo);
+export async function updateUserData(updatedData: UserData): Promise<{ success: boolean; message: string }> {
+  // 1. Actualizar en Supabase
+  if (updatedData.id) {
+    const { error } = await supabase
+      .from('usuarios')
+      .update({
+        nombres: updatedData.nombres,
+        apellidos: updatedData.apellidos,
+        pago_validado: updatedData.pagoValidado,
+        rol: updatedData.rol,
+        desactivado: updatedData.desactivado,
+        nombre_diploma: updatedData.nombreDiploma,
+        tipo_participante: updatedData.tipoParticipante,
+        carnet: updatedData.carnet,
+        ciclo: updatedData.ciclo,
+        telefono: updatedData.telefono,
+        correo_diploma: updatedData.correoDiploma
+      })
+      .eq('id', updatedData.id);
 
-  if (index !== -1) {
-    if (!updatedData.contrasena) {
-      updatedData.contrasena = users[index].contrasena;
+    if (error) {
+      console.error("Error updating user in cloud:", error);
+      return { success: false, message: 'Error al actualizar en la nube.' };
     }
-
-    users[index] = { ...users[index], ...updatedData };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-    setCurrentUser(users[index]);
-    return { success: true, message: 'Datos actualizados correctamente.' };
   }
 
-  return { success: false, message: 'Error al actualizar: Usuario no encontrado.' };
+  // 2. Fallback / Sincronización Local
+  const users = getRegisteredUsers();
+  const index = users.findIndex(u => u.correo === updatedData.correo);
+  
+  if (index !== -1) {
+    users[index] = { ...users[index], ...updatedData };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    
+    // Si es el usuario actual, actualizar la sesión
+    const current = getCurrentUser();
+    if (current && current.correo === updatedData.correo) {
+      setCurrentUser(users[index]);
+    }
+    return { success: true, message: 'Datos actualizados correctamente.' };
+  }
+  
+  return { success: true, message: 'Datos actualizados en la nube.' };
 }
 
-export function changePassword(newPassword: string): { success: boolean; message: string } {
+export async function changePassword(newPassword: string): Promise<{ success: boolean; message: string }> {
   const user = getCurrentUser();
   if (user) {
     user.contrasena = newPassword;
-    return updateUserData(user);
+    return await updateUserData(user);
   }
   return { success: false, message: 'No hay una sesión activa.' };
 }
 
-export function sendPaymentProofInSession() {
+export async function sendPaymentProofInSession() {
   const user = getCurrentUser();
   if (user) {
     user.pagoEnviado = true;
-    updateUserData(user);
+    await updateUserData(user);
   }
 }
 
-export function validatePaymentInSession() {
+export async function validatePaymentInSession() {
   const user = getCurrentUser();
   if (user) {
     user.pagoValidado = true;
-    updateUserData(user);
+    await updateUserData(user);
   }
 }
