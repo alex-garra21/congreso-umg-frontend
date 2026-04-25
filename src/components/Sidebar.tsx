@@ -72,7 +72,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
   if (isAdmin) {
     menuItems.push(
       { id: 'admin-tokens', label: 'Tokens de Pago', icon: <Icons.Shield />, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-usuarios', label: 'Validar Usuarios', icon: <Icons.User />, section: 'ADMINISTRACIÓN' },
+      { id: 'admin-usuarios', label: 'Usuarios', icon: <Icons.User />, section: 'ADMINISTRACIÓN' },
       { id: 'admin-asistencia', label: 'Control Asistencia', icon: <Icons.CheckCircle />, section: 'ADMINISTRACIÓN' },
       { id: 'admin-reportes', label: 'Reportes', icon: <Icons.BarChart />, section: 'ADMINISTRACIÓN' },
       { id: 'admin-agenda', label: 'Gestión Agenda', icon: <Icons.Clipboard />, section: 'ADMINISTRACIÓN' }

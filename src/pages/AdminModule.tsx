@@ -117,6 +117,14 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     }
   };
 
+  const handleDemoteToUser = async (user: UserData) => {
+    if (confirm(`¿Estás seguro de degradar a ${user.nombres} ${user.apellidos} a Usuario participante?`)) {
+      const updated = { ...user, rol: 'usuario' as const };
+      await updateUserData(updated);
+      setUsers(await getAllUsersCloud());
+    }
+  };
+
   const getWorkshopTitle = (id: string) => {
     const w = agenda.find(item => item.id === id);
     return w ? w.title : id;
@@ -424,7 +432,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
       {defaultTab === 'users' && (
         <section className="dashboard-section">
-          <ModuleTitle title="Validación de Usuarios" />
+          <ModuleTitle title="Usuarios" />
           <input
             type="text" className="dashboard-input" placeholder="Buscar por nombre o correo..."
             value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
@@ -434,14 +442,15 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Participante</th>
+                  <th>Usuario</th>
                   <th>Correo</th>
+                  <th>Rol</th>
                   <th>Estado de Pago</th>
                   <th style={{ textAlign: 'right' }}>Opciones</th>
                 </tr>
               </thead>
               <tbody>
-                {users.filter(u => u.rol !== 'admin').filter(u =>
+                {users.filter(u =>
                   u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   u.correo.toLowerCase().includes(searchTerm.toLowerCase())
@@ -450,16 +459,28 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
                     <td><strong>{u.nombres} {u.apellidos}</strong></td>
                     <td>{u.correo}</td>
                     <td>
+                      {u.rol === 'admin' ? (
+                        <span className="badge" style={{ backgroundColor: '#862e9c', color: 'white' }}>ADMINISTRADOR</span>
+                      ) : (
+                        <span className="badge" style={{ backgroundColor: '#f1f3f5', color: '#495057' }}>PARTICIPANTE</span>
+                      )}
+                    </td>
+                    <td>
                       <span className={`badge ${u.desactivado ? 'pend' : (u.pagoValidado ? 'paid' : 'pend')}`}>
                         {u.desactivado ? 'DESACTIVADO' : (u.pagoValidado ? 'PAGADO' : 'PENDIENTE')}
                       </span>
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      {!u.desactivado && !u.pagoValidado && (
+                      {!u.desactivado && !u.pagoValidado && u.rol !== 'admin' && (
                         <button className="btn-edit-sm" style={{ backgroundColor: '#e6fcf5', color: '#0ca678' }} onClick={() => handleValidateUser(u)}>Validar Pago</button>
                       )}
-                      {!u.desactivado && (
-                        <button className="btn-edit-sm" style={{ backgroundColor: '#fff3cd', color: '#856404' }} onClick={() => handlePromoteToAdmin(u)}>Promover a Admin</button>
+                      
+                      {u.rol === 'admin' ? (
+                        <button className="btn-edit-sm" style={{ backgroundColor: '#ffe3e3', color: '#e03131' }} onClick={() => handleDemoteToUser(u)}>Degradar a Usuario</button>
+                      ) : (
+                        !u.desactivado && (
+                          <button className="btn-edit-sm" style={{ backgroundColor: '#fff3cd', color: '#856404' }} onClick={() => handlePromoteToAdmin(u)}>Promover a Admin</button>
+                        )
                       )}
                       
                       {u.desactivado ? (
@@ -473,7 +494,11 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
               </tbody>
             </table>
           </div>
-          <Pagination current={page} total={users.filter(u => u.rol !== 'admin').length} onPageChange={setPage} />
+          <Pagination current={page} total={users.filter(u =>
+            u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.correo.toLowerCase().includes(searchTerm.toLowerCase())
+          ).length} onPageChange={setPage} />
         </section>
       )}
 
