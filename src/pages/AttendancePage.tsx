@@ -190,7 +190,7 @@ export default function AttendancePage() {
 
   if (!workshop) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc' }}>
         <div style={{ textAlign: 'center', padding: '2rem', background: 'white', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
           <h2 style={{ color: '#1a365d', marginBottom: '1rem', fontFamily: 'Syne' }}>Taller no encontrado</h2>
           <p style={{ color: '#4a5568', marginBottom: '2rem' }}>El código del taller proporcionado no es válido o ya no existe.</p>
@@ -201,7 +201,7 @@ export default function AttendancePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem 1rem', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ flex: 1, background: '#e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem 1rem', fontFamily: 'Inter, sans-serif' }}>
 
       {/* Tarjeta del Taller */}
       <div style={{
