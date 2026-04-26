@@ -30,3 +30,5 @@ users.txt
 # Supabase
 supabase_schema.sql
 .env
+
+scratch/
