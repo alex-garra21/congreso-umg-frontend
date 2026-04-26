@@ -3,6 +3,13 @@ import { getSalasCloud, saveSalasCloud, getCategoriasCloud, saveCategoriasCloud,
 
 export type { AgendaItem, Speaker, CategoryStyle };
 
+export const generateSlug = (text: string) => {
+  return text.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+};
+
 const AGENDA_KEY = 'congreso_agenda';
 const SPEAKERS_KEY = 'congreso_speakers';
 const CATEGORIES_KEY = 'congreso_categories';

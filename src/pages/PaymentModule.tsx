@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { validateToken, validatePaymentInSession, getCurrentUser, type UserData } from '../utils/auth';
 import ModuleTitle from '../components/ModuleTitle';
+import { showAlert } from '../utils/swal';
 
 export default function PaymentModule() {
   const [codigo, setCodigo] = useState('');
@@ -16,17 +17,24 @@ export default function PaymentModule() {
 
   const handleSendPayment = async () => {
     if (!codigo.trim()) {
-      alert('Por favor, ingresa el código de pago.');
+      showAlert('Atención', 'Por favor, ingresa el código de pago.', 'warning');
       return;
     }
 
-    const isValid = await validateToken(codigo);
-    if (isValid) {
+    const result = await validateToken(codigo.trim());
+    
+    if (result.success) {
       validatePaymentInSession();
       window.dispatchEvent(new Event('sessionUpdate'));
-      alert('¡Código validado exitosamente! Tu inscripción ha sido activada.');
+      showAlert('¡Éxito!', '¡Código validado exitosamente! Tu inscripción ha sido activada.', 'success');
     } else {
-      alert('El código ingresado no es válido o ya fue utilizado. Si pagaste en ventanilla, solicita tu código al encargado.');
+      if (result.errorType === 'not_found') {
+        showAlert('Código inválido', 'El código ingresado no existe. Por favor, verifica que lo hayas escrito correctamente.', 'error');
+      } else if (result.errorType === 'already_used') {
+        showAlert('Código ya utilizado', 'Este código ya ha sido validado por otro usuario. Si crees que esto es un error, contacta al encargado.', 'warning');
+      } else {
+        showAlert('Error de validación', 'Hubo un problema al validar tu código. Por favor, intenta de nuevo más tarde.', 'error');
+      }
     }
   };
 

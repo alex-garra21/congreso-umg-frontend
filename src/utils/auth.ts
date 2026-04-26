@@ -90,21 +90,33 @@ export async function deleteToken(code: string): Promise<void> {
   await supabase.from('tokens_pago').delete().eq('codigo', code);
 }
 
-export async function validateToken(code: string): Promise<boolean> {
+export async function validateToken(code: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'error' }> {
   const user = getCurrentUser();
-  if (!user || !user.id) return false;
+  if (!user || !user.id) return { success: false, errorType: 'error' };
 
-  // Verificar si existe y no está usado
-  const { data, error } = await supabase
+  // 1. Verificar si existe (sensible a mayúsculas/minúsculas, omitiendo espacios)
+  const { data: tokenData, error: fetchError } = await supabase
     .from('tokens_pago')
     .select('*')
-    .eq('codigo', code)
-    .eq('usado', false)
-    .single();
+    .eq('codigo', code.trim())
+    .maybeSingle();
 
-  if (error || !data) return false;
+  if (fetchError) {
+    console.error("Error fetching token:", fetchError);
+    return { success: false, errorType: 'error' };
+  }
 
-  // Marcar como usado
+  if (!tokenData) {
+    console.warn("Token not found:", code);
+    return { success: false, errorType: 'not_found' };
+  }
+
+  if (tokenData.usado) {
+    console.warn("Token already used:", code);
+    return { success: false, errorType: 'already_used' };
+  }
+
+  // 2. Marcar como usado (usando el código exacto que tiene la DB)
   const { error: updateError } = await supabase
     .from('tokens_pago')
     .update({
@@ -112,14 +124,17 @@ export async function validateToken(code: string): Promise<boolean> {
       usado_por: user.id,
       fecha_uso: new Date().toISOString()
     })
-    .eq('codigo', code);
+    .eq('codigo', tokenData.codigo);
 
-  if (updateError) return false;
+  if (updateError) {
+    console.error("Error updating token:", updateError);
+    return { success: false, errorType: 'error' };
+  }
 
-  // Actualizar también al usuario
+  // 3. Actualizar al usuario en la nube
   await supabase.from('usuarios').update({ pago_validado: true }).eq('id', user.id);
 
-  return true;
+  return { success: true };
 }
 
 export function getRegisteredUsers(): UserData[] {
@@ -212,7 +227,7 @@ export async function registerUser(user: UserData): Promise<{ success: boolean; 
 
   if (profileError) {
     console.error("Supabase Profile Insert Error:", profileError);
-    
+
     if (profileError.message.includes('duplicate key value') || profileError.code === '23505') {
       return { success: false, message: 'Este correo electrónico ya se encuentra registrado.' };
     }
@@ -240,15 +255,14 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
   });
 
   if (authError) {
-    // Si falla Supabase, intentamos fallback a LocalStorage por si hay usuarios viejos
-    const users = getRegisteredUsers();
-    const localUser = users.find(u => u.correo === correo && u.contrasena === contrasena);
+    // Diferenciar el error para guiar al usuario
+    const { data: profile } = await supabase.from('usuarios').select('id').eq('correo', correo).maybeSingle();
 
-    if (localUser) {
-      return { success: true, message: `Inicio de sesión exitoso (Local). ¡Bienvenido ${localUser.nombres}!`, user: localUser };
+    if (!profile) {
+      return { success: false, message: 'El correo electrónico que has ingresado no se encuentra registrado en la plataforma. Por favor, crea una cuenta.' };
+    } else {
+      return { success: false, message: 'El correo o la contraseña que se han ingresado no son correctos. Por favor, verifica e intenta de nuevo.' };
     }
-
-    return { success: false, message: 'Credenciales inválidas o usuario no encontrado.' };
   }
 
   // 2. Si el login en Auth fue exitoso, obtener los datos del perfil de public.usuarios
@@ -350,12 +364,12 @@ export async function updateUserData(updatedData: UserData): Promise<{ success: 
   // Actualizar el objeto en el almacenamiento local para que la UI se refresque
   const users = getRegisteredUsers();
   const index = users.findIndex(u => u.correo === updatedData.correo);
-  
+
   if (index !== -1) {
     users[index] = { ...users[index], ...updatedData };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
   }
-  
+
   // Actualizar la sesión actual
   const current = getCurrentUser();
   if (current && current.correo === updatedData.correo) {
@@ -371,7 +385,7 @@ export async function updateUserData(updatedData: UserData): Promise<{ success: 
 export async function changePassword(newPassword: string): Promise<{ success: boolean; message: string }> {
   // Actualizar contraseña en Supabase Auth
   const { error } = await supabase.auth.updateUser({ password: newPassword });
-  
+
   if (error) {
     console.error("Error changing password in Supabase:", error);
     return { success: false, message: `Error al cambiar contraseña: ${error.message}` };
@@ -381,7 +395,7 @@ export async function changePassword(newPassword: string): Promise<{ success: bo
   const user = getCurrentUser();
   if (user) {
     user.contrasena = newPassword;
-    
+
     // Solo actualizar localStorage, ya no enviamos la contraseña al UPDATE de public.usuarios
     const users = getRegisteredUsers();
     const index = users.findIndex(u => u.correo === user.correo);
@@ -389,7 +403,7 @@ export async function changePassword(newPassword: string): Promise<{ success: bo
       users[index] = { ...users[index], contrasena: newPassword };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
     }
-    
+
     localStorage.setItem(SESSION_KEY, JSON.stringify(user));
     window.dispatchEvent(new Event('sessionUpdate'));
     return { success: true, message: 'Contraseña actualizada correctamente.' };
@@ -456,4 +470,31 @@ export async function resetPasswordWithOTP(email: string, token: string, newPass
   }
 
   return { success: true, message: 'Contraseña actualizada con éxito' };
+}
+
+export async function invalidatePayment(userId: string): Promise<{ success: boolean; message: string }> {
+  // 1. Actualizar al usuario
+  const { error: userError } = await supabase
+    .from('usuarios')
+    .update({ pago_validado: false })
+    .eq('id', userId);
+
+  if (userError) return { success: false, message: 'Error al invalidar el pago del usuario.' };
+
+  // 2. Liberar el token usado por este usuario
+  const { error: tokenError } = await supabase
+    .from('tokens_pago')
+    .update({
+      usado: false,
+      usado_por: null,
+      fecha_uso: null
+    })
+    .eq('usado_por', userId);
+
+  if (tokenError) {
+    console.error("Error releasing token:", tokenError);
+    // No fallamos completamente si el token no se pudo liberar, pero avisamos.
+  }
+
+  return { success: true, message: 'Pago anulado correctamente. El token ha sido liberado.' };
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getAgenda, type AgendaItem, type Speaker } from '../utils/agendaStore';
-import { getRegisteredUsers, updateUserData, type UserData } from '../utils/auth';
+import { getAgenda, type AgendaItem, type Speaker, generateSlug } from '../utils/agendaStore';
+import { loginUser, updateUserData, type UserData } from '../utils/auth';
 import { markAttendanceCloud } from '../utils/supabaseEnrollment';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
@@ -35,6 +35,7 @@ export default function AttendancePage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [confirmedUser, setConfirmedUser] = useState<UserData | null>(null);
@@ -44,7 +45,7 @@ export default function AttendancePage() {
     const loadWorkshop = () => {
       if (workshopId) {
         const agenda = getAgenda();
-        const item = agenda.find(a => a.id === workshopId);
+        const item = agenda.find(a => a.id === workshopId || generateSlug(a.title) === workshopId);
         if (item) {
           setWorkshop(item);
           if (item.speaker) {
@@ -75,23 +76,23 @@ export default function AttendancePage() {
     }
 
     // 1. Verificación de Usuario
-    const users = getRegisteredUsers();
-    const user = users.find(u => u.correo.toLowerCase() === email.toLowerCase());
-
-    if (!user || !user.id) {
-      setError('Usuario no encontrado. Verifica tu correo.');
+    const loginResult = await loginUser(email, password);
+    if (!loginResult.success || !loginResult.user) {
+      setError(loginResult.message);
       return;
     }
-
-    if (user.contrasena !== password) {
-      setError('Contraseña incorrecta.');
+    
+    const user = loginResult.user;
+    
+    if (!user.id) {
+      setError('Error interno: El usuario no tiene un ID válido asignado.');
       return;
     }
 
     // 2. Verificación de Inscripción al taller
     const isEnrolled = user.talleres?.includes(workshop.id);
     if (!isEnrolled) {
-      setError('No estás inscrito en este taller según tu agenda.');
+      setError('No apareces inscrito en este taller. Primero debes agregarlo a tu agenda en la sección "Mis Talleres" de tu perfil.');
       return;
     }
 
@@ -255,14 +256,34 @@ export default function AttendancePage() {
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4a5568', marginBottom: '6px', textTransform: 'uppercase' }}>
                   Contraseña
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Tu contraseña"
-                  required
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '15px' }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Tu contraseña"
+                    required
+                    style={{ width: '100%', padding: '12px 16px', paddingRight: '40px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '15px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showPassword ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <button

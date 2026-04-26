@@ -5,6 +5,7 @@ import ModuleTitle from '../components/ModuleTitle';
 import { getAgenda, getRooms } from '../utils/agendaStore';
 import { syncUserEnrollmentsCloud } from '../utils/supabaseEnrollment';
 import type { AgendaItem } from '../data/agendaData';
+import { showAlert } from '../utils/swal';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
@@ -49,12 +50,28 @@ export default function WorkshopsModule() {
 
   useEffect(() => {
     if (user?.correo) {
-      const saved = localStorage.getItem(`workshops_${user.correo}`);
       const confirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`);
-      if (saved) setEnrolledIds(JSON.parse(saved));
-      if (confirmed === 'true') setIsConfirmed(true);
+      if (confirmed === 'true') {
+        setIsConfirmed(true);
+        if (user.talleres) {
+          setEnrolledIds(user.talleres);
+        }
+      } else {
+        const saved = localStorage.getItem(`workshops_${user.correo}`);
+        if (saved) {
+          setEnrolledIds(JSON.parse(saved));
+        } else if (user.talleres) {
+          setEnrolledIds(user.talleres);
+        }
+      }
     }
-  }, [user?.correo]);
+  }, [user?.correo, user?.talleres]);
+
+  useEffect(() => {
+    if (user?.correo) {
+      localStorage.setItem(`workshops_${user.correo}`, JSON.stringify(enrolledIds));
+    }
+  }, [enrolledIds, user?.correo]);
 
   const parseTime = (timeStr: string) => {
     if (!timeStr) return 8; // fallback
@@ -129,7 +146,7 @@ export default function WorkshopsModule() {
       setEnrolledIds(prev => prev.filter(id => id !== workshop.id));
     } else {
       if (isTimeCollision(workshop)) {
-        alert('Este taller tiene un traslape de horario con uno que ya seleccionaste.');
+        showAlert('Traslape detectado', 'Este taller tiene un traslape de horario con uno que ya seleccionaste.', 'warning');
         return;
       }
       setEnrolledIds(prev => [...prev, workshop.id]);
@@ -153,7 +170,7 @@ export default function WorkshopsModule() {
         setSaveStatus('saved');
         window.dispatchEvent(new Event('sessionUpdate'));
       } else {
-        alert("Hubo un error al guardar tus inscripciones en la nube.");
+        showAlert('Error', 'Hubo un error al guardar tus inscripciones en la nube.', 'error');
         setSaveStatus('idle');
       }
     } else {

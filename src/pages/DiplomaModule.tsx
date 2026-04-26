@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getCurrentUser, updateUserData, type UserData } from '../utils/auth';
 import ModuleTitle from '../components/ModuleTitle';
 import diplomaTemplate from '../assets/diploma-template.png';
+import { showAlert } from '../utils/swal';
 
 export default function DiplomaModule() {
   const [user, setUser] = useState<UserData | null>(getCurrentUser());
@@ -46,7 +47,7 @@ export default function DiplomaModule() {
       setIsSuccessModalOpen(true);
       setUser(getCurrentUser());
     } else {
-      alert(result.message);
+      showAlert('Error', result.message, 'error');
     }
   };
 
