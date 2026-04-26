@@ -55,7 +55,7 @@ body {
   background: var(--bg-primary);
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 100;
 }
 
 .nav-logo {
@@ -64,7 +64,40 @@ body {
   font-weight: 800;
   color: var(--blue);
   letter-spacing: -.5px;
+  white-space: nowrap;
 }
+
+.nav-mobile-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 5px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.menu-toggle:hover {
+  background: var(--bg-secondary);
+}
+
+.menu-toggle svg {
+  width: 24px;
+  height: 24px;
+}
+
+
+
+
+
+
 
 .nav-links {
   display: flex;
@@ -118,7 +151,6 @@ body {
   color: #fff;
   cursor: pointer;
 }
-
 .hero {
   padding: 4rem 2rem 3.5rem;
   background: var(--bg-primary);
@@ -126,7 +158,6 @@ body {
   overflow: hidden;
   border-bottom: .5px solid var(--border-soft);
   flex: 1;
-  /* Ocupa el espacio dinámicamente */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1863,3 +1894,151 @@ h1 span {
   border-radius: 10px !important;
   border: 0.5px solid var(--border-soft) !important;
 }
+
+/* ── SIDEBAR MOBILE ── */
+.mobile-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.mobile-sidebar-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  width: 280px;
+  height: 100vh;
+  background: var(--bg-primary);
+  z-index: 2001;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 15px 0 40px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-sidebar.open {
+  left: 0;
+}
+
+.sidebar-header-mobile {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-soft);
+  height: 80px;
+}
+
+.sidebar-header-mobile .logo-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--blue);
+  text-transform: uppercase;
+}
+
+.close-sidebar {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-soft);
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.close-sidebar:hover {
+  background: #ff5252;
+  color: white;
+  border-color: #ff5252;
+}
+
+.mobile-nav-list {
+  list-style: none;
+  padding: 1.5rem 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.mobile-nav-list li a {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 1.8rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.mobile-nav-list li a:hover {
+  background: var(--bg-secondary);
+  padding-left: 2rem;
+}
+
+.mobile-nav-list li a.active {
+  background: rgba(24, 95, 165, 0.08);
+  color: var(--blue);
+  border-left-color: var(--blue);
+}
+
+.nav-icon-svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+}
+
+.sidebar-footer-mobile {
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--bg-secondary);
+}
+
+.btn-sidebar-login {
+  width: 100%;
+  padding: 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-med);
+  border-radius: 10px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.btn-sidebar-register {
+  width: 100%;
+  padding: 14px;
+  background: var(--blue);
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  color: white;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) { .nav-links, .nav-right { display: none !important; } .menu-toggle { display: block !important; } }
+
+.nav-links a.active { color: var(--blue); border-bottom: 2px solid var(--blue); }

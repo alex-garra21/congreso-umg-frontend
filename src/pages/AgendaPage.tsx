@@ -3,6 +3,7 @@ import { getAgenda } from '../utils/agendaStore';
 import type { AgendaItem } from '../data/agendaData';
 import WorkshopBadge from '../components/workshops/WorkshopBadge';
 import AgendaModal from '../components/AgendaModal';
+import CalendarLink from '../components/CalendarLink';
 
 export default function AgendaPage() {
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<'Mañana' | 'Tarde'>('Mañana');
@@ -28,7 +29,11 @@ export default function AgendaPage() {
         <div className="speakers-header" style={{ flexDirection: 'column', textAlign: 'center', justifyContent: 'center', marginBottom: '3.5rem' }}>
           <span className="speakers-header-badge">Programa</span>
           <h2>Agenda del evento</h2>
-          <p style={{ marginTop: '10px', color: 'var(--text-secondary)' }}>Sábado 23 de Mayo — Hotel Alcazar doña Victoria, Cobán</p>
+          <CalendarLink>
+            <p style={{ marginTop: '10px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
+              Sábado 23 de Mayo — Hotel Alcazar doña Victoria, Cobán
+            </p>
+          </CalendarLink>
         </div>
 
         {/* TABS para Periodos */}
