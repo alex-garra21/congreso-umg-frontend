@@ -94,6 +94,12 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     getTokens().then(setTokens);
     setPage(1);
     setSearchAgenda('');
+    
+    // Limpiar filtros de reportes al cambiar de pestaña
+    setSearchTerm('');
+    setSelectedWorkshopFilter('');
+    setPaymentFilter('all');
+    setParticipantTypeFilter('all');
   }, [defaultTab, agendaTab]);
 
   const handleGenerateToken = async () => {
@@ -753,6 +759,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
             <input type="text" className="dashboard-input" placeholder="Buscar participante..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }} style={{ flex: 2, minWidth: '200px' }} />
             <select className="dashboard-input" value={selectedWorkshopFilter} onChange={(e) => { setSelectedWorkshopFilter(e.target.value); setPage(1); }} style={{ flex: 1, minWidth: '150px' }}>
               <option value="">Todos los talleres</option>
+              <option value="none">Sin talleres asignados</option>
               {agenda.filter(a => a.speaker).map(w => <option key={w.id} value={w.id}>{w.title}</option>)}
             </select>
             <select className="dashboard-input" value={paymentFilter} onChange={(e) => { setPaymentFilter(e.target.value as 'all' | 'paid' | 'unpaid'); setPage(1); }} style={{ flex: 1, minWidth: '150px' }}>
@@ -784,7 +791,11 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
               <tbody>
                 {users.filter(u => u.rol !== 'admin' && !u.desactivado).filter(u => {
                   const matchesSearch = u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) || u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-                  const matchesWorkshop = selectedWorkshopFilter === '' || (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+                  const matchesWorkshop = selectedWorkshopFilter === '' 
+                    ? true 
+                    : selectedWorkshopFilter === 'none' 
+                      ? (!u.talleres || u.talleres.length === 0) 
+                      : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
                   const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
                   const matchesType = participantTypeFilter === 'all' || u.tipoParticipante === participantTypeFilter;
                   return matchesSearch && matchesWorkshop && matchesPayment && matchesType;
@@ -807,7 +818,11 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
             </table>
             <Pagination current={page} total={users.filter(u => u.rol !== 'admin' && !u.desactivado).filter(u => {
               const matchesSearch = u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) || u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-              const matchesWorkshop = selectedWorkshopFilter === '' || (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+              const matchesWorkshop = selectedWorkshopFilter === '' 
+                ? true 
+                : selectedWorkshopFilter === 'none' 
+                  ? (!u.talleres || u.talleres.length === 0) 
+                  : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
               const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
               const matchesType = participantTypeFilter === 'all' || u.tipoParticipante === participantTypeFilter;
               return matchesSearch && matchesWorkshop && matchesPayment && matchesType;

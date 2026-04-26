@@ -5,7 +5,7 @@ import ModuleTitle from '../components/ModuleTitle';
 import { getAgenda, getRooms } from '../utils/agendaStore';
 import { syncUserEnrollmentsCloud } from '../utils/supabaseEnrollment';
 import type { AgendaItem } from '../data/agendaData';
-import { showAlert } from '../utils/swal';
+import { showAlert, showConfirm } from '../utils/swal';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
@@ -178,13 +178,29 @@ export default function WorkshopsModule() {
     }
   };
 
-  const handleEdit = () => {
-    setIsConfirmed(false);
-    setSaveStatus('idle');
-    if (user) {
-      localStorage.setItem(`workshops_confirmed_${user.correo}`, 'false');
+  const handleEdit = async () => {
+    if (!user) return;
+    
+    const count = parseInt(localStorage.getItem(`modifications_count_${user.correo}`) || '0');
+    if (count >= 1) {
+      showAlert('Límite alcanzado', 'Ya has utilizado tu única oportunidad para modificar talleres.', 'error');
+      return;
     }
-    window.dispatchEvent(new Event('sessionUpdate'));
+
+    const confirmed = await showConfirm(
+      '¿Modificar selección?', 
+      'Atención: Solo tienes derecho a UN cambio de talleres en caso de que te arrepientas de tu elección inicial. Si continúas, esta será tu ÚLTIMA oportunidad para modificar tu agenda. ¿Deseas proceder?', 
+      'Sí, modificar', 
+      true
+    );
+
+    if (confirmed) {
+      localStorage.setItem(`modifications_count_${user.correo}`, '1');
+      setIsConfirmed(false);
+      setSaveStatus('idle');
+      localStorage.setItem(`workshops_confirmed_${user.correo}`, 'false');
+      window.dispatchEvent(new Event('sessionUpdate'));
+    }
   };
 
   return (
@@ -266,21 +282,30 @@ export default function WorkshopsModule() {
         })}
       </div>
 
-      {isPaid && (
-        <div className="confirm-section-new">
-          {isConfirmed ? (
-            <button className="btn-edit" onClick={handleEdit}>Modificar selección</button>
-          ) : (
-            <button 
-              className={`btn-confirm ${enrolledIds.length === 0 ? 'disabled' : ''} ${saveStatus === 'saving' ? 'loading' : ''}`}
-              onClick={handleConfirm}
-              disabled={enrolledIds.length === 0 || saveStatus === 'saving'}
-            >
-              {saveStatus === 'saving' ? 'Guardando...' : `Confirmar ${enrolledIds.length} talleres`}
-            </button>
-          )}
-        </div>
-      )}
+      {isPaid && (() => {
+        const modificationsCount = user ? parseInt(localStorage.getItem(`modifications_count_${user.correo}`) || '0') : 0;
+        return (
+          <div className="confirm-section-new">
+            {isConfirmed ? (
+              modificationsCount >= 1 ? (
+                <div style={{ textAlign: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef', color: '#495057' }}>
+                  <p style={{ margin: 0, fontWeight: 500 }}>✔️ Ya has utilizado tu única oportunidad para modificar talleres. Tu selección es definitiva.</p>
+                </div>
+              ) : (
+                <button className="btn-edit" onClick={handleEdit}>Modificar selección (1 cambio disponible)</button>
+              )
+            ) : (
+              <button 
+                className={`btn-confirm ${enrolledIds.length === 0 ? 'disabled' : ''} ${saveStatus === 'saving' ? 'loading' : ''}`}
+                onClick={handleConfirm}
+                disabled={enrolledIds.length === 0 || saveStatus === 'saving'}
+              >
+                {saveStatus === 'saving' ? 'Guardando...' : `Confirmar ${enrolledIds.length} talleres`}
+              </button>
+            )}
+          </div>
+        );
+      })()}
 
       {showSuccessModal && (
         <div className="modal-bg open">
