@@ -3,11 +3,11 @@ import Navbar from './Navbar';
 
 export default function Layout() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
-      
+
       {/* <Outlet /> es el espacio dinámico donde React Router inyectará la página actual */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      <main style={{ flex: 1 }}>
         <Outlet />
       </main>
 

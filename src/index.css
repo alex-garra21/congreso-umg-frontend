@@ -1079,6 +1079,44 @@ h1 span {
   color: var(--text-secondary);
 }
 
+@media (max-width: 640px) {
+  .agenda-list-item {
+    display: grid;
+    grid-template-columns: 85px 1fr;
+    grid-template-areas: 
+      "time content"
+      "tag content";
+    gap: 12px;
+    padding: 16px;
+    align-items: start;
+  }
+
+  .agenda-time {
+    grid-area: time;
+    flex: none;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .agenda-content {
+    grid-area: content;
+  }
+
+  .agenda-content h3 {
+    font-size: 15px;
+  }
+
+  .agenda-content p {
+    font-size: 12px;
+  }
+
+  .agenda-list-item > div:last-child {
+    grid-area: tag;
+    display: flex;
+    justify-content: flex-start;
+  }
+}
+
 .agenda-badge {
   padding: 6px 12px;
   border-radius: 6px;
