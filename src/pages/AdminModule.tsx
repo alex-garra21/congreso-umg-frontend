@@ -13,6 +13,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { showToast, showConfirm } from '../utils/swal';
 import Swal from 'sweetalert2';
+import ColorPicker from '../components/ColorPicker';
 
 interface AdminModuleProps {
   defaultTab: 'tokens' | 'users' | 'reports' | 'agenda' | 'attendance';
@@ -94,7 +95,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     getTokens().then(setTokens);
     setPage(1);
     setSearchAgenda('');
-    
+
     // Limpiar filtros de reportes al cambiar de pestaña
     setSearchTerm('');
     setSelectedWorkshopFilter('');
@@ -282,7 +283,15 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
       const matchesSearch = u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesWorkshop = selectedWorkshopFilter === '' || (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+
+      const matchesWorkshop = selectedWorkshopFilter === 'all_records'
+        ? true
+        : selectedWorkshopFilter === ''
+          ? (u.talleres && u.talleres.length > 0)
+          : selectedWorkshopFilter === 'none'
+            ? (!u.talleres || u.talleres.length === 0)
+            : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+
       const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
       return matchesSearch && matchesWorkshop && matchesPayment;
     });
@@ -295,7 +304,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Participantes');
 
-    const columnTitle = selectedWorkshopFilter ? 'Taller' : 'Todos los talleres';
+    const columnTitle = (selectedWorkshopFilter && selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none') ? 'Taller' : 'Talleres';
 
     worksheet.columns = [
       { header: 'Participante', key: 'name', width: 30 },
@@ -310,26 +319,34 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     ];
 
     filtered.forEach(u => {
-      const workshopsText = selectedWorkshopFilter
+      const isSpecificWorkshop = selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none';
+
+      const workshopsText = isSpecificWorkshop
         ? getWorkshopTitle(selectedWorkshopFilter)
-        : (u.talleres?.map(tid => getWorkshopTitle(tid)).join(', ') || 'Sin talleres');
+        : (u.talleres?.map(tid => getWorkshopTitle(tid)).join(', ') || '-');
 
       worksheet.addRow({
         name: u.nombreDiploma || `${u.nombres} ${u.apellidos}`,
         email: u.correoDiploma || u.correo,
         workshops: workshopsText,
         gender: u.sexo === 'M' ? 'Hombre' : 'Mujer',
-        type: u.tipoParticipante === 'alumno' ? 'Estudiante UMG' : (u.tipoParticipante === 'externo' ? 'Externo' : 'N/A'),
-        idCard: u.tipoParticipante === 'alumno' ? (u.carnet || 'N/A') : 'N/A',
-        cycle: u.tipoParticipante === 'alumno' ? (u.ciclo || 'N/A') : 'N/A',
-        phone: u.telefono || 'N/A',
+        type: u.tipoParticipante === 'alumno' ? 'Estudiante UMG' : (u.tipoParticipante === 'externo' ? 'Externo' : '-'),
+        idCard: u.tipoParticipante === 'alumno' ? (u.carnet || '-') : '-',
+        cycle: u.tipoParticipante === 'alumno' ? (u.ciclo || '-') : '-',
+        phone: u.telefono || '-',
         payment: u.pagoValidado ? 'Pagado' : 'Sin pagar'
       });
     });
 
     worksheet.getRow(1).font = { bold: true };
 
-    const workshopSuffix = selectedWorkshopFilter ? ` - ${getWorkshopTitle(selectedWorkshopFilter)}` : ' - Todos los talleres';
+    const workshopSuffix = selectedWorkshopFilter === 'all_records'
+      ? ' - Todos los registros'
+      : selectedWorkshopFilter === ''
+        ? ' - Todos los talleres'
+        : selectedWorkshopFilter === 'none'
+          ? ' - Sin talleres asignados'
+          : ` - ${getWorkshopTitle(selectedWorkshopFilter)}`;
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `Reporte_Congreso_2026${workshopSuffix}.xlsx`);
   };
@@ -339,7 +356,15 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
       const matchesSearch = u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesWorkshop = selectedWorkshopFilter === '' || (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+
+      const matchesWorkshop = selectedWorkshopFilter === 'all_records'
+        ? true
+        : selectedWorkshopFilter === ''
+          ? (u.talleres && u.talleres.length > 0)
+          : selectedWorkshopFilter === 'none'
+            ? (!u.talleres || u.talleres.length === 0)
+            : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+
       const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
       const matchesType = participantTypeFilter === 'all' || u.tipoParticipante === participantTypeFilter;
       return matchesSearch && matchesWorkshop && matchesPayment && matchesType;
@@ -353,7 +378,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Lista para Diplomas');
 
-    const columnTitle = selectedWorkshopFilter ? 'Taller' : 'Talleres';
+    const columnTitle = (selectedWorkshopFilter && selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none') ? 'Taller' : 'Talleres';
 
     worksheet.columns = [
       { header: 'Participante', key: 'name', width: 35 },
@@ -362,9 +387,11 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     ];
 
     filtered.forEach(u => {
-      const workshopsText = selectedWorkshopFilter
+      const isSpecificWorkshop = selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none';
+
+      const workshopsText = isSpecificWorkshop
         ? getWorkshopTitle(selectedWorkshopFilter)
-        : (u.talleres?.map(tid => getWorkshopTitle(tid)).join(', ') || 'Sin talleres');
+        : (u.talleres?.map(tid => getWorkshopTitle(tid)).join(', ') || '-');
 
       worksheet.addRow({
         name: u.nombreDiploma || `${u.nombres} ${u.apellidos}`,
@@ -375,7 +402,13 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
 
     worksheet.getRow(1).font = { bold: true };
 
-    const workshopSuffix = selectedWorkshopFilter ? ` - ${getWorkshopTitle(selectedWorkshopFilter)}` : ' - Todos los talleres';
+    const workshopSuffix = selectedWorkshopFilter === 'all_records'
+      ? ' - Todos los registros'
+      : selectedWorkshopFilter === ''
+        ? ' - Todos los talleres'
+        : selectedWorkshopFilter === 'none'
+          ? ' - Sin talleres asignados'
+          : ` - ${getWorkshopTitle(selectedWorkshopFilter)}`;
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `Lista_Diplomas_2026${workshopSuffix}.xlsx`);
   };
@@ -501,7 +534,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
     const slug = generateSlug(workshop.title);
     const link = `${window.location.origin}/asistencia/${slug}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(link)}`;
-    
+
     Swal.fire({
       title: 'Código QR',
       html: `<p style="margin-bottom: 1.5rem; color: #4a5568; font-size: 14px;">${workshop.title}</p><img src="${qrUrl}" alt="QR Code" style="display: block; margin: 0 auto; border-radius: 8px; border: 1px solid #e2e8f0; padding: 10px;" />`,
@@ -758,8 +791,9 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
           <div className="filters-bar-admin" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <input type="text" className="dashboard-input" placeholder="Buscar participante..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }} style={{ flex: 2, minWidth: '200px' }} />
             <select className="dashboard-input" value={selectedWorkshopFilter} onChange={(e) => { setSelectedWorkshopFilter(e.target.value); setPage(1); }} style={{ flex: 1, minWidth: '150px' }}>
-              <option value="">Todos los talleres</option>
+              <option value="all_records">Todos los registros</option>
               <option value="none">Sin talleres asignados</option>
+              <option value="">Todos los talleres</option>
               {agenda.filter(a => a.speaker).map(w => <option key={w.id} value={w.id}>{w.title}</option>)}
             </select>
             <select className="dashboard-input" value={paymentFilter} onChange={(e) => { setPaymentFilter(e.target.value as 'all' | 'paid' | 'unpaid'); setPage(1); }} style={{ flex: 1, minWidth: '150px' }}>
@@ -779,7 +813,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
                 <tr>
                   <th>Participante</th>
                   <th>Correo</th>
-                  <th>{selectedWorkshopFilter ? 'Taller' : 'Talleres'}</th>
+                  <th>{(selectedWorkshopFilter && selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none') ? 'Taller' : 'Talleres'}</th>
                   <th>Sexo</th>
                   <th>Tipo</th>
                   <th>Carné</th>
@@ -791,11 +825,13 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
               <tbody>
                 {users.filter(u => u.rol !== 'admin' && !u.desactivado).filter(u => {
                   const matchesSearch = u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) || u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-                  const matchesWorkshop = selectedWorkshopFilter === '' 
-                    ? true 
-                    : selectedWorkshopFilter === 'none' 
-                      ? (!u.talleres || u.talleres.length === 0) 
-                      : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+                  const matchesWorkshop = selectedWorkshopFilter === 'all_records'
+                    ? true
+                    : selectedWorkshopFilter === ''
+                      ? (u.talleres && u.talleres.length > 0)
+                      : selectedWorkshopFilter === 'none'
+                        ? (!u.talleres || u.talleres.length === 0)
+                        : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
                   const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
                   const matchesType = participantTypeFilter === 'all' || u.tipoParticipante === participantTypeFilter;
                   return matchesSearch && matchesWorkshop && matchesPayment && matchesType;
@@ -804,7 +840,9 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
                     <td><strong>{u.nombreDiploma || `${u.nombres} ${u.apellidos}`}</strong></td>
                     <td>{u.correoDiploma || u.correo}</td>
                     <td>
-                      {selectedWorkshopFilter ? getWorkshopTitle(selectedWorkshopFilter) : (u.talleres?.length ? u.talleres.map(id => getWorkshopTitle(id)).join(', ') : '-')}
+                      {(selectedWorkshopFilter && selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none')
+                        ? getWorkshopTitle(selectedWorkshopFilter)
+                        : (u.talleres?.length ? u.talleres.map(id => getWorkshopTitle(id)).join(', ') : '-')}
                     </td>
                     <td>{u.sexo === 'M' ? 'Hombre' : 'Mujer'}</td>
                     <td>{u.tipoParticipante === 'alumno' ? 'Estudiante UMG' : (u.tipoParticipante === 'externo' ? 'Externo' : '-')}</td>
@@ -818,11 +856,13 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
             </table>
             <Pagination current={page} total={users.filter(u => u.rol !== 'admin' && !u.desactivado).filter(u => {
               const matchesSearch = u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) || u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-              const matchesWorkshop = selectedWorkshopFilter === '' 
-                ? true 
-                : selectedWorkshopFilter === 'none' 
-                  ? (!u.talleres || u.talleres.length === 0) 
-                  : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+              const matchesWorkshop = selectedWorkshopFilter === 'all_records'
+                ? true
+                : selectedWorkshopFilter === ''
+                  ? (u.talleres && u.talleres.length > 0)
+                  : selectedWorkshopFilter === 'none'
+                    ? (!u.talleres || u.talleres.length === 0)
+                    : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
               const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
               const matchesType = participantTypeFilter === 'all' || u.tipoParticipante === participantTypeFilter;
               return matchesSearch && matchesWorkshop && matchesPayment && matchesType;
@@ -1291,19 +1331,39 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
                 <input type="text" value={editingCategory.name} onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })} disabled={!!categories[editingCategory.name] && editingCategory.name !== ''} required />
                 {!!categories[editingCategory.name] && <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>El nombre no se puede cambiar, elimina y crea una nueva si es necesario.</small>}
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>COLOR FONDO</label>
-                  <input type="text" value={editingCategory.style.bg} onChange={e => setEditingCategory({ ...editingCategory, style: { ...editingCategory.style, bg: e.target.value } })} placeholder="ej. rgba(1, 87, 155, 0.15) o #f0f0f0" required />
-                </div>
-                <div className="form-group">
-                  <label>COLOR TEXTO</label>
-                  <input type="text" value={editingCategory.style.text} onChange={e => setEditingCategory({ ...editingCategory, style: { ...editingCategory.style, text: e.target.value } })} placeholder="ej. #01579b" required />
-                </div>
+
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label>SELECCIONAR COLOR</label>
+                <ColorPicker 
+                  selectedColor={editingCategory.style.text}
+                  onSelect={(color) => setEditingCategory({ 
+                    ...editingCategory, 
+                    style: { 
+                      bg: `${color}15`, 
+                      text: color 
+                    } 
+                  })}
+                />
               </div>
-              <div className="form-actions">
-                <button type="submit" className="btn-solid">Guardar Categoría</button>
-                <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="btn-ghost">Cancelar</button>
+
+              <div style={{ marginTop: '1.5rem', padding: '1.5rem', border: '2px dashed #e9ecef', borderRadius: '12px', textAlign: 'center', background: '#fff' }}>
+                <label style={{ display: 'block', marginBottom: '15px', fontSize: '12px', fontWeight: 700, color: '#adb5bd', textTransform: 'uppercase', letterSpacing: '1px' }}>Vista Previa del Tag</label>
+                <span className="tag-pill" style={{ 
+                  backgroundColor: editingCategory.style.bg, 
+                  color: editingCategory.style.text,
+                  fontSize: '15px',
+                  fontWeight: 800,
+                  padding: '8px 20px',
+                  borderRadius: '100px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}>
+                  {editingCategory.name || 'Categoría de Taller'}
+                </span>
+              </div>
+
+              <div className="form-actions" style={{ marginTop: '2rem' }}>
+                <button type="submit" className="btn-solid" style={{ flex: 1, padding: '14px', borderRadius: '10px' }}>Guardar Cambios</button>
+                <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="btn-ghost" style={{ flex: 1 }}>Cancelar</button>
               </div>
             </form>
           </div>

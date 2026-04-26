@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getAgenda, type AgendaItem, type Speaker, generateSlug } from '../utils/agendaStore';
-import { loginUser, updateUserData, type UserData } from '../utils/auth';
+import { loginUser, updateUserData, getCurrentUser, type UserData } from '../utils/auth';
 import { markAttendanceCloud } from '../utils/supabaseEnrollment';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
@@ -40,9 +40,20 @@ export default function AttendancePage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [confirmedUser, setConfirmedUser] = useState<UserData | null>(null);
   const [confirmationTime, setConfirmationTime] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [loggedInUser, setLoggedInUser] = useState<UserData | null>(null);
+
+  // Actualizar el tiempo cada 30 segundos para que la página sea reactiva al horario
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
-    const loadWorkshop = () => {
+    const loadData = () => {
+      // Cargar Taller
       if (workshopId) {
         const agenda = getAgenda();
         const item = agenda.find(a => a.id === workshopId || generateSlug(a.title) === workshopId);
@@ -53,16 +64,23 @@ export default function AttendancePage() {
           }
         }
       }
+
+      // Detectar sesión activa
+      const user = getCurrentUser();
+      if (user) {
+        setLoggedInUser(user);
+        setEmail(user.correo); 
+      }
     };
 
-    loadWorkshop();
+    loadData();
 
-    window.addEventListener('agendaUpdate', loadWorkshop);
-    return () => window.removeEventListener('agendaUpdate', loadWorkshop);
+    window.addEventListener('agendaUpdate', loadData);
+    return () => window.removeEventListener('agendaUpdate', loadData);
   }, [workshopId]);
 
-  const handleConfirmAttendance = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleConfirmAttendance = async (e?: React.FormEvent, isQuickConfirm: boolean = false) => {
+    if (e) e.preventDefault();
     setError('');
 
     if (!workshop) {
@@ -70,22 +88,26 @@ export default function AttendancePage() {
       return;
     }
 
-    if (!email || !password) {
-      setError('Por favor, ingresa tus credenciales.');
-      return;
-    }
+    let user: UserData | null = null;
 
-    // 1. Verificación de Usuario
-    const loginResult = await loginUser(email, password);
-    if (!loginResult.success || !loginResult.user) {
-      setError(loginResult.message);
-      return;
+    if (isQuickConfirm && loggedInUser) {
+      user = loggedInUser;
+    } else {
+      if (!email || !password) {
+        setError('Por favor, ingresa tus credenciales.');
+        return;
+      }
+      // Verificación de Usuario
+      const loginResult = await loginUser(email, password);
+      if (!loginResult.success || !loginResult.user) {
+        setError(loginResult.message);
+        return;
+      }
+      user = loginResult.user;
     }
     
-    const user = loginResult.user;
-    
-    if (!user.id) {
-      setError('Error interno: El usuario no tiene un ID válido asignado.');
+    if (!user || !user.id) {
+      setError('Error interno: El usuario no es válido.');
       return;
     }
 
@@ -96,8 +118,7 @@ export default function AttendancePage() {
       return;
     }
 
-    // 3. Verificación de Horario
-    const now = new Date();
+    // 3. Verificación de Horario (Usando currentTime para consistencia)
     const startTime = parseTimeStr(workshop.time, workshop.date);
     const endTime = parseTimeStr(workshop.endTime, workshop.date);
 
@@ -105,9 +126,7 @@ export default function AttendancePage() {
     const graceMinutes = workshop.gracePeriod !== undefined ? workshop.gracePeriod : 10;
     endTime.setMinutes(endTime.getMinutes() + graceMinutes);
 
-    // Para evitar bloqueos durante pruebas de desarrollo, si el evento es en el futuro/pasado, 
-    // en producción debería restringirse estrictamente. Aquí lo implementamos según los requisitos.
-    if (now < startTime || now > endTime) {
+    if (currentTime < startTime || currentTime > endTime) {
       setError(`La confirmación de asistencia solo está disponible durante el horario del taller (${workshop.time} - ${workshop.endTime}) y hasta ${graceMinutes} minutos después.`);
       return;
     }
@@ -157,6 +176,18 @@ export default function AttendancePage() {
     });
   };
 
+  // Determinar si el taller está fuera de horario
+  const checkIsOutOfTime = () => {
+    if (!workshop) return true;
+    const startTime = parseTimeStr(workshop.time, workshop.date);
+    const endTime = parseTimeStr(workshop.endTime, workshop.date);
+    const graceMinutes = workshop.gracePeriod !== undefined ? workshop.gracePeriod : 10;
+    endTime.setMinutes(endTime.getMinutes() + graceMinutes);
+    return currentTime < startTime || currentTime > endTime;
+  };
+
+  const isOutOfTime = checkIsOutOfTime();
+
   if (!workshop) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
@@ -189,8 +220,15 @@ export default function AttendancePage() {
         <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1px', color: '#63b3ed', textTransform: 'uppercase', marginBottom: '8px' }}>
-            Taller en curso
+          <p style={{ 
+            fontSize: '11px', 
+            fontWeight: 700, 
+            letterSpacing: '1px', 
+            color: isOutOfTime ? '#fc8181' : '#63b3ed', 
+            textTransform: 'uppercase', 
+            marginBottom: '8px' 
+          }}>
+            {isOutOfTime ? 'Taller fuera de horario' : 'Taller en curso'}
           </p>
           <h1 style={{ fontSize: '28px', fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             {workshop.title}
@@ -213,158 +251,247 @@ export default function AttendancePage() {
         </div>
       </div>
 
-      {/* Formulario / Estado de Éxito */}
-      <div style={{
-        width: '100%',
-        maxWidth: '400px',
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        padding: '2rem',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-      }}>
-        {!isSuccess ? (
-          <>
-            <h2 style={{ fontSize: '22px', fontFamily: 'Syne', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
-              Identifícate para confirmar
-            </h2>
-            <p style={{ fontSize: '14px', color: '#718096', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-              Ingresa tus datos una sola vez. Este dispositivo te recordará para futuros talleres.
-            </p>
+      {/* Formulario / Estado de Éxito - Solo se muestra si NO está fuera de horario o si ya tuvo éxito */}
+      {(!isOutOfTime || isSuccess) && (
+        <div style={{
+          width: '100%',
+          maxWidth: '400px',
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '2rem',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }}>
+          {!isSuccess ? (
+            <>
+              {loggedInUser ? (
+                /* Vista de Confirmación Rápida */
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ 
+                    width: '60px', 
+                    height: '60px', 
+                    borderRadius: '50%', 
+                    backgroundColor: '#eef6ff', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    color: '#1971c2', 
+                    fontWeight: 700, 
+                    fontSize: '20px',
+                    margin: '0 auto 1rem'
+                  }}>
+                    {loggedInUser.nombres[0]}{loggedInUser.apellidos[0]}
+                  </div>
+                  <h2 style={{ fontSize: '22px', fontFamily: 'Syne', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
+                    ¡Hola, {loggedInUser.nombres.split(' ')[0]}!
+                  </h2>
+                  <p style={{ fontSize: '14px', color: '#718096', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                    Hemos detectado tu sesión activa. ¿Deseas confirmar tu asistencia a este taller?
+                  </p>
 
-            {error && (
-              <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
-                {error}
-              </div>
-            )}
+                  {error && (
+                    <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
+                      {error}
+                    </div>
+                  )}
 
-            <form onSubmit={handleConfirmAttendance} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4a5568', marginBottom: '6px', textTransform: 'uppercase' }}>
-                  Correo electrónico
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="correo@ejemplo.com"
-                  required
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '15px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4a5568', marginBottom: '6px', textTransform: 'uppercase' }}>
-                  Contraseña
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Tu contraseña"
-                    required
-                    style={{ width: '100%', padding: '12px 16px', paddingRight: '40px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '15px' }}
-                  />
                   <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    onClick={() => handleConfirmAttendance(undefined, true)}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      backgroundColor: '#0ca678',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s',
+                      boxShadow: '0 4px 12px rgba(12, 166, 120, 0.3)'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#099268'}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = '#0ca678'}
                   >
-                    {showPassword ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    )}
+                    Sí, confirmar ahora
+                  </button>
+
+                  <button
+                    onClick={() => setLoggedInUser(null)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#3182ce',
+                      fontSize: '13px',
+                      marginTop: '1.5rem',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                  >
+                    No soy yo, usar otra cuenta
                   </button>
                 </div>
+              ) : (
+                /* Formulario Tradicional */
+                <>
+                  <h2 style={{ fontSize: '22px', fontFamily: 'Syne', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
+                    Identifícate para confirmar
+                  </h2>
+                  <p style={{ fontSize: '14px', color: '#718096', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                    Ingresa tus datos una sola vez. Este dispositivo te recordará para futuros talleres.
+                  </p>
+
+                  {error && (
+                    <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
+                      {error}
+                    </div>
+                  )}
+
+                  <form onSubmit={(e) => handleConfirmAttendance(e, false)} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4a5568', marginBottom: '6px', textTransform: 'uppercase' }}>
+                        Correo electrónico
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="correo@ejemplo.com"
+                        required
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '15px' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#4a5568', marginBottom: '6px', textTransform: 'uppercase' }}>
+                        Contraseña
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          placeholder="Tu contraseña"
+                          required
+                          style={{ width: '100%', padding: '12px 16px', paddingRight: '40px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '15px' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                          aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        >
+                          {showPassword ? (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                              <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                        backgroundColor: '#1971c2',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        marginTop: '0.5rem',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.backgroundColor = '#1864ab'}
+                      onMouseOut={e => e.currentTarget.style.backgroundColor = '#1971c2'}
+                    >
+                      Confirmar asistencia
+                    </button>
+                  </form>
+                </>
+              )}
+            </>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+
+              {/* Header del usuario confirmado */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #edf2f7' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#eef6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1971c2', fontWeight: 700, fontSize: '18px' }}>
+                  {(confirmedUser?.nombres?.[0] || '')}{(confirmedUser?.apellidos?.[0] || '')}
+                </div>
+                <div style={{ textAlign: 'left', flex: 1 }}>
+                  <div style={{ fontWeight: 700, color: '#1a202c' }}>{confirmedUser?.nombres} {confirmedUser?.apellidos}</div>
+                  <div style={{ fontSize: '13px', color: '#718096' }}>{confirmedUser?.correo}</div>
+                </div>
               </div>
 
-              <button
-                type="submit"
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  backgroundColor: '#1971c2',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  marginTop: '0.5rem',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={e => e.currentTarget.style.backgroundColor = '#1864ab'}
-                onMouseOut={e => e.currentTarget.style.backgroundColor = '#1971c2'}
-              >
-                Confirmar asistencia
-              </button>
-            </form>
-          </>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
+              <div style={{
+                backgroundColor: '#f0f9ff',
+                borderRadius: '16px',
+                padding: '2rem 1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
+                <div style={{ width: '64px', height: '64px', backgroundColor: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#0ca678" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '32px', height: '32px' }}>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
 
-            {/* Header del usuario */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #edf2f7' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#eef6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1971c2', fontWeight: 700, fontSize: '18px' }}>
-                {(confirmedUser?.nombres?.[0] || '')}{(confirmedUser?.apellidos?.[0] || '')}
-              </div>
-              <div style={{ textAlign: 'left', flex: 1 }}>
-                <div style={{ fontWeight: 700, color: '#1a202c' }}>{confirmedUser?.nombres} {confirmedUser?.apellidos}</div>
-                <div style={{ fontSize: '13px', color: '#718096' }}>{confirmedUser?.correo}</div>
+                <h2 style={{ fontSize: '24px', fontFamily: 'Syne', fontWeight: 800, color: '#1a365d', marginBottom: '1rem', lineHeight: 1.2 }}>
+                  ¡Ya confirmaste tu<br />asistencia!
+                </h2>
+                <p style={{ color: '#4a5568', fontSize: '14px', marginBottom: '2rem', lineHeight: 1.5 }}>
+                  Tu presencia en este taller ya fue registrada correctamente.
+                </p>
+
+                <div style={{ width: '100%', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px' }}>
+                    <span style={{ color: '#718096' }}>Participante</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right' }}>{confirmedUser?.nombres} {confirmedUser?.apellidos?.split(' ')[0]}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px' }}>
+                    <span style={{ color: '#718096' }}>Taller</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right', maxWidth: '150px' }}>{workshop.title}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px' }}>
+                    <span style={{ color: '#718096' }}>Sala</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right' }}>{workshop.room}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                    <span style={{ color: '#718096' }}>Registrado</span>
+                    <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right' }}>{formatDate(confirmationTime)}</span>
+                  </div>
+                </div>
               </div>
             </div>
+          )}
+        </div>
+      )}
 
-            <div style={{
-              backgroundColor: '#f0f9ff',
-              borderRadius: '16px',
-              padding: '2rem 1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center'
-            }}>
-              <div style={{ width: '64px', height: '64px', backgroundColor: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#0ca678" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '32px', height: '32px' }}>
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-
-              <h2 style={{ fontSize: '24px', fontFamily: 'Syne', fontWeight: 800, color: '#1a365d', marginBottom: '1rem', lineHeight: 1.2 }}>
-                ¡Ya confirmaste tu<br />asistencia!
-              </h2>
-              <p style={{ color: '#4a5568', fontSize: '14px', marginBottom: '2rem', lineHeight: 1.5 }}>
-                Tu presencia en este taller ya fue registrada correctamente.
-              </p>
-
-              <div style={{ width: '100%', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px' }}>
-                  <span style={{ color: '#718096' }}>Participante</span>
-                  <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right' }}>{confirmedUser?.nombres} {confirmedUser?.apellidos?.split(' ')[0]}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px' }}>
-                  <span style={{ color: '#718096' }}>Taller</span>
-                  <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right', maxWidth: '150px' }}>{workshop.title}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px' }}>
-                  <span style={{ color: '#718096' }}>Sala</span>
-                  <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right' }}>{workshop.room}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                  <span style={{ color: '#718096' }}>Registrado</span>
-                  <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right' }}>{formatDate(confirmationTime)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Mensaje informativo si está fuera de horario */}
+      {isOutOfTime && !isSuccess && (
+        <div style={{
+          width: '100%',
+          maxWidth: '400px',
+          textAlign: 'center',
+          marginTop: '2rem',
+          color: '#4a5568'
+        }}>
+          <p style={{ fontSize: '14px' }}>
+            La confirmación de asistencia se habilitará automáticamente cuando inicie el taller.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
