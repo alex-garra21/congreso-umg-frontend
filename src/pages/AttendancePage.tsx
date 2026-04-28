@@ -127,7 +127,7 @@ export default function AttendancePage() {
     endTime.setMinutes(endTime.getMinutes() + graceMinutes);
 
     if (currentTime < startTime || currentTime > endTime) {
-      setError(`La confirmación de asistencia solo está disponible durante el horario del taller (${workshop.time} - ${workshop.endTime}) y hasta ${graceMinutes} minutos después.`);
+      setError(`La confirmación de asistencia está disponible desde el inicio del taller (${workshop.time}) hasta ${graceMinutes} minutos después de su finalización (${workshop.endTime}).`);
       return;
     }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { validateToken, validatePaymentInSession, getCurrentUser, type UserData } from '../utils/auth';
-import ModuleTitle from '../components/ModuleTitle';
-import { showAlert } from '../utils/swal';
+import { validateToken, validatePaymentInSession, getCurrentUser, type UserData } from '../../../utils/auth';
+import ModuleTitle from '../../../components/ModuleTitle';
+import { showAlert } from '../../../utils/swal';
 
 export default function PaymentModule() {
   const [codigo, setCodigo] = useState('');

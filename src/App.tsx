@@ -17,11 +17,11 @@ import ParticipantesInfo from './pages/ParticipantesInfo';
 
 // Importar Dashboard components
 import DashboardLayout from './components/DashboardLayout';
-import DashboardHome from './pages/DashboardHome';
-import PaymentModule from './pages/PaymentModule';
-import ProfileModule from './pages/ProfileModule';
-import WorkshopsModule from './pages/WorkshopsModule';
-import DiplomaModule from './pages/DiplomaModule';
+import DashboardHome from './modules/user/dashboard/DashboardHome';
+import PaymentModule from './modules/user/pago/PaymentModule';
+import ProfileModule from './modules/general/perfil/ProfileModule';
+import WorkshopsModule from './modules/user/talleres/WorkshopsModule';
+import DiplomaModule from './modules/user/diploma/DiplomaModule';
 import AdminModule from './pages/AdminModule';
 import { DashboardTitleProvider } from './utils/DashboardTitleContext';
 

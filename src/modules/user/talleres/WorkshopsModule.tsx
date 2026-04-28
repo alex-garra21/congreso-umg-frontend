@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, updateUserData } from '../utils/auth';
-import ModuleTitle from '../components/ModuleTitle';
-import { getAgenda, getRooms } from '../utils/agendaStore';
-import { syncUserEnrollmentsCloud } from '../utils/supabaseEnrollment';
-import type { AgendaItem } from '../data/agendaData';
-import { showAlert, showConfirm } from '../utils/swal';
+import { getCurrentUser, updateUserData } from '../../../utils/auth';
+import ModuleTitle from '../../../components/ModuleTitle';
+import { getAgenda, getRooms } from '../../../utils/agendaStore';
+import { syncUserEnrollmentsCloud } from '../../../utils/supabaseEnrollment';
+import type { AgendaItem } from '../../../data/agendaData';
+import { showAlert, showConfirm } from '../../../utils/swal';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();

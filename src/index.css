@@ -2060,3 +2060,96 @@ h1 span {
 }
 
 .nav-links a.active { color: var(--blue); border-bottom: 2px solid var(--blue); }
+
+/* ── UI COMPONENTS ── */
+.admin-btn-hover:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.admin-btn-hover:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.search-input-focus:focus {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 4px rgba(24, 95, 165, 0.1);
+}
+
+.select-focus:focus {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 4px rgba(24, 95, 165, 0.1);
+}
+
+.admin-tabs-container button:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-tabs-container button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-table thead th {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 16px 24px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.admin-table thead tr th:first-child {
+  border-top-left-radius: 12px;
+}
+
+.admin-table thead tr th:last-child {
+  border-top-right-radius: 12px;
+}
+
+.admin-table tbody td {
+  padding: 20px 24px;
+  font-size: 14px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+  transition: all 0.2s ease;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.admin-table tbody tr:hover td {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+}
+

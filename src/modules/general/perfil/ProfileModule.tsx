@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { getCurrentUser, updateUserData, type UserData } from '../utils/auth';
-import ChangePasswordModal from '../components/ChangePasswordModal';
-import ModuleTitle from '../components/ModuleTitle';
-import { showAlert } from '../utils/swal';
+import { useState, useEffect } from 'react';
+import { getCurrentUser, updateUserData, type UserData } from '../../../utils/auth';
+import ChangePasswordModal from '../../../components/ChangePasswordModal';
+import ModuleTitle from '../../../components/ModuleTitle';
+import { showAlert } from '../../../utils/swal';
 
 export default function ProfileModule() {
   const [user, setUser] = useState<UserData | null>(getCurrentUser());

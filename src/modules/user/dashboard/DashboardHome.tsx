@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getCurrentUser, getAllUsersCloud, type UserData } from '../utils/auth';
-import ModuleTitle from '../components/ModuleTitle';
-import LocationLink from '../components/LocationLink';
+import { getCurrentUser, getAllUsersCloud, type UserData } from '../../../utils/auth';
+import ModuleTitle from '../../../components/ModuleTitle';
+import LocationLink from '../../../components/LocationLink';
 
 export default function DashboardHome() {
   const [user, setUser] = useState<UserData | null>(getCurrentUser());

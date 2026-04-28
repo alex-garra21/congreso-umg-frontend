@@ -27,6 +27,8 @@ export interface TokenData {
   code: string;
   used: boolean;
   usedBy?: string;
+  usedByName?: string;
+  usedByType?: string;
 }
 
 const STORAGE_KEY = 'congreso_users';
@@ -39,15 +41,30 @@ export async function getTokens(): Promise<TokenData[]> {
       codigo, 
       usado, 
       usado_por,
-      usuarios (correo)
+      usuarios (nombres, apellidos, correo, tipo_participante)
     `);
   if (error || !data) return [];
 
-  return data.map(d => ({
-    code: d.codigo,
-    used: d.usado,
-    usedBy: d.usuarios ? (d.usuarios as any).correo : undefined
-  }));
+  return data.map(d => {
+    const u = Array.isArray(d.usuarios) ? d.usuarios[0] : d.usuarios;
+    const nombres = (u as any)?.nombres || '';
+    const apellidos = (u as any)?.apellidos || '';
+    const name = `${nombres} ${apellidos}`.trim();
+    
+    // Normalizar el tipo de participante
+    let type = (u as any)?.tipo_participante;
+    if (type) {
+      type = type.toLowerCase();
+    }
+
+    return {
+      code: d.codigo,
+      used: d.usado,
+      usedBy: u ? (u as any).correo : undefined,
+      usedByName: name || undefined,
+      usedByType: type || undefined
+    };
+  });
 }
 
 // Función auxiliar para generar bloques de caracteres aleatorios
