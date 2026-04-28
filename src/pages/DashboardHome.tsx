@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getCurrentUser, getAllUsersCloud, type UserData } from '../utils/auth';
 import ModuleTitle from '../components/ModuleTitle';
+import LocationLink from '../components/LocationLink';
 
 export default function DashboardHome() {
   const [user, setUser] = useState<UserData | null>(getCurrentUser());
@@ -12,7 +13,7 @@ export default function DashboardHome() {
     const updateData = () => {
       const currentUser = getCurrentUser();
       setUser(currentUser);
-      
+
       if (currentUser?.rol !== 'admin') {
         const saved = localStorage.getItem(`workshops_${currentUser?.correo}`);
         if (saved) {
@@ -46,14 +47,15 @@ export default function DashboardHome() {
     Calendar: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
     Layout: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>,
     Clock: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-    Users: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+    Users: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
+    Award: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></svg>
   };
 
   if (user?.rol === 'admin') {
     // Los administradores no cuentan como participantes
     const participants = allUsers.filter(u => u.rol !== 'admin');
     const adminsCount = allUsers.filter(u => u.rol === 'admin').length;
-    
+
     const totalUsers = participants.length;
     const paidUsers = participants.filter(u => u.pagoValidado).length;
     const studentUsers = participants.filter(u => u.tipoParticipante === 'alumno').length;
@@ -91,7 +93,7 @@ export default function DashboardHome() {
             </div>
             <span className="card-sub">Alumnos universitarios</span>
           </div>
-          
+
           <div className="status-card">
             <span className="card-label">PARTICIPANTES EXTERNOS</span>
             <div className="card-value" style={{ color: '#f59f00' }}>
@@ -168,7 +170,7 @@ export default function DashboardHome() {
   const isPaid = user?.pagoValidado;
   const isSent = user?.pagoEnviado;
 
-  const getStepStatus = (type: 'pago' | 'talleres' | 'playera') => {
+  const getStepStatus = (type: 'pago' | 'talleres' | 'playera' | 'diploma') => {
     if (type === 'pago') {
       if (isPaid) return { class: 'completed', label: 'Completado', badge: 'success' };
       if (isSent) return { class: 'in-progress', label: 'En proceso', badge: 'warning' };
@@ -179,11 +181,16 @@ export default function DashboardHome() {
       if (workshopsCount > 0) return { class: 'in-progress', label: 'En proceso', badge: 'warning' };
       return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
     }
+    if (type === 'diploma') {
+      if (user?.diplomaEditado) return { class: 'completed', label: 'Completado', badge: 'success' };
+      return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
+    }
     return { class: 'pending', label: 'Pendiente', badge: 'neutral' };
   };
 
   const pagoStatus = getStepStatus('pago');
   const talleresStatus = getStepStatus('talleres');
+  const diplomaStatus = getStepStatus('diploma');
 
   return (
     <div className="dashboard-home">
@@ -193,23 +200,16 @@ export default function DashboardHome() {
       <div className="status-grid">
         <div className="status-card">
           <span className="card-label">ESTADO DE PAGO</span>
-          {isPaid ? (
-            <div className="card-value success">
-              <span className="icon"><Icons.CheckCircle /></span>
-              <span>Validado</span>
-            </div>
-          ) : isSent ? (
-            <div className="card-value warning">
-              <span className="icon"><Icons.Clock /></span>
-              <span>En revisión</span>
-            </div>
-          ) : (
-            <div className="card-value danger">
-              <span className="icon"><Icons.AlertTriangle /></span>
-              <span>Pendiente</span>
-            </div>
-          )}
-          <span className="card-sub">{isPaid ? 'Inscripción activa' : isSent ? 'Validando comprobante' : 'Pago requerido'}</span>
+          <div className="status-badge-wrapper" style={{ margin: '10px 0' }}>
+            {isPaid ? (
+              <span className="step-badge success" style={{ fontSize: '14px', padding: '4px 12px' }}>Validado</span>
+            ) : isSent ? (
+              <span className="step-badge warning" style={{ fontSize: '14px', padding: '4px 12px' }}>En revisión</span>
+            ) : (
+              <span className="step-badge neutral" style={{ fontSize: '14px', padding: '4px 12px' }}>Pendiente</span>
+            )}
+          </div>
+          <span className="card-sub">{isPaid ? 'Inscripción activa' : isSent ? 'Validando comprobante' : 'Pago requerido, ingrese el token para validar su inscripción'}</span>
         </div>
 
         <div className="status-card">
@@ -220,18 +220,30 @@ export default function DashboardHome() {
           <span className="card-sub">{workshopsCount === 1 ? 'Taller seleccionado' : 'Talleres seleccionados'}</span>
         </div>
 
+        <div className="status-card">
+          <span className="card-label">DIPLOMA</span>
+          {user?.diplomaEditado ? (
+            <div className="status-badge-wrapper">
+              <span className="step-badge success" style={{ fontSize: '14px', padding: '4px 12px' }}>Confirmado</span>
+            </div>
+          ) : (
+            <div className="status-badge-wrapper">
+              <span className="step-badge neutral" style={{ fontSize: '14px', padding: '4px 12px' }}>Pendiente</span>
+            </div>
+          )}
+          <span className="card-sub">{user?.diplomaEditado ? 'Datos confirmados' : 'Requiere confirmación de datos para el diploma'}</span>
+        </div>
 
-
-        <div 
-          className="status-card highlight" 
-          style={{ cursor: 'pointer' }} 
+        <div
+          className="status-card highlight"
+          style={{ cursor: 'pointer' }}
           onClick={() => window.open('https://www.google.com/calendar/render?action=TEMPLATE&text=CONGRESO+2026+UMG+SISTEMAS+COBÁN&dates=20260523T140000Z/20260523T230000Z&details=El+evento+académico+más+importante+del+año.&location=Hotel+Alcazar+doña+Victoria,+Cobán', '_blank')}
         >
           <span className="card-label">EVENTO</span>
           <div className="card-value">
             <span className="text">Mayo 23</span>
           </div>
-          <span className="card-sub">Recordatorio Calendar</span>
+          <span className="card-sub">Agregar recordatorio en google calendar</span>
         </div>
       </div>
 
@@ -277,22 +289,22 @@ export default function DashboardHome() {
             <span className={`step-badge ${talleresStatus.badge}`}>{talleresStatus.label}</span>
           </div>
 
-
+          {/* Step 4: Diploma */}
+          <div className={`step-item ${diplomaStatus.class}`}>
+            <div className={user?.diplomaEditado ? 'step-check' : 'step-icon'}>
+              {user?.diplomaEditado ? <Icons.Check /> : <Icons.Award />}
+            </div>
+            <div className="step-content">
+              <h3>Confirmación de Diploma</h3>
+              <p>{user?.diplomaEditado ? 'Datos del diploma confirmados' : 'Confirma tu nombre y correo para el diploma'}</p>
+            </div>
+            <span className={`step-badge ${diplomaStatus.badge}`}>{diplomaStatus.label}</span>
+          </div>
         </div>
       </section>
 
-      {/* Info Banner */}
-      <div 
-        className="info-banner" 
-        style={{ cursor: 'pointer' }}
-        onClick={() => window.open('https://maps.app.goo.gl/drwTJp68mjcYne5S9', '_blank')}
-      >
-        <span className="banner-icon">📍</span>
-        <div className="banner-text">
-          <h3>Hotel Alcazar doña Victoria — 23 de mayo, 2026</h3>
-          <p>Hotel Alcazar doña Victoria, Cobán · Clic para ver ubicación</p>
-        </div>
-      </div>
+      {/* Info Banner Reutilizable */}
+      <LocationLink variant="banner" />
 
       <style>{`
         .step-item.in-progress {
@@ -308,11 +320,26 @@ export default function DashboardHome() {
           color: #f76707;
           border: 1px solid #ffe8cc;
         }
+        .step-badge.neutral {
+          background: #fff5f5;
+          color: #e53e3e;
+          border: 1px solid #fed7d7;
+        }
         .status-card .card-value.warning {
           color: #f76707;
         }
         .status-card .card-value.danger {
           color: #fa5252;
+        }
+        .status-badge-wrapper {
+          display: flex;
+          margin: 8px 0;
+        }
+        .status-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
         }
       `}</style>
     </div>

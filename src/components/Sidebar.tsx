@@ -1,6 +1,7 @@
 import { useState, useEffect, type JSX } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { logout, getCurrentUser, type UserData } from '../utils/auth';
+import logoUMG from '../assets/UMG-LOGO.svg';
 
 interface SidebarProps {
   onModuleChange?: (moduleId: string) => void;
@@ -104,10 +105,10 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
           {isExpanded ? (
             <div className="logo-full">
               <span className="logo-main">CONGRESO 2026</span>
-              <span className="logo-sub">UMG PLATAFORMA</span>
+              <span className="logo-sub">SISTEMAS UMG - COBÁN</span>
             </div>
           ) : (
-            <span className="logo-mini">UMG</span>
+            <img src={logoUMG} alt="UMG" style={{ width: '32px', height: '32px', borderRadius: '4px' }} />
           )}
         </div>
         <button className="expand-toggle" onClick={() => setIsExpanded(!isExpanded)}>
@@ -139,31 +140,31 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
             return true;
           })
           .map(section => (
-          <div key={section} className="nav-section">
-            {isExpanded && <span className="section-title">{section}</span>}
-            <ul className="nav-list">
-              {menuItems.filter(item => item.section === section).map(item => (
-                <li key={item.id} className="nav-item">
-                  <button
-                    className={`nav-link ${location.pathname.includes(item.id) ? 'active' : (item.id === 'inicio' && location.pathname === '/dashboard' ? 'active' : '')}`}
-                    onClick={() => {
-                      navigate(`/dashboard/${item.id}`);
-                      onModuleChange?.(item.id);
-                    }}
-                  >
-                    <span className="nav-icon">{item.icon}</span>
-                    {isExpanded && <span className="nav-label">{item.label}</span>}
-                    {isExpanded && item.badge && (
-                      <span className={`nav-badge ${item.badge === 'PEND' ? 'pending' : ''}`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+            <div key={section} className="nav-section">
+              {isExpanded && <span className="section-title">{section}</span>}
+              <ul className="nav-list">
+                {menuItems.filter(item => item.section === section).map(item => (
+                  <li key={item.id} className="nav-item">
+                    <button
+                      className={`nav-link ${location.pathname.includes(item.id) ? 'active' : (item.id === 'inicio' && location.pathname === '/dashboard' ? 'active' : '')}`}
+                      onClick={() => {
+                        navigate(`/dashboard/${item.id}`);
+                        onModuleChange?.(item.id);
+                      }}
+                    >
+                      <span className="nav-icon">{item.icon}</span>
+                      {isExpanded && <span className="nav-label">{item.label}</span>}
+                      {isExpanded && item.badge && (
+                        <span className={`nav-badge ${item.badge === 'PEND' ? 'pending' : ''}`}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
       </nav>
 
       <div className="sidebar-footer">

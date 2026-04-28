@@ -52,7 +52,8 @@ export default function DiplomaModule() {
   };
 
   const isDiplomaNameTooLong = formData.nombreDiploma.length > 25;
-  const isLocked = user?.diplomaEditado || false;
+  //const isLocked = user?.diplomaEditado || false;
+  const isLocked = false; // Cambiado temporalmente de user?.diplomaEditado para pruebas
 
   if (!user) return null;
 
@@ -68,11 +69,11 @@ export default function DiplomaModule() {
 
         {/* Warning Only Once */}
         {!isLocked && (
-          <div style={{ 
-            backgroundColor: '#fff5f5', 
-            border: '1.5px solid #feb2b2', 
-            borderRadius: '12px', 
-            padding: '1rem 1.5rem', 
+          <div style={{
+            backgroundColor: '#fff5f5',
+            border: '1.5px solid #feb2b2',
+            borderRadius: '12px',
+            padding: '1rem 1.5rem',
             marginBottom: '2rem',
             color: '#c53030',
             display: 'flex',
@@ -87,11 +88,11 @@ export default function DiplomaModule() {
         )}
 
         {/* Info Box */}
-        <div style={{ 
-          backgroundColor: '#eef6ff', 
-          border: '1px solid #cce3ff', 
-          borderRadius: '12px', 
-          padding: '1.5rem', 
+        <div style={{
+          backgroundColor: '#eef6ff',
+          border: '1px solid #cce3ff',
+          borderRadius: '12px',
+          padding: '1.5rem',
           marginBottom: '2rem',
           color: '#2c5282'
         }}>
@@ -109,10 +110,10 @@ export default function DiplomaModule() {
         </div>
 
         <form onSubmit={handleSave} className="diploma-form" style={{ display: 'flex', gap: '3rem', alignItems: 'flex-start' }}>
-          
+
           {/* Columna Izquierda: Campos y Avisos */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            
+
             <div className="form-group">
               <label style={{ fontSize: '12px', fontWeight: 700, color: '#4a5568', marginBottom: '8px', display: 'block' }}>
                 NOMBRE PARA EL DIPLOMA *
@@ -125,7 +126,7 @@ export default function DiplomaModule() {
                 placeholder="EJ: MARÍA ELENA GARCÍA LÓPEZ"
                 required
                 readOnly={isLocked}
-                style={{ 
+                style={{
                   width: '100%',
                   padding: '12px 16px',
                   borderRadius: '12px',
@@ -154,15 +155,15 @@ export default function DiplomaModule() {
               <label style={{ fontSize: '12px', fontWeight: 700, color: '#4a5568', marginBottom: '8px', display: 'block' }}>
                 CORREO PARA RECIBIR EL DIPLOMA *
               </label>
-              <input 
-                type="email" 
-                name="correoDiploma" 
-                value={formData.correoDiploma} 
+              <input
+                type="email"
+                name="correoDiploma"
+                value={formData.correoDiploma}
                 onChange={handleEmailChange}
                 placeholder="ejemplo@correo.com"
                 required
                 readOnly={isLocked}
-                style={{ 
+                style={{
                   width: '100%',
                   padding: '12px 16px',
                   borderRadius: '12px',
@@ -171,7 +172,7 @@ export default function DiplomaModule() {
                   backgroundColor: isLocked ? '#f8fafc' : '#fff',
                   color: isLocked ? '#64748b' : 'inherit',
                   cursor: isLocked ? 'not-allowed' : 'text'
-                }} 
+                }}
               />
               <p style={{ fontSize: '12px', color: '#718096', marginTop: '8px' }}>
                 Se enviará un diploma por cada taller donde se confirme tu asistencia.
@@ -179,11 +180,11 @@ export default function DiplomaModule() {
             </div>
 
             {/* Warning Box */}
-            <div style={{ 
-              backgroundColor: '#fffaf0', 
-              border: '1px solid #feebc8', 
-              borderRadius: '12px', 
-              padding: '1.25rem', 
+            <div style={{
+              backgroundColor: '#fffaf0',
+              border: '1px solid #feebc8',
+              borderRadius: '12px',
+              padding: '1.25rem',
               color: '#7b341e',
               display: 'flex',
               gap: '12px',
@@ -227,11 +228,11 @@ export default function DiplomaModule() {
                 </button>
               </div>
             ) : (
-              <div style={{ 
-                padding: '1.25rem', 
-                backgroundColor: '#f0fff4', 
-                border: '1px solid #c6f6d5', 
-                borderRadius: '12px', 
+              <div style={{
+                padding: '1.25rem',
+                backgroundColor: '#f0fff4',
+                border: '1px solid #c6f6d5',
+                borderRadius: '12px',
                 color: '#2f855a',
                 textAlign: 'center',
                 fontWeight: 600,
@@ -247,7 +248,7 @@ export default function DiplomaModule() {
             <label style={{ fontSize: '12px', fontWeight: 700, color: '#4a5568', marginBottom: '8px', display: 'block' }}>
               ASÍ APARECERÁ EN TU DIPLOMA
             </label>
-            <div style={{ 
+            <div style={{
               position: 'relative',
               width: '100%',
               aspectRatio: '1.414',
@@ -259,15 +260,15 @@ export default function DiplomaModule() {
               flexDirection: 'column',
               alignItems: 'center'
             }}>
-              <img 
-                src={diplomaTemplate} 
-                alt="Template de Diploma" 
+              <img
+                src={diplomaTemplate}
+                alt="Template de Diploma"
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
-              
+
               <div style={{
                 position: 'absolute',
-                top: '49%',
+                top: '42%',
                 width: '80%',
                 textAlign: 'center',
                 fontSize: 'clamp(8px, 1.8vw, 24px)',

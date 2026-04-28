@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import CalendarLink from '../components/CalendarLink';
+import LocationLink from '../components/LocationLink';
 // 1. Aquí importas tu imagen. 
 // (Asegúrate de tener un archivo llamado así en la carpeta assets, o cambia el nombre)
 import logoUMG from '../assets/UMG-LOGO.svg';
@@ -53,15 +54,7 @@ export default function Hero() {
               <CalendarLink className="meta-chip">
                 📅 23 de mayo, 2026
               </CalendarLink>
-              <a
-                href="https://maps.app.goo.gl/drwTJp68mjcYne5S9"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="meta-chip"
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                📍 Hotel Alcazar doña Victoria, Cobán
-              </a>
+              <LocationLink className="meta-chip" />
               <span
                 className="meta-chip"
                 style={{ cursor: 'pointer' }}

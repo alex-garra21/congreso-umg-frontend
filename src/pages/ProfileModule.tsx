@@ -10,6 +10,7 @@ export default function ProfileModule() {
     nombres: '',
     apellidos: '',
     correo: '',
+    dpi: '',
     tipoParticipante: '' as 'alumno' | 'externo',
     carnet: '',
     ciclo: '',
@@ -26,6 +27,7 @@ export default function ProfileModule() {
         nombres: user.nombres || '',
         apellidos: user.apellidos || '',
         correo: user.correo || '',
+        dpi: user.dpi || '',
         tipoParticipante: user.tipoParticipante || 'externo',
         carnet: user.carnet || '',
         ciclo: user.ciclo || '',
@@ -61,6 +63,16 @@ export default function ProfileModule() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'dpi') {
+      const numbers = value.replace(/\D/g, '').substring(0, 13);
+      let formatted = numbers;
+      if (numbers.length > 4) formatted = numbers.substring(0, 4) + ' ' + numbers.substring(4);
+      if (numbers.length > 9) formatted = formatted.substring(0, 10) + ' ' + numbers.substring(9);
+      setFormData(prev => ({ ...prev, dpi: formatted }));
+      return;
+    }
+
     if (name === 'carnet') {
       setFormData(prev => ({ ...prev, [name]: formatCarnet(value) }));
     } else {
@@ -89,8 +101,6 @@ export default function ProfileModule() {
     }
   };
 
-
-
   if (!user) return null;
 
   return (
@@ -106,19 +116,19 @@ export default function ProfileModule() {
         <form onSubmit={handleSave} className="profile-form">
           <div className="form-row">
             <div className="form-group">
-              <label>PRIMER NOMBRE</label>
+              <label>NOMBRES</label>
               <input type="text" name="nombres" value={formData.nombres} onChange={handleChange} placeholder="Nombres" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
             </div>
             <div className="form-group">
-              <label>PRIMER APELLIDO</label>
+              <label>APELLIDOS</label>
               <input type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} placeholder="Apellidos" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
             </div>
           </div>
 
           <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
             <div className="form-group" style={{ flex: 3 }}>
-              <label>CORREO ELECTRÓNICO AL QUE SE ENVIARÁN LOS DIPLOMAS</label>
-              <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@miumg.edu.gt" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
+              <label>DPI</label>
+              <input type="text" name="dpi" value={formData.dpi} onChange={handleChange} placeholder="0000 00000 0000" required />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label>SEXO</label>
@@ -130,12 +140,18 @@ export default function ProfileModule() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>TIPO DE PARTICIPANTE</label>
-            <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required>
-              <option value="externo">Participante externo</option>
-              <option value="alumno">Alumno UMG</option>
-            </select>
+          <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
+            <div className="form-group" style={{ flex: 2 }}>
+              <label>CORREO ELECTRÓNICO AL QUE SE ENVIARÁN LOS DIPLOMAS</label>
+              <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@miumg.edu.gt" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>TIPO DE PARTICIPANTE</label>
+              <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required>
+                <option value="externo">Participante externo</option>
+                <option value="alumno">Alumno UMG</option>
+              </select>
+            </div>
           </div>
 
           {formData.tipoParticipante === 'alumno' && (
@@ -165,7 +181,7 @@ export default function ProfileModule() {
 
           <div className="form-group">
             <label>TELÉFONO (OPCIONAL)</label>
-            <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="+(502) 0000-0000" />
+            <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="0000 0000" />
           </div>
 
 
@@ -184,7 +200,7 @@ export default function ProfileModule() {
             <button
               type="button"
               className="btn-ghost"
-              style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid #000', color: '#000' }}
+              style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid rgba(4, 20, 90, 1)', color: '#000000ff', backgroundColor: '#fbfdffff' }}
               onClick={() => setIsPasswordModalOpen(true)}
             >
               Cambiar contraseña

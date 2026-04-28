@@ -20,6 +20,7 @@ export interface UserData {
   correoDiploma?: string;
   desactivado?: boolean;
   asistencias?: { workshopId: string; timestamp: string }[];
+  dpi?: string;
 }
 
 export interface TokenData {
@@ -176,7 +177,8 @@ export async function getAllUsersCloud(): Promise<UserData[]> {
     ciclo: userData.ciclo,
     telefono: userData.telefono,
     correoDiploma: userData.correo_diploma,
-    desactivado: userData.desactivado || false
+    desactivado: userData.desactivado || false,
+    dpi: userData.dpi
   }));
 
   // Cargar talleres y asistencias para cada uno (esto es pesado pero necesario para el reporte)
@@ -222,7 +224,8 @@ export async function registerUser(user: UserData): Promise<{ success: boolean; 
     tipo_participante: user.tipoParticipante,
     carnet: user.carnet,
     ciclo: user.ciclo,
-    desactivado: false
+    desactivado: false,
+    dpi: user.dpi
   });
 
   if (profileError) {
@@ -293,6 +296,7 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     contrasena: 'auth_managed',
     rol: userData.rol as any,
     pagoValidado: userData.pago_validado,
+    pagoEnviado: userData.pago_enviado,
     nombreDiploma: userData.nombre_diploma,
     tipoParticipante: userData.tipo_participante,
     carnet: userData.carnet,
@@ -300,6 +304,7 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     telefono: userData.telefono,
     talleres: talleres,
     asistencias: asistencias,
+    dpi: userData.dpi
   };
 
   return { success: true, message: `Inicio de sesión exitoso. ¡Bienvenido ${user.nombres}!`, user };
@@ -342,6 +347,8 @@ export async function updateUserData(updatedData: UserData): Promise<{ success: 
         nombres: updatedData.nombres,
         apellidos: updatedData.apellidos,
         pago_validado: updatedData.pagoValidado,
+        pago_enviado: updatedData.pagoEnviado,
+        dpi: updatedData.dpi,
         rol: updatedData.rol,
         desactivado: updatedData.desactivado,
         nombre_diploma: updatedData.nombreDiploma,
@@ -356,6 +363,9 @@ export async function updateUserData(updatedData: UserData): Promise<{ success: 
 
     if (error) {
       console.error("Error updating user in cloud:", error);
+      if (error.code === '23505') {
+        return { success: false, message: 'Este DPI ya está registrado por otro participante.' };
+      }
       return { success: false, message: 'Error al actualizar en la nube.' };
     }
   }

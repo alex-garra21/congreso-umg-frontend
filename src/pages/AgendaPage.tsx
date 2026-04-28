@@ -4,6 +4,7 @@ import type { AgendaItem } from '../data/agendaData';
 import WorkshopBadge from '../components/workshops/WorkshopBadge';
 import AgendaModal from '../components/AgendaModal';
 import CalendarLink from '../components/CalendarLink';
+import LocationLink from '../components/LocationLink';
 
 export default function AgendaPage() {
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<'Mañana' | 'Tarde'>('Mañana');
@@ -29,11 +30,18 @@ export default function AgendaPage() {
         <div className="speakers-header" style={{ flexDirection: 'column', textAlign: 'center', justifyContent: 'center', marginBottom: '3.5rem' }}>
           <span className="speakers-header-badge">Programa</span>
           <h2>Agenda del evento</h2>
-          <CalendarLink>
-            <p style={{ marginTop: '10px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
-              Sábado 23 de Mayo — Hotel Alcazar doña Victoria, Cobán
-            </p>
-          </CalendarLink>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '10px' }}>
+            <CalendarLink>
+              <p style={{ color: 'var(--text-secondary)', cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
+                📅 Sábado 23 de Mayo —
+              </p>
+            </CalendarLink>
+            <LocationLink>
+              <p style={{ color: 'var(--text-secondary)', cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
+                Hotel Alcazar doña Victoria, Cobán
+              </p>
+            </LocationLink>
+          </div>
         </div>
 
         {/* TABS para Periodos */}

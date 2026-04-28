@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { changePassword } from '../utils/auth';
+import PasswordField from './PasswordField';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -13,15 +14,11 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   });
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const clearFields = () => {
     setPasswords({ newPassword: '', confirmPassword: '' });
     setError(null);
     setShowSuccess(false);
-    setShowPassword(false);
-    setShowConfirmPassword(false);
   };
 
   const handleClose = () => {
@@ -77,67 +74,39 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             )}
 
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Nueva Contraseña</label>
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    value={passwords.newPassword} 
-                    onChange={e => setPasswords({...passwords, newPassword: e.target.value})} 
-                    placeholder="********"
-                    required 
-                    style={{ paddingRight: '40px' }}
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                  >
-                    {showPassword ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    )}
-                  </button>
-                </div>
+              <PasswordField
+                label="Nueva Contraseña"
+                value={passwords.newPassword}
+                onChange={e => setPasswords({...passwords, newPassword: e.target.value})}
+                placeholder="********"
+                required
+              />
+
+              <PasswordField
+                label="Confirmar Nueva Contraseña"
+                value={passwords.confirmPassword}
+                onChange={e => setPasswords({...passwords, confirmPassword: e.target.value})}
+                placeholder="********"
+                required
+                style={{ marginBottom: '2rem' }}
+              />
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="submit-btn" style={{ flex: 2 }}>Actualizar Contraseña</button>
+                <button 
+                  type="button" 
+                  className="submit-btn" 
+                  onClick={handleClose}
+                  style={{ 
+                    flex: 1, 
+                    backgroundColor: '#fff5f5', 
+                    color: '#e53e3e', 
+                    border: '1px solid #fed7d7' 
+                  }}
+                >
+                  Cancelar
+                </button>
               </div>
-              <div className="form-group" style={{ marginBottom: '2rem' }}>
-                <label>Confirmar Nueva Contraseña</label>
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type={showConfirmPassword ? "text" : "password"} 
-                    value={passwords.confirmPassword} 
-                    onChange={e => setPasswords({...passwords, confirmPassword: e.target.value})} 
-                    placeholder="********"
-                    required 
-                    style={{ paddingRight: '40px' }}
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                  >
-                    {showConfirmPassword ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-              <button type="submit" className="submit-btn">Actualizar Contraseña</button>
             </form>
           </>
         )}
