@@ -52,8 +52,8 @@ export default function DiplomaModule() {
   };
 
   const isDiplomaNameTooLong = formData.nombreDiploma.length > 25;
-  //const isLocked = user?.diplomaEditado || false;
-  const isLocked = false; // Cambiado temporalmente de user?.diplomaEditado para pruebas
+  const isLocked = user?.diplomaEditado || false;
+  //const isLocked = false; // Cambiado temporalmente de user?.diplomaEditado para pruebas
 
   if (!user) return null;
 
