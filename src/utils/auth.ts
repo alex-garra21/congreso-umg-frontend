@@ -29,6 +29,10 @@ export interface TokenData {
   usedBy?: string;
   usedByName?: string;
   usedByType?: string;
+  createdAt?: string;
+  usedAt?: string;
+  createdBy?: string;
+  createdByName?: string;
 }
 
 const STORAGE_KEY = 'congreso_users';
@@ -41,16 +45,23 @@ export async function getTokens(): Promise<TokenData[]> {
       codigo, 
       usado, 
       usado_por,
-      usuarios (nombres, apellidos, correo, tipo_participante)
+      creado_por,
+      fecha_creacion,
+      fecha_uso,
+      usado_por_user:usuarios!usado_por(nombres, apellidos, correo, tipo_participante),
+      creado_por_user:usuarios!creado_por(nombres, apellidos)
     `);
   if (error || !data) return [];
 
   return data.map(d => {
-    const u = Array.isArray(d.usuarios) ? d.usuarios[0] : d.usuarios;
-    const nombres = (u as any)?.nombres || '';
-    const apellidos = (u as any)?.apellidos || '';
-    const name = `${nombres} ${apellidos}`.trim();
+    // Datos del usuario que usó el token
+    const u = Array.isArray(d.usado_por_user) ? d.usado_por_user[0] : d.usado_por_user;
+    const name = u ? `${(u as any).nombres} ${(u as any).apellidos}`.trim() : '';
     
+    // Datos del administrador que creó el token
+    const creator = Array.isArray(d.creado_por_user) ? d.creado_por_user[0] : d.creado_por_user;
+    const creatorName = creator ? `${(creator as any).nombres} ${(creator as any).apellidos}`.trim() : '';
+
     // Normalizar el tipo de participante
     let type = (u as any)?.tipo_participante;
     if (type) {
@@ -62,7 +73,11 @@ export async function getTokens(): Promise<TokenData[]> {
       used: d.usado,
       usedBy: u ? (u as any).correo : undefined,
       usedByName: name || undefined,
-      usedByType: type || undefined
+      usedByType: type || undefined,
+      createdAt: d.fecha_creacion,
+      usedAt: d.fecha_uso,
+      createdBy: d.creado_por,
+      createdByName: creatorName || undefined
     };
   });
 }
@@ -89,7 +104,11 @@ export async function generateToken(): Promise<string> {
     if (code === PROHIBITED_CODE) continue;
 
     // Intentar insertarlo en Supabase
-    const { error } = await supabase.from('tokens_pago').insert({ codigo: code });
+    const user = getCurrentUser();
+    const { error } = await supabase.from('tokens_pago').insert({ 
+      codigo: code,
+      creado_por: user?.id
+    });
 
     if (!error) {
       success = true; // Se insertó correctamente

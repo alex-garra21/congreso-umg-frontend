@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SpeakerModal from '../components/SpeakerModal';
-import { mockSpeakers, type Speaker } from '../data/agendaData';
+import { getSpeakers, type Speaker } from '../utils/agendaStore';
 import WorkshopBadge from '../components/workshops/WorkshopBadge';
 
 export default function PonentesPage() {
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
+  const [speakers, setSpeakers] = useState<Speaker[]>(getSpeakers());
+
+  useEffect(() => {
+    const handleUpdate = () => setSpeakers(getSpeakers());
+    window.addEventListener('agendaUpdate', handleUpdate);
+    return () => window.removeEventListener('agendaUpdate', handleUpdate);
+  }, []);
 
   return (
     <div style={{ flex: 1, position: 'relative', minHeight: '100%' }}>
@@ -20,7 +27,7 @@ export default function PonentesPage() {
         </div>
 
         <div className="speakers-grid">
-          {mockSpeakers.map(speaker => (
+          {speakers.map(speaker => (
             <div key={speaker.id} className="speaker-card" onClick={() => setSelectedSpeaker(speaker)}>
               <div
                 className="speaker-avatar"

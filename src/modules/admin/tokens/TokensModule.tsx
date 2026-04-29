@@ -8,6 +8,9 @@ import AdminBadge from '../../../components/ui/AdminBadge';
 import ModuleCard from '../../../components/ui/ModuleCard';
 import AdminSelect from '../../../components/ui/AdminSelect';
 import SearchBar from '../../../components/ui/SearchBar';
+import AdminDateInput from '../../../components/ui/AdminDateInput';
+import FormattedDate from '../../../components/ui/FormattedDate';
+import { isDateInRange, formatFullDate } from '../../../utils/dateUtils';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -22,6 +25,8 @@ export default function TokensModule() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     loadTokens();
@@ -60,7 +65,9 @@ export default function TokensModule() {
     const matchesType = typeFilter === 'all' || 
       t.usedByType === typeFilter;
 
-    return matchesSearch && matchesStatus && matchesType;
+    const matchesDate = !t.createdAt || isDateInRange(t.createdAt, startDate, endDate);
+
+    return matchesSearch && matchesStatus && matchesType && matchesDate;
   });
 
   const currentTokensOnPage = filteredTokens.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -107,6 +114,11 @@ export default function TokensModule() {
   };
 
   const exportTokensToExcel = async () => {
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      showToast('El rango de fechas no es válido.', 'error');
+      return;
+    }
+
     if (filteredTokens.length === 0) {
       showToast('No hay tokens para exportar con los filtros actuales.', 'warning');
       return;
@@ -120,7 +132,10 @@ export default function TokensModule() {
       { header: 'Estado', key: 'status', width: 20 },
       { header: 'Nombre', key: 'usedByName', width: 30 },
       { header: 'Correo', key: 'usedBy', width: 30 },
-      { header: 'Tipo', key: 'usedByType', width: 20 }
+      { header: 'Tipo', key: 'usedByType', width: 20 },
+      { header: 'Generado por', key: 'createdByName', width: 25 },
+      { header: 'Validado el', key: 'usedAt', width: 25 },
+      { header: 'Fecha Creación', key: 'createdAt', width: 25 }
     ];
 
     filteredTokens.forEach(t => {
@@ -129,15 +144,74 @@ export default function TokensModule() {
         status: t.used ? 'Utilizado' : 'Disponible',
         usedByName: t.usedByName || 'N/A',
         usedBy: t.usedBy || 'N/A',
-        usedByType: t.usedByType ? (t.usedByType === 'alumno' ? 'Estudiante' : 'Externo') : 'N/A'
+        usedByType: t.usedByType ? (t.usedByType === 'alumno' ? 'Estudiante' : 'Externo') : 'N/A',
+        createdByName: t.createdByName || 'N/A',
+        usedAt: formatFullDate(t.usedAt),
+        createdAt: formatFullDate(t.createdAt)
       });
     });
 
     worksheet.getRow(1).font = { bold: true };
 
-    const suffix = searchTerm || statusFilter !== 'all' || typeFilter !== 'all' ? '_Filtrado' : '';
+    const suffix = searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || startDate || endDate ? '_Filtrado' : '';
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `Tokens_Acceso_Congreso_2026${suffix}.xlsx`);
+  };
+
+  const exportForUsageToExcel = async () => {
+    const isStatusAvailable = statusFilter === 'available';
+    const isDateSelected = !!startDate || !!endDate;
+
+    if (!isStatusAvailable && !isDateSelected) {
+      showToast('Es obligatorio seleccionar el estado "Disponibles" y al menos una fecha.', 'warning');
+      return;
+    }
+
+    if (!isStatusAvailable) {
+      showToast('Es obligatorio seleccionar el estado "Disponibles".', 'warning');
+      return;
+    }
+
+    if (!isDateSelected) {
+      showToast('Es obligatorio seleccionar al menos una fecha (Inicio o Fin).', 'warning');
+      return;
+    }
+
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      showToast('El rango de fechas no es válido.', 'error');
+      return;
+    }
+
+    if (filteredTokens.length === 0) {
+      showToast('No hay tokens disponibles para exportar con los filtros actuales.', 'warning');
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Tokens para Uso');
+
+    worksheet.columns = [
+      { header: 'No.', key: 'index', width: 10 },
+      { header: 'Token de Activación', key: 'code', width: 30 },
+      { header: 'Fecha Creación', key: 'createdAt', width: 25 }
+    ];
+
+    filteredTokens.forEach((t, i) => {
+      worksheet.addRow({
+        index: i + 1,
+        code: t.code,
+        createdAt: formatFullDate(t.createdAt)
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getColumn(1).alignment = { horizontal: 'center' };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const dateRange = (startDate && endDate) 
+      ? `${startDate}_al_${endDate}` 
+      : `${startDate || endDate}_unico_dia`;
+    saveAs(new Blob([buffer]), `Tokens_PARA_USO_${dateRange}.xlsx`);
   };
 
   return (
@@ -148,7 +222,7 @@ export default function TokensModule() {
         title="Tokens de Activación"
         description="Genera y administra tokens para que los participantes puedan validar su inscripción."
         headerActions={
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {selectedTokens.length > 0 && (
               <AdminButton variant="danger" onClick={handleDeleteSelectedTokens}>
                 Eliminar ({selectedTokens.length})
@@ -156,6 +230,7 @@ export default function TokensModule() {
             )}
             <AdminButton onClick={handleGenerateToken}>+ Generar Token</AdminButton>
             <AdminButton variant="outline" onClick={() => setIsMassModalOpen(true)}>Generación Masiva</AdminButton>
+            <AdminButton variant="secondary" onClick={exportForUsageToExcel}>Exportar para Uso</AdminButton>
             <AdminButton variant="success" onClick={exportTokensToExcel}>Exportar Excel</AdminButton>
           </div>
         }
@@ -192,7 +267,75 @@ export default function TokensModule() {
               ]}
             />
           </div>
+          <div style={{ flex: 2, minWidth: '350px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ 
+              fontSize: '12px', 
+              fontWeight: 700, 
+              color: 'var(--text-secondary)', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.8px',
+              marginLeft: '4px'
+            }}>
+              Rango de Fecha de Creación
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <AdminDateInput 
+                label="FECHA INICIO"
+                value={startDate}
+                onChange={e => { setStartDate(e.target.value); setPage(1); }}
+                containerStyle={{ flex: 1 }}
+              />
+              <AdminDateInput 
+                label="FECHA FIN"
+                value={endDate}
+                onChange={e => { setEndDate(e.target.value); setPage(1); }}
+                containerStyle={{ flex: 1 }}
+              />
+            </div>
+          </div>
         </div>
+
+        {startDate && endDate && new Date(startDate) > new Date(endDate) && (
+          <div style={{ 
+            color: '#dc3545', 
+            fontSize: '0.8rem', 
+            fontWeight: 600, 
+            marginTop: '-1rem', 
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            paddingLeft: '4px'
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            La fecha de inicio no puede ser posterior a la fecha de fin.
+          </div>
+        )}
+
+        {((startDate && !endDate) || (!startDate && endDate)) && (
+          <div style={{ 
+            color: 'var(--blue)', 
+            fontSize: '0.8rem', 
+            fontWeight: 600, 
+            marginTop: '-1rem', 
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            paddingLeft: '4px'
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            Se ha seleccionado una sola fecha. El reporte se generará únicamente para el día {new Date((startDate || endDate) + 'T00:00:00').toLocaleDateString('es-GT')}.
+          </div>
+        )}
 
         <div className="table-responsive">
           <table className="admin-table">
@@ -211,6 +354,9 @@ export default function TokensModule() {
                 <th>Nombre</th>
                 <th>Correo</th>
                 <th>Tipo</th>
+                <th>Generado por</th>
+                <th>Validado el</th>
+                <th>Creado el</th>
                 <th style={{ textAlign: 'right' }}>Opciones</th>
               </tr>
             </thead>
@@ -244,6 +390,13 @@ export default function TokensModule() {
                       t.used && '-'
                     )}
                   </td>
+                  <td style={{ fontSize: '0.85rem' }}>{t.createdByName || '-'}</td>
+                  <td style={{ fontSize: '0.85rem', color: 'var(--blue)' }}>
+                    <FormattedDate date={t.usedAt} />
+                  </td>
+                  <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    <FormattedDate date={t.createdAt} />
+                  </td>
                   <td style={{ textAlign: 'right' }}>
                     <AdminButton size="sm" variant="danger" onClick={() => handleDeleteToken(t.code)}>
                       Eliminar
@@ -253,7 +406,7 @@ export default function TokensModule() {
               ))}
               {currentTokensOnPage.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                  <td colSpan={10} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                     No se encontraron tokens con los filtros seleccionados.
                   </td>
                 </tr>
