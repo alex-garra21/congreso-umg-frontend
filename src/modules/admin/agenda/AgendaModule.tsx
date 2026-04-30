@@ -6,6 +6,8 @@ import {
   getRooms, saveRooms,
   type AgendaItem, type Speaker, type CategoryStyle
 } from '../../../utils/agendaStore';
+import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
+import SearchBar from '../../../components/ui/SearchBar';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
 import ColorPicker from '../../../components/ColorPicker';
@@ -20,6 +22,8 @@ export default function AgendaModule() {
   const [speakers, setSpeakers] = useState<Speaker[]>(getSpeakers());
   const [categories, setCategories] = useState<Record<string, CategoryStyle>>(getCategories());
   const [rooms, setRooms] = useState<string[]>(getRooms());
+  const [searchTerm, setSearchTerm] = useState('');
+const [currentPage, setCurrentPage] = useState(1);
 
   const [agendaTab, setAgendaTab] = useState<'schedule' | 'speakers' | 'categories' | 'rooms'>('schedule');
 
@@ -41,7 +45,7 @@ export default function AgendaModule() {
     
     try {
       const newAgenda = agenda.some(a => a.id === editingItem.id)
-        ? agenda.map(a => a.id === editingItem.id ? editingItem : a)
+        ? currentAgenda.map(a => a.id === editingItem.id ? editingItem : a)
         : [...agenda, editingItem];
       
       // Intentar guardar (esto ahora lanzará error si falla la nube)
@@ -171,6 +175,30 @@ export default function AgendaModule() {
     return hours * 60 + minutes;
   };
 
+  // Filtrado y Paginación para Horario
+const filteredAgenda = agenda.filter(item => 
+  item.title.toLowerCase().includes(searchTerm.toLowerCase())
+);
+const currentAgenda = filteredAgenda
+  .sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time))
+  .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+// Filtrado y Paginación para Ponentes
+const filteredSpeakers = speakers.filter(s => 
+  s.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+const currentSpeakers = filteredSpeakers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+// Filtrado y Paginación para Categorías
+const filteredCategories = Object.entries(categories).filter(([name]) => 
+  name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+const currentCategories = filteredCategories.slice(
+  (currentPage - 1) * ITEMS_PER_PAGE, 
+  currentPage * ITEMS_PER_PAGE
+);
+
+
   return (
     <section className="dashboard-section">
       <div className="section-header" style={{ marginBottom: '2rem' }}>
@@ -196,8 +224,16 @@ export default function AgendaModule() {
               setEditingItem({ id: Math.random().toString(36).substr(2, 9), title: '', time: '', endTime: '', room: rooms[0] || '', location: rooms[0] || '', tag: '', speaker: undefined, gracePeriod: 10, description: '', period: 'Mañana' });
               setIsAgendaModalOpen(true);
             }}>+ Agregar Charla/Taller</AdminButton>
+
           }
         >
+                    <div style={{ marginBottom: '1.5rem' }}>
+            <SearchBar 
+              value={searchTerm} 
+              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }} 
+              placeholder="Buscar..." 
+            />
+          </div>
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -210,7 +246,7 @@ export default function AgendaModule() {
                 </tr>
               </thead>
               <tbody>
-                {[...agenda].sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time)).map(item => (
+                {currentAgenda.map(item => (
                   <tr key={item.id}>
                     <td>{item.time} - {item.endTime}</td>
                     <td>
@@ -225,7 +261,7 @@ export default function AgendaModule() {
                     </td>
                   </tr>
                 ))}
-                {agenda.length === 0 && (
+                {currentAgenda.length === 0 && (
                   <tr>
                     <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                       <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay actividades registradas en la agenda.</div>
@@ -235,6 +271,11 @@ export default function AgendaModule() {
               </tbody>
             </table>
           </div>
+                <Pagination 
+        current={currentPage} 
+        total={filteredAgenda.length} 
+        onPageChange={setCurrentPage} 
+/>
         </ModuleCard>
       )}
 
@@ -249,6 +290,13 @@ export default function AgendaModule() {
             }}>+ Agregar Ponente</AdminButton>
           }
         >
+                  <div style={{ marginBottom: '1.5rem' }}>
+          <SearchBar 
+            value={searchTerm} 
+            onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }} 
+            placeholder="Buscar..." 
+          />
+        </div>
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -258,8 +306,8 @@ export default function AgendaModule() {
                   <th style={{ textAlign: 'right' }}>Opciones</th>
                 </tr>
               </thead>
-              <tbody>
-                {speakers.map(s => (
+                <tbody>
+                {currentSpeakers.map(s => (
                   <tr key={s.id}>
                     <td><strong>{s.name}</strong></td>
                     <td>{s.role}</td>
@@ -269,7 +317,7 @@ export default function AgendaModule() {
                     </td>
                   </tr>
                 ))}
-                {speakers.length === 0 && (
+                {currentSpeakers.length === 0 && (
                   <tr>
                     <td colSpan={3} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                       <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay ponentes registrados.</div>
@@ -279,6 +327,11 @@ export default function AgendaModule() {
               </tbody>
             </table>
           </div>
+          <Pagination 
+          current={currentPage} 
+          total={filteredSpeakers.length} 
+          onPageChange={setCurrentPage} 
+        />
         </ModuleCard>
       )}
 
@@ -293,6 +346,13 @@ export default function AgendaModule() {
             }}>+ Nueva Categoría</AdminButton>
           }
         >
+            <div style={{ marginBottom: '1.5rem' }}>
+            <SearchBar 
+              value={searchTerm} 
+              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }} 
+              placeholder="Buscar..." 
+            />
+          </div>
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -303,7 +363,7 @@ export default function AgendaModule() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(categories).map(([name, style]) => (
+                {currentCategories.map(([name, style]) => (
                   <tr key={name}>
                     <td><strong>{name}</strong></td>
                     <td><AdminBadge style={{ backgroundColor: style.bg, color: style.text }}>{name}</AdminBadge></td>
@@ -313,7 +373,7 @@ export default function AgendaModule() {
                     </td>
                   </tr>
                 ))}
-                {Object.keys(categories).length === 0 && (
+                {currentCategories.length === 0 && (
                   <tr>
                     <td colSpan={3} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                       <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay categorías registradas.</div>
@@ -323,6 +383,11 @@ export default function AgendaModule() {
               </tbody>
             </table>
           </div>
+          <Pagination 
+            current={currentPage} 
+            total={filteredCategories.length} 
+            onPageChange={setCurrentPage} 
+/>
         </ModuleCard>
       )}
 
