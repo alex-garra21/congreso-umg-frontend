@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAllUsers } from '../../../api/hooks/useUsers';
 import { generateSlug, type AgendaItem } from '../../../utils/agendaStore';
 import { useCharlas, useSaveAgenda } from '../../../api/hooks/useAgenda';
@@ -9,7 +9,8 @@ import AdminBadge from '../../../components/ui/AdminBadge';
 import SearchBar from '../../../components/ui/SearchBar';
 import ModuleCard from '../../../components/ui/ModuleCard';
 import AdminSelect from '../../../components/ui/AdminSelect';
-import Swal from 'sweetalert2';
+import AttendanceQR, { type AttendanceQRHandle } from '../../../components/admin/AttendanceQR';
+import { toPng } from 'html-to-image';
 export default function AttendanceModule() {
   const { data: users = [] } = useAllUsers();
   const { data: agenda = [] } = useCharlas();
@@ -23,6 +24,31 @@ export default function AttendanceModule() {
   const [tempGraceHours, setTempGraceHours] = useState<number>(0);
   const [tempGraceMinutes, setTempGraceMinutes] = useState<number>(10);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrWorkshop, setQRWorkshop] = useState<AgendaItem | null>(null);
+  const [qrLink, setQRLink] = useState('');
+  const qrRef = useRef<AttendanceQRHandle>(null);
+
+  const handleDownloadQR = async () => {
+    if (qrRef.current && qrWorkshop) {
+      const node = qrRef.current.getCardRef();
+      if (node) {
+        try {
+          const dataUrl = await toPng(node, { 
+            quality: 1,
+            pixelRatio: 2, // Mayor calidad
+            backgroundColor: '#ffffff' // Fondo blanco para la imagen descargada
+          });
+          const link = document.createElement('a');
+          link.download = `QR-Asistencia-${qrWorkshop.title.replace(/\s+/g, '-')}.png`;
+          link.href = dataUrl;
+          link.click();
+        } catch (error) {
+          console.error('Error al generar la imagen del QR:', error);
+        }
+      }
+    }
+  };
   const handleUpdateGracePeriod = (workshopId: string) => {
     const workshop = agenda.find(a => a.id === workshopId);
     if (!workshop) return;
@@ -58,19 +84,10 @@ export default function AttendanceModule() {
     if (!workshop) return;
     const slug = generateSlug(workshop.title);
     const link = `${window.location.origin}/asistencia/${slug}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(link)}`;
-
-    Swal.fire({
-      title: 'Código QR',
-      html: `<p style="margin-bottom: 1.5rem; color: #4a5568; font-size: 14px;">${workshop.title}</p><img src="${qrUrl}" alt="QR Code" style="display: block; margin: 0 auto; border-radius: 8px; border: 1px solid #e2e8f0; padding: 10px;" />`,
-      showConfirmButton: true,
-      confirmButtonText: 'Cerrar',
-      confirmButtonColor: '#1a365d',
-      customClass: {
-        popup: 'swal2-custom-popup',
-        title: 'swal2-custom-title'
-      }
-    });
+    
+    setQRWorkshop(workshop);
+    setQRLink(link);
+    setIsQRModalOpen(true);
   };
 
   const filteredAgenda = agenda.filter(item => item.title.toLowerCase().includes(searchAgenda.toLowerCase()));
@@ -226,6 +243,45 @@ export default function AttendanceModule() {
         </div>
       )}
 
+      {/* Modal QR Premium */}
+      {isQRModalOpen && qrWorkshop && (
+        <div className="modal-bg open" onClick={() => setIsQRModalOpen(false)}>
+          <div className="modal" style={{ maxWidth: '400px', padding: '0', background: 'transparent', boxShadow: 'none' }} onClick={e => e.stopPropagation()}>
+            <AttendanceQR ref={qrRef} workshop={qrWorkshop} link={qrLink} />
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+              <button 
+                className="btn-solid" 
+                onClick={() => setIsQRModalOpen(false)}
+                style={{ background: 'white', color: '#1a365d', fontWeight: 800, padding: '12px 30px', borderRadius: '100px', border: '1px solid #e2e8f0' }}
+              >
+                Cerrar
+              </button>
+              <button 
+                className="btn-solid" 
+                onClick={handleDownloadQR}
+                style={{ 
+                  background: '#1a365d', 
+                  color: 'white', 
+                  fontWeight: 800, 
+                  padding: '12px 30px', 
+                  borderRadius: '100px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Descargar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+ 
       {/* Modal Éxito */}
       {isSuccessModalOpen && (
         <div className="modal-bg open">
