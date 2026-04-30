@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { registerUser } from '../utils/auth';
+import { useRegisterUser } from '../api/hooks/useUsers';
 import PasswordField from './PasswordField';
 
 interface RegisterModalProps {
@@ -9,6 +9,7 @@ interface RegisterModalProps {
 }
 
 export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModalProps) {
+  const registerUserMutation = useRegisterUser();
   const [isRegistered, setIsRegistered] = useState(false);
   const [formData, setFormData] = useState({
     nombres: '',
@@ -28,7 +29,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   useEffect(() => {
     if (formData.correo.toLowerCase().endsWith('@miumg.edu.gt')) {
       if (formData.tipoParticipante !== 'alumno') {
-        setFormData(prev => ({ ...prev, tipoParticipante: 'alumno' }));
+        setFormData((prev: any) => ({ ...prev, tipoParticipante: 'alumno' }));
       }
     }
   }, [formData.correo]);
@@ -51,9 +52,9 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'carnet') {
-      setFormData(prev => ({ ...prev, [name]: formatCarnet(value) }));
+      setFormData((prev: any) => ({ ...prev, [name]: formatCarnet(value) }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -83,7 +84,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
       return;
     }
 
-    const result = await registerUser({
+    const result = await registerUserMutation.mutateAsync({
       nombres: formData.nombres,
       apellidos: formData.apellidos,
       sexo: formData.sexo,

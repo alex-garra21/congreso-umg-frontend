@@ -1,43 +1,15 @@
-import { useState, useEffect } from 'react';
-import { getCurrentUser, getAllUsersCloud, type UserData } from '../../../utils/auth';
+import { useAuth } from '../../../api/hooks/useAuth';
+import { useAllUsers } from '../../../api/hooks/useUsers';
 import ModuleTitle from '../../../components/ModuleTitle';
 import LocationLink from '../../../components/LocationLink';
 
 export default function DashboardHome() {
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
-  const [workshopsCount, setWorkshopsCount] = useState(0);
-  const [allUsers, setAllUsers] = useState<UserData[]>([]);
-  const [loadingAdmin, setLoadingAdmin] = useState(false);
+  const { user } = useAuth();
+  const { data: allUsers = [], isLoading: loadingAdmin } = useAllUsers();
+  
+  const workshopsCount = user?.talleres?.length || 0;
 
-  useEffect(() => {
-    const updateData = () => {
-      const currentUser = getCurrentUser();
-      setUser(currentUser);
 
-      if (currentUser?.rol !== 'admin') {
-        const saved = localStorage.getItem(`workshops_${currentUser?.correo}`);
-        if (saved) {
-          setWorkshopsCount(JSON.parse(saved).length);
-        } else {
-          setWorkshopsCount(0);
-        }
-      }
-    };
-
-    updateData();
-    window.addEventListener('sessionUpdate', updateData);
-
-    // Si es administrador, cargar la lista completa para métricas
-    if (getCurrentUser()?.rol === 'admin') {
-      setLoadingAdmin(true);
-      getAllUsersCloud().then(data => {
-        setAllUsers(data);
-        setLoadingAdmin(false);
-      });
-    }
-
-    return () => window.removeEventListener('sessionUpdate', updateData);
-  }, []);
 
   const Icons = {
     Check: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser, setCurrentUser } from '../utils/auth';
+import { loginUser } from '../utils/auth';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import PasswordField from './PasswordField';
 
@@ -42,8 +42,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
     setError(null);
     const result = await loginUser(correo, contrasena);
 
-    if (result.success && result.user) {
-      setCurrentUser(result.user);
+    if (result.success) {
       clearFields();
       onClose();
       navigate('/dashboard'); 

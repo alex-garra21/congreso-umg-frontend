@@ -1,17 +1,13 @@
-import { useState, useEffect } from 'react';
-import { validateToken, validatePaymentInSession, getCurrentUser, type UserData } from '../../../utils/auth';
+import { useState } from 'react';
+import { useAuth } from '../../../api/hooks/useAuth';
+import { useValidateToken } from '../../../api/hooks/useUsers';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showAlert } from '../../../utils/swal';
 
 export default function PaymentModule() {
   const [codigo, setCodigo] = useState('');
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
-
-  useEffect(() => {
-    const handleUpdate = () => setUser(getCurrentUser());
-    window.addEventListener('sessionUpdate', handleUpdate);
-    return () => window.removeEventListener('sessionUpdate', handleUpdate);
-  }, []);
+  const { user } = useAuth();
+  const validateTokenMutation = useValidateToken();
 
   const isPaid = user?.pagoValidado;
 
@@ -21,16 +17,15 @@ export default function PaymentModule() {
       return;
     }
 
-    const result = await validateToken(codigo.trim());
-    
-    if (result.success) {
-      validatePaymentInSession();
-      window.dispatchEvent(new Event('sessionUpdate'));
+    if (!user?.id) return;
+
+    try {
+      await validateTokenMutation.mutateAsync({ code: codigo.trim(), userId: user.id });
       showAlert('¡Éxito!', '¡Código validado exitosamente! Tu inscripción ha sido activada.', 'success');
-    } else {
-      if (result.errorType === 'not_found') {
+    } catch (error: any) {
+      if (error?.message?.includes('not found')) {
         showAlert('Código inválido', 'El código ingresado no existe. Por favor, verifica que lo hayas escrito correctamente.', 'error');
-      } else if (result.errorType === 'already_used') {
+      } else if (error?.message?.includes('already used')) {
         showAlert('Código ya utilizado', 'Este código ya ha sido validado por otro usuario. Si crees que esto es un error, contacta al encargado.', 'warning');
       } else {
         showAlert('Error de validación', 'Hubo un problema al validar tu código. Por favor, intenta de nuevo más tarde.', 'error');

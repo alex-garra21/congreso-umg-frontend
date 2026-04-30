@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, updateUserData } from '../../../utils/auth';
+import { useAuth } from '../../../api/hooks/useAuth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { useCharlas, useSalas } from '../../../api/hooks/useAgenda';
 import { useSyncUserEnrollments } from '../../../api/hooks/useEnrollment';
@@ -8,8 +7,7 @@ import type { AgendaItem } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
 
 export default function WorkshopsModule() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(getCurrentUser());
+  const { user } = useAuth();
   const { data: agenda = [], isLoading: isLoadingAgenda } = useCharlas();
   const { data: rooms = [] } = useSalas();
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
@@ -20,25 +18,6 @@ export default function WorkshopsModule() {
   
   const syncEnrollmentsMutation = useSyncUserEnrollments();
 
-
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/');
-      return;
-    }
-
-    const handleUpdate = () => {
-      const updatedUser = getCurrentUser();
-      if (updatedUser) setUser(updatedUser);
-    };
-
-    window.addEventListener('sessionUpdate', handleUpdate);
-
-    return () => {
-      window.removeEventListener('sessionUpdate', handleUpdate);
-    };
-  }, [navigate, user]);
 
   useEffect(() => {
     if (user?.correo) {
@@ -120,7 +99,7 @@ export default function WorkshopsModule() {
     const start = parseTime(workshop.time);
     const end = parseTime(workshop.endTime);
     
-    return enrolledIds.some(id => {
+    return enrolledIds.some((id: string) => {
       const other = agenda.find(a => a.id === id);
       if (!other || other.id === workshop.id) return false;
       const oStart = parseTime(other.time);
@@ -135,13 +114,13 @@ export default function WorkshopsModule() {
     setSaveStatus('idle');
 
     if (enrolledIds.includes(workshop.id)) {
-      setEnrolledIds(prev => prev.filter(id => id !== workshop.id));
+      setEnrolledIds((prev: string[]) => prev.filter((id: string) => id !== workshop.id));
     } else {
       if (isTimeCollision(workshop)) {
         showAlert('Traslape detectado', 'Este taller tiene un traslape de horario con uno que ya seleccionaste.', 'warning');
         return;
       }
-      setEnrolledIds(prev => [...prev, workshop.id]);
+      setEnrolledIds((prev: string[]) => [...prev, workshop.id]);
     }
   };
 
@@ -153,8 +132,7 @@ export default function WorkshopsModule() {
       try {
         await syncEnrollmentsMutation.mutateAsync({ userId: user.id, workshopIds: enrolledIds });
         
-        // 2. Actualizar estado local
-        updateUserData({ ...user, talleres: enrolledIds });
+        // 2. Actualizar estado local (Ya no es necesario con React Query, pero mantenemos por compatibilidad de otras partes si hace falta)
         localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
         
         setIsConfirmed(true);

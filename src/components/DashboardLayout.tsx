@@ -1,34 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getCurrentUser, type UserData } from '../utils/auth';
+import { useAuth } from '../api/hooks/useAuth';
 import { useDashboardTitle } from '../utils/DashboardTitleContext';
 import AdminBadge from './ui/AdminBadge';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
+  const { user, session, isLoading } = useAuth();
   const { title } = useDashboardTitle();
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
+    // Solo redirigir si ya terminó de cargar y no hay sesión
+    if (!isLoading && !session) {
       navigate('/');
-      return;
     }
-    setUser(currentUser);
+  }, [session, isLoading, navigate]);
 
-    const handleUpdate = () => {
-      const updatedUser = getCurrentUser();
-      if (updatedUser) setUser(updatedUser);
-    };
-
-    window.addEventListener('sessionUpdate', handleUpdate);
-    
-    return () => {
-      window.removeEventListener('sessionUpdate', handleUpdate);
-    };
-  }, [navigate]); // No necesitamos user aquí para evitar el loop, handleUpdate lo mantiene sincronizado
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
+        <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(99, 179, 237, 0.2)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   if (!user) return null;
 

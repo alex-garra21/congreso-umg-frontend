@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getCurrentUser, updateUserData, type UserData } from '../../../utils/auth';
+import { useAuth } from '../../../api/hooks/useAuth';
+import { useUpdateUserData } from '../../../api/hooks/useUsers';
+import { type UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import diplomaTemplate from '../../../assets/diploma-template.png';
 import { showAlert } from '../../../utils/swal';
 
 export default function DiplomaModule() {
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
+  const { user } = useAuth();
+  const updateUserDataMutation = useUpdateUserData();
   const [formData, setFormData] = useState({
     nombreDiploma: '',
     correoDiploma: ''
@@ -23,12 +26,12 @@ export default function DiplomaModule() {
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ ]/g, '');
-    setFormData(prev => ({ ...prev, nombreDiploma: value }));
+    setFormData((prev: any) => ({ ...prev, nombreDiploma: value }));
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
-    setFormData(prev => ({ ...prev, correoDiploma: value }));
+    setFormData((prev: any) => ({ ...prev, correoDiploma: value }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -42,12 +45,11 @@ export default function DiplomaModule() {
       diplomaEditado: true
     };
 
-    const result = await updateUserData(updatedUser);
-    if (result.success) {
+    try {
+      await updateUserDataMutation.mutateAsync(updatedUser);
       setIsSuccessModalOpen(true);
-      setUser(getCurrentUser());
-    } else {
-      showAlert('Error', result.message, 'error');
+    } catch (error: any) {
+      showAlert('Error', error?.message || 'Error al actualizar datos', 'error');
     }
   };
 

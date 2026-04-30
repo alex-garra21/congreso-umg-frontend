@@ -46,7 +46,7 @@ export function useUpdateUserData() {
     mutationFn: (updatedData: UserData) => updateUserDataMutation(updatedData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      // Might also invalidate specific user profile if we had a single user query
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
     },
   });
 }

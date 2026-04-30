@@ -42,6 +42,7 @@ export function useMarkAttendance() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['attendances', variables.userId] });
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
     },
   });
 }
