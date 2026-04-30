@@ -13,10 +13,11 @@ import type { UserData } from '../../utils/auth';
 
 // --- QUERIES ---
 
-export function useAllUsers() {
+export function useAllUsers(enabled: boolean = true) {
   return useQuery({
     queryKey: ['users'],
     queryFn: getAllUsersQuery,
+    enabled
   });
 }
 

@@ -5,7 +5,8 @@ import LocationLink from '../../../components/LocationLink';
 
 export default function DashboardHome() {
   const { user } = useAuth();
-  const { data: allUsers = [], isLoading: loadingAdmin } = useAllUsers();
+  const isAdmin = user?.rol === 'admin';
+  const { data: allUsers = [], isLoading: loadingAdmin } = useAllUsers(isAdmin);
   
   const workshopsCount = user?.talleres?.length || 0;
 

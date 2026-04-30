@@ -19,6 +19,7 @@ export function useSalas() {
   return useQuery({
     queryKey: ['salas'],
     queryFn: getSalasQuery,
+    staleTime: 1000 * 60 * 60, // 1 hora
   });
 }
 
@@ -26,6 +27,7 @@ export function useCategorias() {
   return useQuery({
     queryKey: ['categorias'],
     queryFn: getCategoriasQuery,
+    staleTime: 1000 * 60 * 60, // 1 hora
   });
 }
 
@@ -33,6 +35,7 @@ export function usePonentes() {
   return useQuery({
     queryKey: ['ponentes'],
     queryFn: getPonentesQuery,
+    staleTime: 1000 * 60 * 60, // 1 hora
   });
 }
 
@@ -40,6 +43,7 @@ export function useCharlas() {
   return useQuery({
     queryKey: ['charlas'],
     queryFn: getCharlasQuery,
+    staleTime: 1000 * 60 * 60, // 1 hora
   });
 }
 

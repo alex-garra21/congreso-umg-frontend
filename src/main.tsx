@@ -8,9 +8,11 @@ import App from './App.tsx'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutos
+      staleTime: 1000 * 60 * 10, // 10 minutos por defecto
+      gcTime: 1000 * 60 * 30,    // Mantener en cache 30 minutos
       retry: 1,
-      refetchOnWindowFocus: false, // Opcional: evitar recargas constantes al cambiar de pestaña
+      refetchOnWindowFocus: false, 
+      refetchOnReconnect: false,   // Evitar recargas al recuperar internet si no es crítico
     },
   },
 })
