@@ -4,6 +4,7 @@ import {
   registerUserMutation,
   updateUserDataMutation,
   invalidatePaymentMutation,
+  adminValidateUserMutation,
   deleteTokenMutation,
   generateTokenMutation,
   validateTokenMutation
@@ -56,6 +57,18 @@ export function useInvalidatePayment() {
   
   return useMutation({
     mutationFn: (userId: string) => invalidatePaymentMutation(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['tokens'] });
+    },
+  });
+}
+
+export function useAdminValidateUser() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ userId, adminId }: { userId: string; adminId?: string }) => adminValidateUserMutation(userId, adminId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['tokens'] });

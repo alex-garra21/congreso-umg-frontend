@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useAllUsers, useUpdateUserData, useInvalidatePayment } from '../../../api/hooks/useUsers';
+import { useAllUsers, useUpdateUserData, useInvalidatePayment, useAdminValidateUser } from '../../../api/hooks/useUsers';
+import { useAuth } from '../../../api/hooks/useAuth';
 import { type UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
@@ -14,14 +15,23 @@ export default function UsersModule() {
   const { data: users = [], isLoading } = useAllUsers();
   const updateUserDataMutation = useUpdateUserData();
   const invalidatePaymentMutation = useInvalidatePayment();
+  const adminValidateMutation = useAdminValidateUser();
+  const { user: currentAdmin } = useAuth();
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('all');
 
   const handleValidateUser = async (user: UserData) => {
-    const updated = { ...user, pagoValidado: true };
-    await updateUserDataMutation.mutateAsync(updated);
-    showToast(`Pago validado para ${user.nombres} ${user.apellidos}`, 'success');
+    if (!user.id) return;
+    try {
+      await adminValidateMutation.mutateAsync({ 
+        userId: user.id, 
+        adminId: currentAdmin?.id 
+      });
+      showToast(`Pago validado para ${user.nombres} ${user.apellidos} (Token ADMIN generado)`, 'success');
+    } catch (error: any) {
+      showToast(`Error al validar: ${error.message}`, 'error');
+    }
   };
 
   const handleInvalidatePayment = async (user: UserData) => {
