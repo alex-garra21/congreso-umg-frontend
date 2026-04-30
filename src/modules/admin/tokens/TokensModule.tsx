@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react';
-import { getTokensQuery } from '../../../api/supabase/users/userQueries';
-import { generateToken, type TokenData } from '../../../utils/auth';
-import { deleteTokenMutation } from '../../../api/supabase/users/userMutations';
+import { useState } from 'react';
+import { useTokens, useGenerateToken, useDeleteToken } from '../../../api/hooks/useUsers';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
@@ -17,7 +15,9 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
 export default function TokensModule() {
-  const [tokens, setTokens] = useState<TokenData[]>([]);
+  const { data: tokens = [], isLoading } = useTokens();
+  const generateTokenMutation = useGenerateToken();
+  const deleteTokenMutation = useDeleteToken();
   const [page, setPage] = useState(1);
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [isMassModalOpen, setIsMassModalOpen] = useState(false);
@@ -30,26 +30,25 @@ export default function TokensModule() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  useEffect(() => {
-    loadTokens();
-  }, []);
-
-  const loadTokens = async () => {
-    const data = await getTokensQuery();
-    setTokens(data);
-  };
-
   const handleGenerateToken = async () => {
-    await generateToken();
-    await loadTokens();
+    // Generate a random block for the token code
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    
+    await generateTokenMutation.mutateAsync({ code });
     setPage(1);
   };
 
   const handleMassGenerate = async () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const promises = [];
     for (let i = 0; i < massQuantity; i++) {
-      await generateToken();
+      let code = '';
+      for (let j = 0; j < 8; j++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+      promises.push(generateTokenMutation.mutateAsync({ code }));
     }
-    await loadTokens();
+    await Promise.all(promises);
     setIsMassModalOpen(false);
     setPage(1);
   };
@@ -94,8 +93,9 @@ export default function TokensModule() {
   const handleDeleteToken = async (code: string) => {
     const confirmed = await showConfirm('Eliminar Token', '¿Estás seguro de eliminar este token?', 'Eliminar', true);
     if (confirmed) {
-      await deleteTokenMutation(code);
-      await loadTokens();
+      await deleteTokenMutation.mutateAsync(code);
+      showToast('Token eliminado permanentemente', 'success');
+      setSelectedTokens(prev => prev.filter(t => t !== code));
     }
   };
 
@@ -107,10 +107,9 @@ export default function TokensModule() {
       true
     );
     if (confirmed) {
-      for (const code of selectedTokens) {
-        await deleteTokenMutation(code);
-      }
-      await loadTokens();
+      const promises = selectedTokens.map(code => deleteTokenMutation.mutateAsync(code));
+      await Promise.all(promises);
+      showToast(`${selectedTokens.length} tokens eliminados`, 'success');
       setSelectedTokens([]);
     }
   };
@@ -339,8 +338,11 @@ export default function TokensModule() {
           </div>
         )}
 
-        <div className="table-responsive">
-          <table className="admin-table">
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Cargando tokens...</div>
+        ) : (
+          <div className="table-responsive">
+            <table className="admin-table">
             <thead>
               <tr>
                 <th style={{ width: '40px' }}>
@@ -416,6 +418,8 @@ export default function TokensModule() {
             </tbody>
           </table>
         </div>
+        )}
+        
         <Pagination current={page} total={filteredTokens.length} onPageChange={setPage} />
       </ModuleCard>
 

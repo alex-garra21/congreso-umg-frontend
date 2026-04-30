@@ -1,4 +1,4 @@
-import { getCategories } from '../../utils/agendaStore';
+import { useCategorias } from '../../api/hooks/useAgenda';
 import { categoryStyles as fallbackStyles } from '../../data/agendaData';
 
 interface WorkshopBadgeProps {
@@ -7,7 +7,7 @@ interface WorkshopBadgeProps {
 }
 
 export default function WorkshopBadge({ tag, className = "" }: WorkshopBadgeProps) {
-  const dynamicCategories = getCategories();
+  const { data: dynamicCategories = {} } = useCategorias();
   const style = dynamicCategories[tag] || fallbackStyles[tag] || fallbackStyles['General'];
 
   return (

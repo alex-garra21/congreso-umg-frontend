@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { getAgenda } from '../utils/agendaStore';
+import { useState } from 'react';
+import { useCharlas } from '../api/hooks/useAgenda';
 import type { AgendaItem } from '../data/agendaData';
 import WorkshopBadge from '../components/workshops/WorkshopBadge';
 import AgendaModal from '../components/AgendaModal';
@@ -9,13 +9,7 @@ import LocationLink from '../components/LocationLink';
 export default function AgendaPage() {
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<'Mañana' | 'Tarde'>('Mañana');
   const [charlaSeleccionada, setCharlaSeleccionada] = useState<AgendaItem | null>(null);
-  const [agenda, setAgenda] = useState<AgendaItem[]>(getAgenda());
-
-  useEffect(() => {
-    const handleUpdate = () => setAgenda(getAgenda());
-    window.addEventListener('agendaUpdate', handleUpdate);
-    return () => window.removeEventListener('agendaUpdate', handleUpdate);
-  }, []);
+  const { data: agenda = [], isLoading } = useCharlas();
 
   // Función para convertir "8:00 AM" en un valor numérico comparable
   const parseTimeToNumber = (timeStr: string) => {
@@ -79,7 +73,11 @@ export default function AgendaPage() {
 
         {/* LISTA DE LA AGENDA */}
         <div className="agenda-list">
-          {charlasMostradas.length === 0 ? (
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+              Cargando agenda...
+            </div>
+          ) : charlasMostradas.length === 0 ? (
             <div style={{
               textAlign: 'center',
               padding: '4rem 2rem',

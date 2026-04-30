@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import {
-  getAgenda, saveAgenda,
-  getSpeakers, saveSpeakers,
-  getCategories, saveCategories,
-  getRooms, saveRooms,
   type AgendaItem, type Speaker, type CategoryStyle
-} from '../../../utils/agendaStore';
+} from '../../../data/agendaData';
+import {
+  useCharlas, usePonentes, useCategorias, useSalas,
+  useSaveAgenda, useSavePonentes, useSaveCategorias, useSaveSalas
+} from '../../../api/hooks/useAgenda';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
 import ColorPicker from '../../../components/ColorPicker';
@@ -16,10 +16,15 @@ import AdminSelect from '../../../components/ui/AdminSelect';
 import ModuleCard from '../../../components/ui/ModuleCard';
 
 export default function AgendaModule() {
-  const [agenda, setAgenda] = useState<AgendaItem[]>(getAgenda());
-  const [speakers, setSpeakers] = useState<Speaker[]>(getSpeakers());
-  const [categories, setCategories] = useState<Record<string, CategoryStyle>>(getCategories());
-  const [rooms, setRooms] = useState<string[]>(getRooms());
+  const { data: agenda = [] } = useCharlas();
+  const { data: speakers = [] } = usePonentes();
+  const { data: categories = {} } = useCategorias();
+  const { data: rooms = [] } = useSalas();
+
+  const saveAgendaMutation = useSaveAgenda();
+  const savePonentesMutation = useSavePonentes();
+  const saveCategoriasMutation = useSaveCategorias();
+  const saveSalasMutation = useSaveSalas();
 
   const [agendaTab, setAgendaTab] = useState<'schedule' | 'speakers' | 'categories' | 'rooms'>('schedule');
 
@@ -45,9 +50,8 @@ export default function AgendaModule() {
         : [...agenda, editingItem];
       
       // Intentar guardar (esto ahora lanzará error si falla la nube)
-      await saveAgenda(newAgenda);
+      await saveAgendaMutation.mutateAsync(newAgenda);
       
-      setAgenda(newAgenda);
       setIsAgendaModalOpen(false);
       showToast('Cambios guardados correctamente', 'success');
     } catch (error: any) {
@@ -61,8 +65,7 @@ export default function AgendaModule() {
       if (confirmed) {
         try {
           const newAgenda = agenda.filter(a => a.id !== id);
-          await saveAgenda(newAgenda);
-          setAgenda(newAgenda);
+          await saveAgendaMutation.mutateAsync(newAgenda);
           showToast('Actividad eliminada', 'success');
         } catch (error: any) {
           showToast(`Error al eliminar: ${error.message}`, 'error');
@@ -71,23 +74,31 @@ export default function AgendaModule() {
     });
   };
 
-  const handleSaveSpeaker = (e: React.FormEvent) => {
+  const handleSaveSpeaker = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSpeaker) return;
-    const newSpeakers = speakers.some(s => s.id === editingSpeaker.id)
-      ? speakers.map(s => s.id === editingSpeaker.id ? editingSpeaker : s)
-      : [...speakers, editingSpeaker];
-    setSpeakers(newSpeakers);
-    saveSpeakers(newSpeakers);
-    setIsSpeakerModalOpen(false);
+    try {
+      const newSpeakers = speakers.some(s => s.id === editingSpeaker.id)
+        ? speakers.map(s => s.id === editingSpeaker.id ? editingSpeaker : s)
+        : [...speakers, editingSpeaker];
+      await savePonentesMutation.mutateAsync(newSpeakers);
+      setIsSpeakerModalOpen(false);
+      showToast('Ponente guardado', 'success');
+    } catch (error: any) {
+      showToast(`Error al guardar ponente: ${error.message}`, 'error');
+    }
   };
 
   const handleDeleteSpeaker = (id: number) => {
-    showConfirm('Eliminar Ponente', '¿Eliminar ponente?', 'Eliminar', true).then(confirmed => {
+    showConfirm('Eliminar Ponente', '¿Eliminar ponente?', 'Eliminar', true).then(async confirmed => {
       if (confirmed) {
-        const newSpeakers = speakers.filter(s => s.id !== id);
-        setSpeakers(newSpeakers);
-        saveSpeakers(newSpeakers);
+        try {
+          const newSpeakers = speakers.filter(s => s.id !== id);
+          await savePonentesMutation.mutateAsync(newSpeakers);
+          showToast('Ponente eliminado', 'success');
+        } catch (error: any) {
+          showToast(`Error al eliminar: ${error.message}`, 'error');
+        }
       }
     });
   };
@@ -97,8 +108,7 @@ export default function AgendaModule() {
     if (!editingCategory) return;
     try {
       const newCategories = { ...categories, [editingCategory.name]: editingCategory.style };
-      await saveCategories(newCategories);
-      setCategories(newCategories);
+      await saveCategoriasMutation.mutateAsync(newCategories);
       setIsCategoryModalOpen(false);
       showToast('Categoría guardada', 'success');
     } catch (error: any) {
@@ -107,12 +117,16 @@ export default function AgendaModule() {
   };
 
   const handleDeleteCategory = (name: string) => {
-    showConfirm('Eliminar Categoría', '¿Eliminar categoría?', 'Eliminar', true).then(confirmed => {
+    showConfirm('Eliminar Categoría', '¿Eliminar categoría?', 'Eliminar', true).then(async confirmed => {
       if (confirmed) {
-        const newCategories = { ...categories };
-        delete newCategories[name];
-        setCategories(newCategories);
-        saveCategories(newCategories);
+        try {
+          const newCategories = { ...categories };
+          delete newCategories[name];
+          await saveCategoriasMutation.mutateAsync(newCategories);
+          showToast('Categoría eliminada', 'success');
+        } catch (error: any) {
+          showToast(`Error al eliminar: ${error.message}`, 'error');
+        }
       }
     });
   };
@@ -134,12 +148,10 @@ export default function AgendaModule() {
 
       // Guardar ambos en la nube
       await Promise.all([
-        saveRooms(newRooms),
-        saveAgenda(newAgenda)
+        saveSalasMutation.mutateAsync(newRooms),
+        saveAgendaMutation.mutateAsync(newAgenda)
       ]);
 
-      setRooms(newRooms);
-      setAgenda(newAgenda);
       setIsRoomModalOpen(false);
       showToast('Sala actualizada correctamente', 'success');
     } catch (error: any) {
@@ -148,11 +160,15 @@ export default function AgendaModule() {
   };
 
   const handleDeleteRoom = (roomName: string) => {
-    showConfirm('Eliminar Sala', `¿Eliminar la sala "${roomName}"?`, 'Eliminar', true).then(confirmed => {
+    showConfirm('Eliminar Sala', `¿Eliminar la sala "${roomName}"?`, 'Eliminar', true).then(async confirmed => {
       if (confirmed) {
-        const newRooms = rooms.filter(r => r !== roomName);
-        setRooms(newRooms);
-        saveRooms(newRooms);
+        try {
+          const newRooms = rooms.filter(r => r !== roomName);
+          await saveSalasMutation.mutateAsync(newRooms);
+          showToast('Sala eliminada', 'success');
+        } catch (error: any) {
+          showToast(`Error al eliminar: ${error.message}`, 'error');
+        }
       }
     });
   };

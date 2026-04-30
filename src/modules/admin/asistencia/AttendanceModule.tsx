@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { getAllUsersQuery } from '../../../api/supabase/users/userQueries';
-import { type UserData } from '../../../utils/auth';
-import { getAgenda, saveAgenda, generateSlug, type AgendaItem } from '../../../utils/agendaStore';
+import { useState } from 'react';
+import { useAllUsers } from '../../../api/hooks/useUsers';
+import { generateSlug, type AgendaItem } from '../../../utils/agendaStore';
+import { useCharlas, useSaveAgenda } from '../../../api/hooks/useAgenda';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
 import AdminButton from '../../../components/ui/AdminButton';
@@ -10,10 +10,10 @@ import SearchBar from '../../../components/ui/SearchBar';
 import ModuleCard from '../../../components/ui/ModuleCard';
 import AdminSelect from '../../../components/ui/AdminSelect';
 import Swal from 'sweetalert2';
-
 export default function AttendanceModule() {
-  const [users, setUsers] = useState<UserData[]>([]);
-  const [agenda, setAgenda] = useState<AgendaItem[]>(getAgenda());
+  const { data: users = [] } = useAllUsers();
+  const { data: agenda = [] } = useCharlas();
+  const saveAgendaMutation = useSaveAgenda();
   const [searchAgenda, setSearchAgenda] = useState('');
   const [page, setPage] = useState(1);
 
@@ -23,11 +23,6 @@ export default function AttendanceModule() {
   const [tempGraceHours, setTempGraceHours] = useState<number>(0);
   const [tempGraceMinutes, setTempGraceMinutes] = useState<number>(10);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-
-  useEffect(() => {
-    getAllUsersQuery().then(setUsers);
-  }, []);
-
   const handleUpdateGracePeriod = (workshopId: string) => {
     const workshop = agenda.find(a => a.id === workshopId);
     if (!workshop) return;
@@ -44,10 +39,10 @@ export default function AttendanceModule() {
     if (!graceWorkshop) return;
     const totalMinutes = (tempGraceHours * 60) + tempGraceMinutes;
     const newAgenda = agenda.map(a => a.id === graceWorkshop.id ? { ...a, gracePeriod: totalMinutes } : a);
-    setAgenda(newAgenda);
-    saveAgenda(newAgenda);
-    setIsGraceModalOpen(false);
-    setIsSuccessModalOpen(true);
+    saveAgendaMutation.mutateAsync(newAgenda).then(() => {
+      setIsGraceModalOpen(false);
+      setIsSuccessModalOpen(true);
+    });
   };
 
   const handleShowLink = (workshopId: string) => {

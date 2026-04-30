@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getAgenda, type AgendaItem, type Speaker, generateSlug } from '../utils/agendaStore';
+import { type AgendaItem, type Speaker, generateSlug } from '../utils/agendaStore';
+import { useCharlas } from '../api/hooks/useAgenda';
 import { loginUser, updateUserData, getCurrentUser, type UserData } from '../utils/auth';
-import { markAttendanceMutation } from '../api/supabase/enrollment/enrollmentMutations';
+import { useMarkAttendance } from '../api/hooks/useEnrollment';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
 function parseTimeStr(timeStr: string, baseDate?: string): Date {
@@ -42,6 +43,9 @@ export default function AttendancePage() {
   const [confirmationTime, setConfirmationTime] = useState<string>('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [loggedInUser, setLoggedInUser] = useState<UserData | null>(null);
+  const markAttendanceMutation = useMarkAttendance();
+
+  const { data: agenda = [], isLoading } = useCharlas();
 
   // Actualizar el tiempo cada 30 segundos para que la página sea reactiva al horario
   useEffect(() => {
@@ -52,16 +56,13 @@ export default function AttendancePage() {
   }, []);
 
   useEffect(() => {
-    const loadData = () => {
-      // Cargar Taller
-      if (workshopId) {
-        const agenda = getAgenda();
-        const item = agenda.find(a => a.id === workshopId || generateSlug(a.title) === workshopId);
-        if (item) {
-          setWorkshop(item);
-          if (item.speaker) {
-            setSpeaker(item.speaker as Speaker);
-          }
+    // Cargar Taller
+    if (workshopId && agenda.length > 0) {
+      const item = agenda.find(a => a.id === workshopId || generateSlug(a.title) === workshopId);
+      if (item) {
+        setWorkshop(item);
+        if (item.speaker) {
+          setSpeaker(item.speaker as Speaker);
         }
       }
 
@@ -71,13 +72,8 @@ export default function AttendancePage() {
         setLoggedInUser(user);
         setEmail(user.correo); 
       }
-    };
-
-    loadData();
-
-    window.addEventListener('agendaUpdate', loadData);
-    return () => window.removeEventListener('agendaUpdate', loadData);
-  }, [workshopId]);
+    }
+  }, [workshopId, agenda]);
 
   const handleConfirmAttendance = async (e?: React.FormEvent, isQuickConfirm: boolean = false) => {
     if (e) e.preventDefault();
@@ -141,9 +137,10 @@ export default function AttendancePage() {
     }
 
     // 5. Registrar asistencia en la NUBE
-    const { success } = await markAttendanceMutation(user.id, workshop.id);
-    if (!success) {
-      setError('Error de conexión al registrar la asistencia en la nube.');
+    try {
+      await markAttendanceMutation.mutateAsync({ userId: user.id, workshopId: workshop.id });
+    } catch (error) {
+      setError('Ocurrió un error al registrar tu asistencia en la nube. Por favor intenta de nuevo.');
       return;
     }
 
@@ -187,6 +184,14 @@ export default function AttendancePage() {
   };
 
   const isOutOfTime = checkIsOutOfTime();
+
+  if (isLoading) {
+    return (
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Cargando información del taller...</p>
+      </div>
+    );
+  }
 
   if (!workshop) {
     return (

@@ -1,5 +1,5 @@
 import { supabase } from '../../../utils/supabase';
-import type { AgendaItem, CategoryStyle } from '../../../data/agendaData';
+import type { AgendaItem, CategoryStyle, Speaker } from '../../../data/agendaData';
 
 /**
  * MUTATIONS - Escritura y modificación de datos de Agenda
@@ -70,4 +70,28 @@ export async function saveAgendaMutation(agenda: AgendaItem[]): Promise<void> {
     console.error("Error en saveAgendaMutation:", err);
     throw err;
   }
+}
+
+export async function savePonentesMutation(ponentes: Speaker[]): Promise<void> {
+  const { data: actuales } = await supabase.from('ponentes').select('id');
+  const idsActuales = actuales?.map(a => a.id) || [];
+  const nuevosIds = ponentes.map(p => p.id);
+
+  const toDelete = idsActuales.filter(id => !nuevosIds.includes(id));
+  if (toDelete.length > 0) {
+    await supabase.from('ponentes').delete().in('id', toDelete);
+  }
+
+  const mapped = ponentes.map(p => ({
+    id: p.id,
+    nombre: p.name,
+    cargo: p.role,
+    bio: p.bio,
+    avatar_url: p.avatar,
+    bg_color: p.bgColor,
+    text_color: p.textColor,
+    tag: p.tag
+  }));
+
+  await supabase.from('ponentes').upsert(mapped);
 }

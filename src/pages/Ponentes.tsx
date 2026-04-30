@@ -1,17 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { usePonentes } from '../api/hooks/useAgenda';
+import type { Speaker } from '../data/agendaData';
 import SpeakerModal from '../components/SpeakerModal';
-import { getSpeakers, type Speaker } from '../utils/agendaStore';
 import WorkshopBadge from '../components/workshops/WorkshopBadge';
 
 export default function PonentesPage() {
+  const { data: speakers = [], isLoading } = usePonentes();
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
-  const [speakers, setSpeakers] = useState<Speaker[]>(getSpeakers());
-
-  useEffect(() => {
-    const handleUpdate = () => setSpeakers(getSpeakers());
-    window.addEventListener('agendaUpdate', handleUpdate);
-    return () => window.removeEventListener('agendaUpdate', handleUpdate);
-  }, []);
 
   return (
     <div style={{ flex: 1, position: 'relative', minHeight: '100%' }}>
@@ -27,7 +22,16 @@ export default function PonentesPage() {
         </div>
 
         <div className="speakers-grid">
-          {speakers.length === 0 ? (
+          {isLoading ? (
+            <div style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: '4rem 2rem',
+              color: 'var(--text-secondary)'
+            }}>
+              Cargando ponentes...
+            </div>
+          ) : speakers.length === 0 ? (
             <div style={{
               gridColumn: '1 / -1',
               textAlign: 'center',

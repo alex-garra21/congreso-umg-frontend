@@ -2,33 +2,25 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, updateUserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
-import { getAgenda, getRooms } from '../../../utils/agendaStore';
-import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
+import { useCharlas, useSalas } from '../../../api/hooks/useAgenda';
+import { useSyncUserEnrollments } from '../../../api/hooks/useEnrollment';
 import type { AgendaItem } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
-  const [agenda, setAgenda] = useState<AgendaItem[]>([]);
-  const [rooms, setRooms] = useState<string[]>([]);
+  const { data: agenda = [], isLoading: isLoadingAgenda } = useCharlas();
+  const { data: rooms = [] } = useSalas();
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const isPaid = user?.pagoValidado;
+  
+  const syncEnrollmentsMutation = useSyncUserEnrollments();
 
-  useEffect(() => {
-    setAgenda(getAgenda());
-    setRooms(getRooms());
-    
-    const handleAgendaUpdate = () => {
-      setAgenda(getAgenda());
-      setRooms(getRooms());
-    };
-    window.addEventListener('agendaUpdate', handleAgendaUpdate);
-    return () => window.removeEventListener('agendaUpdate', handleAgendaUpdate);
-  }, []);
+
 
   useEffect(() => {
     if (!user) {
@@ -158,9 +150,9 @@ export default function WorkshopsModule() {
     
     if (user && user.id) {
       // 1. Guardar en la nube
-      const { success } = await syncUserEnrollmentsMutation(user.id, enrolledIds);
-      
-      if (success) {
+      try {
+        await syncEnrollmentsMutation.mutateAsync({ userId: user.id, workshopIds: enrolledIds });
+        
         // 2. Actualizar estado local
         updateUserData({ ...user, talleres: enrolledIds });
         localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
@@ -169,7 +161,7 @@ export default function WorkshopsModule() {
         setShowSuccessModal(true);
         setSaveStatus('saved');
         window.dispatchEvent(new Event('sessionUpdate'));
-      } else {
+      } catch (error) {
         showAlert('Error', 'Hubo un error al guardar tus inscripciones en la nube.', 'error');
         setSaveStatus('idle');
       }
@@ -206,6 +198,10 @@ export default function WorkshopsModule() {
   return (
     <div className="workshops-module">
       <ModuleTitle title="Inscripción de Talleres" />
+      <p className="dashboard-description">
+        Configura tu itinerario seleccionando los talleres a los que deseas asistir.
+        {isLoadingAgenda && <span style={{ marginLeft: '10px', color: '#63b3ed' }}>Cargando agenda...</span>}
+      </p>
 
       {!isPaid && (
         <div className="alert-banner warning">
