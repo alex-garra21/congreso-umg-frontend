@@ -45,7 +45,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
     if (result.success) {
       clearFields();
       onClose();
-      navigate('/dashboard'); 
+      // Redirigir según el rol
+      if (result.user?.rol === 'admin') {
+        navigate('/dashboard/admin');
+      } else {
+        navigate('/dashboard/inicio');
+      }
     } else {
       setError(result.message);
     }

@@ -5,7 +5,7 @@ import RegisterModal from './RegisterModal';
 import { useAuth } from '../api/hooks/useAuth';
 
 export default function Navbar() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -67,22 +67,17 @@ export default function Navbar() {
         </ul>
 
         <div className="nav-right">
-          {isLoading ? (
-            <div className="loader-mini" style={{ width: '20px', height: '20px', border: '2px solid rgba(255,255,255,0.1)', borderTop: '2px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-          ) : isAuthenticated ? (
-            <Link to="/dashboard" className="btn-solid">
+          {isAuthenticated && (
+            <Link to="/dashboard" className="btn-solid" style={{ marginRight: '12px' }}>
               Ir al Dashboard
             </Link>
-          ) : (
-            <>
-              <button className="btn-ghost" onClick={() => setIsLoginOpen(true)}>
-                Iniciar sesión
-              </button>
-              <button className="btn-solid" onClick={() => setIsRegisterOpen(true)}>
-                Regístrate aquí
-              </button>
-            </>
           )}
+          <button className="btn-ghost" onClick={() => setIsLoginOpen(true)}>
+            Iniciar sesión
+          </button>
+          <button className="btn-solid" onClick={() => setIsRegisterOpen(true)}>
+            Regístrate aquí
+          </button>
         </div>
       </nav>
 
@@ -112,16 +107,13 @@ export default function Navbar() {
           </ul>
 
           <div className="sidebar-footer-mobile">
-            {isAuthenticated ? (
-              <Link to="/dashboard" className="btn-sidebar-register" style={{ textAlign: 'center' }} onClick={() => setIsMenuOpen(false)}>
+            {isAuthenticated && (
+              <Link to="/dashboard" className="btn-sidebar-register" style={{ textAlign: 'center', marginBottom: '10px' }} onClick={() => setIsMenuOpen(false)}>
                 Ir al Dashboard
               </Link>
-            ) : (
-              <>
-                <button className="btn-sidebar-login" onClick={openLogin}>Iniciar sesión</button>
-                <button className="btn-sidebar-register" onClick={openRegister}>Regístrate aquí</button>
-              </>
             )}
+            <button className="btn-sidebar-login" onClick={openLogin}>Iniciar sesión</button>
+            <button className="btn-sidebar-register" onClick={openRegister}>Regístrate aquí</button>
           </div>
         </aside>
       </div>

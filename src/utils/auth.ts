@@ -41,7 +41,7 @@ export interface TokenData {
  */
 
 export async function loginUser(correo: string, contrasena: string): Promise<{ success: boolean; message: string; user?: UserData }> {
-  const { error: authError } = await supabase.auth.signInWithPassword({
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email: correo,
     password: contrasena,
   });
@@ -55,7 +55,25 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     }
   }
 
-  return { success: true, message: 'Inicio de sesión exitoso.' };
+  // Obtener el perfil para saber el rol y otros datos
+  const { data: profile } = await supabase
+    .from('usuarios')
+    .select('*')
+    .eq('id', authData.user?.id)
+    .single();
+
+  return { 
+    success: true, 
+    message: 'Inicio de sesión exitoso.', 
+    user: profile ? {
+      id: profile.id,
+      nombres: profile.nombres,
+      apellidos: profile.apellidos,
+      correo: profile.correo,
+      rol: profile.rol,
+      pagoValidado: profile.pago_validado
+    } as UserData : undefined
+  };
 }
 
 export async function changePassword(newPassword: string): Promise<{ success: boolean; message: string }> {

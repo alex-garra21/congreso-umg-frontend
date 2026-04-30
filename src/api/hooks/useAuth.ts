@@ -6,20 +6,23 @@ import { getUserProfileQuery } from '../supabase/users/userQueries';
 
 export function useAuth() {
   const queryClient = useQueryClient();
-  const [session, setSession] = useState(null as any);
+  const [session, setSession] = useState<any>(null);
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
 
   useEffect(() => {
     // 1. Obtener sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setIsSessionLoading(false);
     });
 
     // 2. Escuchar cambios en la sesión
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setIsSessionLoading(false);
       if (_event === 'SIGNED_OUT') {
         queryClient.setQueryData(['userProfile'], null);
-        localStorage.removeItem('congreso_current_user'); // Mantener compatibilidad temporal
+        localStorage.removeItem('congreso_current_user'); 
       } else if (_event === 'SIGNED_IN') {
         queryClient.invalidateQueries({ queryKey: ['userProfile'] });
       }
@@ -30,7 +33,7 @@ export function useAuth() {
 
   const userId = session?.user?.id;
 
-  const { data: user, isLoading, isError, refetch } = useQuery({
+  const { data: user, isLoading: isProfileLoading, isError, refetch } = useQuery({
     queryKey: ['userProfile', userId],
     queryFn: () => (userId ? getUserProfileQuery(userId) : null),
     enabled: !!userId,
@@ -41,7 +44,7 @@ export function useAuth() {
     user,
     session,
     isAuthenticated: !!session,
-    isLoading: isLoading || (!!userId && !user),
+    isLoading: isSessionLoading || isProfileLoading || (!!userId && !user),
     isError,
     refetchProfile: refetch
   };
