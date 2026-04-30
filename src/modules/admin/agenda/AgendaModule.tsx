@@ -43,15 +43,15 @@ export default function AgendaModule() {
   const handleSaveAgendaItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItem) return;
-    
+
     try {
       const newAgenda = agenda.some(a => a.id === editingItem.id)
-        ? agenda.map(a => a.id === editingItem.id ? editingItem : a)
+        ? currentAgenda.map(a => a.id === editingItem.id ? editingItem : a)
         : [...agenda, editingItem];
-      
+
       // Intentar guardar (esto ahora lanzará error si falla la nube)
       await saveAgendaMutation.mutateAsync(newAgenda);
-      
+
       setIsAgendaModalOpen(false);
       showToast('Cambios guardados correctamente', 'success');
     } catch (error: any) {
@@ -138,7 +138,7 @@ export default function AgendaModule() {
     try {
       let newRooms = [...rooms];
       let newAgenda = [...agenda];
-      
+
       if (editingRoom.oldName && rooms.includes(editingRoom.oldName)) {
         newRooms = newRooms.map(r => r === editingRoom.oldName ? editingRoom.newName : r);
         newAgenda = agenda.map(a => a.room === editingRoom.oldName ? { ...a, room: editingRoom.newName, location: editingRoom.newName } : a);
@@ -187,11 +187,35 @@ export default function AgendaModule() {
     return hours * 60 + minutes;
   };
 
+  // Filtrado y Paginación para Horario
+  const filteredAgenda = agenda.filter(item =>
+    item.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const currentAgenda = filteredAgenda
+    .sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time))
+    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  // Filtrado y Paginación para Ponentes
+  const filteredSpeakers = speakers.filter(s =>
+    s.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const currentSpeakers = filteredSpeakers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  // Filtrado y Paginación para Categorías
+  const filteredCategories = Object.entries(categories).filter(([name]) =>
+    name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const currentCategories = filteredCategories.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+
   return (
     <section className="dashboard-section">
       <div className="section-header" style={{ marginBottom: '2rem' }}>
         <ModuleTitle title="Gestión de Agenda" />
-        <AdminTabs 
+        <AdminTabs
           tabs={[
             { id: 'schedule', label: 'Horario' },
             { id: 'speakers', label: 'Ponentes' },
@@ -204,7 +228,7 @@ export default function AgendaModule() {
       </div>
 
       {agendaTab === 'schedule' && (
-        <ModuleCard 
+        <ModuleCard
           title="Cronograma de Actividades"
           description="Gestiona las charlas y talleres del congreso."
           headerActions={
@@ -212,8 +236,16 @@ export default function AgendaModule() {
               setEditingItem({ id: Math.random().toString(36).substr(2, 9), title: '', time: '', endTime: '', room: rooms[0] || '', location: rooms[0] || '', tag: '', speaker: undefined, gracePeriod: 10, description: '', period: 'Mañana' });
               setIsAgendaModalOpen(true);
             }}>+ Agregar Charla/Taller</AdminButton>
+
           }
         >
+          <div style={{ marginBottom: '1.5rem' }}>
+            <SearchBar
+              value={searchTerm}
+              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+              placeholder="Buscar..."
+            />
+          </div>
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -226,7 +258,7 @@ export default function AgendaModule() {
                 </tr>
               </thead>
               <tbody>
-                {[...agenda].sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time)).map(item => (
+                {currentAgenda.map(item => (
                   <tr key={item.id}>
                     <td>{item.time} - {item.endTime}</td>
                     <td>
@@ -241,7 +273,7 @@ export default function AgendaModule() {
                     </td>
                   </tr>
                 ))}
-                {agenda.length === 0 && (
+                {currentAgenda.length === 0 && (
                   <tr>
                     <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                       <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay actividades registradas en la agenda.</div>
@@ -251,11 +283,16 @@ export default function AgendaModule() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            current={currentPage}
+            total={filteredAgenda.length}
+            onPageChange={setCurrentPage}
+          />
         </ModuleCard>
       )}
 
       {agendaTab === 'speakers' && (
-        <ModuleCard 
+        <ModuleCard
           title="Ponentes"
           description="Listado de expertos que participarán en el evento."
           headerActions={
@@ -265,6 +302,13 @@ export default function AgendaModule() {
             }}>+ Agregar Ponente</AdminButton>
           }
         >
+          <div style={{ marginBottom: '1.5rem' }}>
+            <SearchBar
+              value={searchTerm}
+              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+              placeholder="Buscar..."
+            />
+          </div>
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -275,7 +319,7 @@ export default function AgendaModule() {
                 </tr>
               </thead>
               <tbody>
-                {speakers.map(s => (
+                {currentSpeakers.map(s => (
                   <tr key={s.id}>
                     <td><strong>{s.name}</strong></td>
                     <td>{s.role}</td>
@@ -285,7 +329,7 @@ export default function AgendaModule() {
                     </td>
                   </tr>
                 ))}
-                {speakers.length === 0 && (
+                {currentSpeakers.length === 0 && (
                   <tr>
                     <td colSpan={3} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                       <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay ponentes registrados.</div>
@@ -295,11 +339,16 @@ export default function AgendaModule() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            current={currentPage}
+            total={filteredSpeakers.length}
+            onPageChange={setCurrentPage}
+          />
         </ModuleCard>
       )}
 
       {agendaTab === 'categories' && (
-        <ModuleCard 
+        <ModuleCard
           title="Categorías"
           description="Etiquetas visuales para clasificar las actividades."
           headerActions={
@@ -309,6 +358,13 @@ export default function AgendaModule() {
             }}>+ Nueva Categoría</AdminButton>
           }
         >
+          <div style={{ marginBottom: '1.5rem' }}>
+            <SearchBar
+              value={searchTerm}
+              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+              placeholder="Buscar..."
+            />
+          </div>
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -319,7 +375,7 @@ export default function AgendaModule() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(categories).map(([name, style]) => (
+                {currentCategories.map(([name, style]) => (
                   <tr key={name}>
                     <td><strong>{name}</strong></td>
                     <td><AdminBadge style={{ backgroundColor: style.bg, color: style.text }}>{name}</AdminBadge></td>
@@ -329,7 +385,7 @@ export default function AgendaModule() {
                     </td>
                   </tr>
                 ))}
-                {Object.keys(categories).length === 0 && (
+                {currentCategories.length === 0 && (
                   <tr>
                     <td colSpan={3} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                       <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay categorías registradas.</div>
@@ -339,11 +395,16 @@ export default function AgendaModule() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            current={currentPage}
+            total={filteredCategories.length}
+            onPageChange={setCurrentPage}
+          />
         </ModuleCard>
       )}
 
       {agendaTab === 'rooms' && (
-        <ModuleCard 
+        <ModuleCard
           title="Salas y Ubicaciones"
           description="Espacios físicos donde se llevarán a cabo las actividades."
           headerActions={
@@ -395,9 +456,9 @@ export default function AgendaModule() {
                 <input type="text" className="dashboard-input" value={editingItem.title} onChange={e => setEditingItem({ ...editingItem, title: e.target.value })} required />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <AdminSelect 
+                <AdminSelect
                   label="HORA INICIO"
-                  value={editingItem.time} 
+                  value={editingItem.time}
                   onChange={e => setEditingItem({ ...editingItem, time: e.target.value })}
                   containerStyle={{ flex: 1 }}
                   options={[
@@ -413,9 +474,9 @@ export default function AgendaModule() {
                     })
                   ]}
                 />
-                <AdminSelect 
+                <AdminSelect
                   label="HORA FIN"
-                  value={editingItem.endTime} 
+                  value={editingItem.endTime}
                   onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })}
                   containerStyle={{ flex: 1 }}
                   options={[
@@ -433,16 +494,16 @@ export default function AgendaModule() {
                 />
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <AdminSelect 
+                <AdminSelect
                   label="SALA / UBICACIÓN"
-                  value={editingItem.room} 
+                  value={editingItem.room}
                   onChange={e => setEditingItem({ ...editingItem, room: e.target.value, location: e.target.value })}
                   containerStyle={{ flex: 1 }}
                   options={rooms.map(r => ({ value: r, label: r }))}
                 />
-                <AdminSelect 
+                <AdminSelect
                   label="CATEGORÍA"
-                  value={editingItem.tag} 
+                  value={editingItem.tag}
                   onChange={e => setEditingItem({ ...editingItem, tag: e.target.value })}
                   containerStyle={{ flex: 1 }}
                   options={[
@@ -451,9 +512,9 @@ export default function AgendaModule() {
                   ]}
                 />
               </div>
-              <AdminSelect 
+              <AdminSelect
                 label="PONENTE (Opcional)"
-                value={editingItem.speaker?.id || ''} 
+                value={editingItem.speaker?.id || ''}
                 onChange={e => {
                   const s = speakers.find(sp => sp.id === parseInt(e.target.value));
                   setEditingItem({ ...editingItem, speaker: s });
@@ -501,15 +562,15 @@ export default function AgendaModule() {
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>COLOR TEXTO</label>
-                  <ColorPicker 
-                    selectedColor={editingCategory.style.text} 
+                  <ColorPicker
+                    selectedColor={editingCategory.style.text}
                     onSelect={c => {
                       const bgWithAlpha = c.startsWith('#') ? c + '26' : c;
-                      setEditingCategory({ 
-                        ...editingCategory, 
-                        style: { ...editingCategory.style, text: c, bg: bgWithAlpha } 
+                      setEditingCategory({
+                        ...editingCategory,
+                        style: { ...editingCategory.style, text: c, bg: bgWithAlpha }
                       });
-                    }} 
+                    }}
                   />
                 </div>
               </div>
