@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, updateUserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { getAgenda, getRooms } from '../../../utils/agendaStore';
-import { syncUserEnrollmentsCloud } from '../../../utils/supabaseEnrollment';
+import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
 import type { AgendaItem } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
 
@@ -158,7 +158,7 @@ export default function WorkshopsModule() {
     
     if (user && user.id) {
       // 1. Guardar en la nube
-      const { success } = await syncUserEnrollmentsCloud(user.id, enrolledIds);
+      const { success } = await syncUserEnrollmentsMutation(user.id, enrolledIds);
       
       if (success) {
         // 2. Actualizar estado local

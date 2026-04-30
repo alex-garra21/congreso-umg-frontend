@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getTokens, generateToken, deleteToken, type TokenData } from '../../../utils/auth';
+import { getTokensQuery } from '../../../api/supabase/users/userQueries';
+import { generateToken, type TokenData } from '../../../utils/auth';
+import { deleteTokenMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
@@ -33,7 +35,7 @@ export default function TokensModule() {
   }, []);
 
   const loadTokens = async () => {
-    const data = await getTokens();
+    const data = await getTokensQuery();
     setTokens(data);
   };
 
@@ -92,7 +94,7 @@ export default function TokensModule() {
   const handleDeleteToken = async (code: string) => {
     const confirmed = await showConfirm('Eliminar Token', '¿Estás seguro de eliminar este token?', 'Eliminar', true);
     if (confirmed) {
-      await deleteToken(code);
+      await deleteTokenMutation(code);
       await loadTokens();
     }
   };
@@ -106,7 +108,7 @@ export default function TokensModule() {
     );
     if (confirmed) {
       for (const code of selectedTokens) {
-        await deleteToken(code);
+        await deleteTokenMutation(code);
       }
       await loadTokens();
       setSelectedTokens([]);

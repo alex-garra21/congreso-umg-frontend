@@ -1914,10 +1914,6 @@ h1 span {
   border: 0.5px solid var(--border-soft) !important;
 }
 
-.swal2-backdrop-show {
-  backdrop-filter: blur(5px) !important;
-}
-
 /* ── SIDEBAR MOBILE ── */
 .mobile-sidebar-overlay {
   position: fixed;

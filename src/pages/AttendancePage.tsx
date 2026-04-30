@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getAgenda, type AgendaItem, type Speaker, generateSlug } from '../utils/agendaStore';
 import { loginUser, updateUserData, getCurrentUser, type UserData } from '../utils/auth';
-import { markAttendanceCloud } from '../utils/supabaseEnrollment';
+import { markAttendanceMutation } from '../api/supabase/enrollment/enrollmentMutations';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
 function parseTimeStr(timeStr: string, baseDate?: string): Date {
@@ -141,7 +141,7 @@ export default function AttendancePage() {
     }
 
     // 5. Registrar asistencia en la NUBE
-    const { success } = await markAttendanceCloud(user.id, workshop.id);
+    const { success } = await markAttendanceMutation(user.id, workshop.id);
     if (!success) {
       setError('Error de conexión al registrar la asistencia en la nube.');
       return;

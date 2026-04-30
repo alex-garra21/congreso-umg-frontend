@@ -17,7 +17,21 @@ export default function AgendaPage() {
     return () => window.removeEventListener('agendaUpdate', handleUpdate);
   }, []);
 
-  const charlasMostradas = agenda.filter(c => c.period === periodoSeleccionado);
+  // Función para convertir "8:00 AM" en un valor numérico comparable
+  const parseTimeToNumber = (timeStr: string) => {
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (hours === 12) {
+      hours = modifier === 'PM' ? 12 : 0;
+    } else if (modifier === 'PM') {
+      hours += 12;
+    }
+    return hours * 60 + minutes;
+  };
+
+  const charlasMostradas = agenda
+    .filter(c => c.period === periodoSeleccionado)
+    .sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time));
 
   return (
     <div style={{ flex: 1, position: 'relative', minHeight: '100%' }}>
@@ -65,34 +79,49 @@ export default function AgendaPage() {
 
         {/* LISTA DE LA AGENDA */}
         <div className="agenda-list">
-          {charlasMostradas.map(charla => (
-            <div
-              key={charla.id}
-              className="agenda-list-item"
-              onClick={() => setCharlaSeleccionada(charla)}
-            >
-              <div className="agenda-time">
-                {charla.time}
-              </div>
-
-              <div className="agenda-content">
-                <span style={{ fontSize: '13px', color: '#81c784', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                  📍 {charla.location}
-                </span>
-                <h3>{charla.title}</h3>
-                <p>
-                  {charla.speaker
-                    ? `${charla.speaker.name} — ${charla.speaker.role.substring(0, 40)}...`
-                    : (charla.id.startsWith('reg') ? 'Comité Organizador UMG' : (charla.id === 'almuerzo' ? 'Hotel Alcázar doña Victoria' : 'Clausura General'))
-                  }
-                </p>
-              </div>
-
-              <div>
-                <WorkshopBadge tag={charla.tag} />
-              </div>
+          {charlasMostradas.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '4rem 2rem',
+              color: 'var(--text-secondary)'
+            }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
+              <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Programa próximamente</h3>
+              <p style={{ fontSize: '0.95rem' }}>
+                La jornada de la {periodoSeleccionado.toLowerCase()} aún no ha sido publicada.<br />
+                Vuelve pronto para ver las charlas y talleres confirmados.
+              </p>
             </div>
-          ))}
+          ) : (
+            charlasMostradas.map(charla => (
+              <div
+                key={charla.id}
+                className="agenda-list-item"
+                onClick={() => setCharlaSeleccionada(charla)}
+              >
+                <div className="agenda-time">
+                  {charla.time}
+                </div>
+
+                <div className="agenda-content">
+                  <span style={{ fontSize: '13px', color: '#81c784', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                    📍 {charla.location}
+                  </span>
+                  <h3>{charla.title}</h3>
+                  <p>
+                    {charla.speaker
+                      ? `${charla.speaker.name} — ${charla.speaker.role.substring(0, 40)}...`
+                      : (charla.id.startsWith('reg') ? 'Comité Organizador UMG' : (charla.id === 'almuerzo' ? 'Hotel Alcázar doña Victoria' : 'Clausura General'))
+                    }
+                  </p>
+                </div>
+
+                <div>
+                  <WorkshopBadge tag={charla.tag} />
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         <AgendaModal

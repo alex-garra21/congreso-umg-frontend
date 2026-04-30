@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getAllUsersCloud, type UserData } from '../../../utils/auth';
+import { getGeneralReportQuery } from '../../../api/supabase/reports/reportQueries';
+import { type UserData } from '../../../utils/auth';
 import { getAgenda, type AgendaItem } from '../../../utils/agendaStore';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast } from '../../../utils/swal';
@@ -22,7 +23,7 @@ export default function ReportsModule() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    getAllUsersCloud().then(setUsers);
+    getGeneralReportQuery().then(setUsers);
   }, []);
 
   const getWorkshopTitle = (id: string) => {

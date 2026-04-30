@@ -7,7 +7,7 @@ import {
   type AgendaItem, type Speaker, type CategoryStyle
 } from '../../../utils/agendaStore';
 import ModuleTitle from '../../../components/ModuleTitle';
-import { showConfirm } from '../../../utils/swal';
+import { showToast, showConfirm } from '../../../utils/swal';
 import ColorPicker from '../../../components/ColorPicker';
 import AdminButton from '../../../components/ui/AdminButton';
 import AdminBadge from '../../../components/ui/AdminBadge';
@@ -35,23 +35,38 @@ export default function AgendaModule() {
 
 
 
-  const handleSaveAgendaItem = (e: React.FormEvent) => {
+  const handleSaveAgendaItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItem) return;
-    const newAgenda = agenda.some(a => a.id === editingItem.id)
-      ? agenda.map(a => a.id === editingItem.id ? editingItem : a)
-      : [...agenda, editingItem];
-    setAgenda(newAgenda);
-    saveAgenda(newAgenda);
-    setIsAgendaModalOpen(false);
+    
+    try {
+      const newAgenda = agenda.some(a => a.id === editingItem.id)
+        ? agenda.map(a => a.id === editingItem.id ? editingItem : a)
+        : [...agenda, editingItem];
+      
+      // Intentar guardar (esto ahora lanzará error si falla la nube)
+      await saveAgenda(newAgenda);
+      
+      setAgenda(newAgenda);
+      setIsAgendaModalOpen(false);
+      showToast('Cambios guardados correctamente', 'success');
+    } catch (error: any) {
+      console.error("Error al guardar actividad:", error);
+      showToast(`Error al guardar: ${error.message || 'Error de conexión'}`, 'error');
+    }
   };
 
   const handleDeleteAgendaItem = (id: string) => {
-    showConfirm('Eliminar Taller', '¿Eliminar taller de la agenda?', 'Eliminar', true).then(confirmed => {
+    showConfirm('Eliminar Taller', '¿Eliminar taller de la agenda?', 'Eliminar', true).then(async confirmed => {
       if (confirmed) {
-        const newAgenda = agenda.filter(a => a.id !== id);
-        setAgenda(newAgenda);
-        saveAgenda(newAgenda);
+        try {
+          const newAgenda = agenda.filter(a => a.id !== id);
+          await saveAgenda(newAgenda);
+          setAgenda(newAgenda);
+          showToast('Actividad eliminada', 'success');
+        } catch (error: any) {
+          showToast(`Error al eliminar: ${error.message}`, 'error');
+        }
       }
     });
   };
@@ -77,13 +92,18 @@ export default function AgendaModule() {
     });
   };
 
-  const handleSaveCategory = (e: React.FormEvent) => {
+  const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCategory) return;
-    const newCategories = { ...categories, [editingCategory.name]: editingCategory.style };
-    setCategories(newCategories);
-    saveCategories(newCategories);
-    setIsCategoryModalOpen(false);
+    try {
+      const newCategories = { ...categories, [editingCategory.name]: editingCategory.style };
+      await saveCategories(newCategories);
+      setCategories(newCategories);
+      setIsCategoryModalOpen(false);
+      showToast('Categoría guardada', 'success');
+    } catch (error: any) {
+      showToast(`Error: ${error.message}`, 'error');
+    }
   };
 
   const handleDeleteCategory = (name: string) => {
@@ -97,23 +117,34 @@ export default function AgendaModule() {
     });
   };
 
-  const handleSaveRoom = (e: React.FormEvent) => {
+  const handleSaveRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRoom || !editingRoom.newName.trim()) return;
 
-    let newRooms = [...rooms];
-    if (editingRoom.oldName && rooms.includes(editingRoom.oldName)) {
-      newRooms = newRooms.map(r => r === editingRoom.oldName ? editingRoom.newName : r);
-      const newAgenda = agenda.map(a => a.room === editingRoom.oldName ? { ...a, room: editingRoom.newName, location: editingRoom.newName } : a);
-      setAgenda(newAgenda);
-      saveAgenda(newAgenda);
-    } else if (!rooms.includes(editingRoom.newName)) {
-      newRooms.push(editingRoom.newName);
-    }
+    try {
+      let newRooms = [...rooms];
+      let newAgenda = [...agenda];
+      
+      if (editingRoom.oldName && rooms.includes(editingRoom.oldName)) {
+        newRooms = newRooms.map(r => r === editingRoom.oldName ? editingRoom.newName : r);
+        newAgenda = agenda.map(a => a.room === editingRoom.oldName ? { ...a, room: editingRoom.newName, location: editingRoom.newName } : a);
+      } else if (!rooms.includes(editingRoom.newName)) {
+        newRooms.push(editingRoom.newName);
+      }
 
-    setRooms(newRooms);
-    saveRooms(newRooms);
-    setIsRoomModalOpen(false);
+      // Guardar ambos en la nube
+      await Promise.all([
+        saveRooms(newRooms),
+        saveAgenda(newAgenda)
+      ]);
+
+      setRooms(newRooms);
+      setAgenda(newAgenda);
+      setIsRoomModalOpen(false);
+      showToast('Sala actualizada correctamente', 'success');
+    } catch (error: any) {
+      showToast(`Error al guardar sala: ${error.message}`, 'error');
+    }
   };
 
   const handleDeleteRoom = (roomName: string) => {
@@ -124,6 +155,20 @@ export default function AgendaModule() {
         saveRooms(newRooms);
       }
     });
+  };
+
+  // Función para convertir "8:00 AM" en un valor numérico comparable
+  const parseTimeToNumber = (timeStr: string) => {
+    if (!timeStr) return 0;
+    const [time, modifier] = timeStr.split(' ');
+    if (!time || !modifier) return 0;
+    let [hours, minutes] = time.split(':').map(Number);
+    if (hours === 12) {
+      hours = modifier === 'PM' ? 12 : 0;
+    } else if (modifier === 'PM') {
+      hours += 12;
+    }
+    return hours * 60 + minutes;
   };
 
   return (
@@ -165,7 +210,7 @@ export default function AgendaModule() {
                 </tr>
               </thead>
               <tbody>
-                {agenda.sort((a, b) => a.time.localeCompare(b.time)).map(item => (
+                {[...agenda].sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time)).map(item => (
                   <tr key={item.id}>
                     <td>{item.time} - {item.endTime}</td>
                     <td>
@@ -334,16 +379,44 @@ export default function AgendaModule() {
                 <input type="text" className="dashboard-input" value={editingItem.title} onChange={e => setEditingItem({ ...editingItem, title: e.target.value })} required />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>HORA INICIO</label>
-                  <input type="text" className="dashboard-input" value={editingItem.time} onChange={e => setEditingItem({ ...editingItem, time: e.target.value })} placeholder="Ej: 8:00 AM" required />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>HORA FIN</label>
-                  <input type="text" className="dashboard-input" value={editingItem.endTime} onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })} placeholder="Ej: 9:00 AM" required />
-                </div>
+                <AdminSelect 
+                  label="HORA INICIO"
+                  value={editingItem.time} 
+                  onChange={e => setEditingItem({ ...editingItem, time: e.target.value })}
+                  containerStyle={{ flex: 1 }}
+                  options={[
+                    ...Array.from({ length: 15 * 4 }).map((_, i) => {
+                      const totalMinutes = (7 * 60) + (i * 15);
+                      let hours = Math.floor(totalMinutes / 60);
+                      const minutes = totalMinutes % 60;
+                      const ampm = hours >= 12 ? 'PM' : 'AM';
+                      hours = hours % 12;
+                      if (hours === 0) hours = 12;
+                      const timeStr = `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+                      return { value: timeStr, label: timeStr };
+                    })
+                  ]}
+                />
+                <AdminSelect 
+                  label="HORA FIN"
+                  value={editingItem.endTime} 
+                  onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })}
+                  containerStyle={{ flex: 1 }}
+                  options={[
+                    ...Array.from({ length: 15 * 4 }).map((_, i) => {
+                      const totalMinutes = (7 * 60) + (i * 15);
+                      let hours = Math.floor(totalMinutes / 60);
+                      const minutes = totalMinutes % 60;
+                      const ampm = hours >= 12 ? 'PM' : 'AM';
+                      hours = hours % 12;
+                      if (hours === 0) hours = 12;
+                      const timeStr = `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+                      return { value: timeStr, label: timeStr };
+                    })
+                  ]}
+                />
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <AdminSelect 
                   label="SALA / UBICACIÓN"
                   value={editingItem.room} 

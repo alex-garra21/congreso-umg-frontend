@@ -1,5 +1,6 @@
-import { agendaCompleta as initialAgenda, mockSpeakers as initialSpeakers, categoryStyles as initialCategories, initialRooms, type AgendaItem, type Speaker, type CategoryStyle } from '../data/agendaData';
-import { getSalasCloud, saveSalasCloud, getCategoriasCloud, saveCategoriasCloud, getPonentesCloud, getCharlasCloud, saveAgendaCloud } from './supabaseAgenda';
+import { categoryStyles as initialCategories, initialRooms, type AgendaItem, type Speaker, type CategoryStyle } from '../data/agendaData';
+import { getSalasQuery, getCategoriasQuery, getPonentesQuery, getCharlasQuery } from '../api/supabase/agenda/agendaQueries';
+import { saveSalasMutation, saveCategoriasMutation, saveAgendaMutation } from '../api/supabase/agenda/agendaMutations';
 
 export type { AgendaItem, Speaker, CategoryStyle };
 
@@ -19,10 +20,10 @@ const ROOMS_KEY = 'congreso_rooms';
 export async function syncFromCloud() {
   try {
     const [salas, categorias, ponentes, charlas] = await Promise.all([
-      getSalasCloud(),
-      getCategoriasCloud(),
-      getPonentesCloud(),
-      getCharlasCloud()
+      getSalasQuery(),
+      getCategoriasQuery(),
+      getPonentesQuery(),
+      getCharlasQuery()
     ]);
     
     localStorage.setItem(ROOMS_KEY, JSON.stringify(salas));
@@ -38,20 +39,17 @@ export async function syncFromCloud() {
 
 export function getAgenda(): AgendaItem[] {
   const saved = localStorage.getItem(AGENDA_KEY);
-  if (!saved) {
-    localStorage.setItem(AGENDA_KEY, JSON.stringify(initialAgenda));
-    return initialAgenda;
-  }
+  if (!saved) return []; // Sin datos configurados por admin
   try {
     return JSON.parse(saved);
   } catch (e) {
-    return initialAgenda;
+    return [];
   }
 }
 
 export async function saveAgenda(agenda: AgendaItem[]) {
   // Primero a la nube
-  await saveAgendaCloud(agenda);
+  await saveAgendaMutation(agenda);
   // Luego localmente
   localStorage.setItem(AGENDA_KEY, JSON.stringify(agenda));
   window.dispatchEvent(new Event('agendaUpdate'));
@@ -59,8 +57,8 @@ export async function saveAgenda(agenda: AgendaItem[]) {
 
 export function getSpeakers(): Speaker[] {
   const saved = localStorage.getItem(SPEAKERS_KEY);
-  if (!saved) return initialSpeakers;
-  try { return JSON.parse(saved); } catch (e) { return initialSpeakers; }
+  if (!saved) return []; // Sin datos configurados por admin
+  try { return JSON.parse(saved); } catch (e) { return []; }
 }
 
 export async function saveSpeakers(speakers: Speaker[]) {
@@ -75,7 +73,7 @@ export function getCategories(): Record<string, CategoryStyle> {
 }
 
 export async function saveCategories(categories: Record<string, CategoryStyle>) {
-  await saveCategoriasCloud(categories);
+  await saveCategoriasMutation(categories);
   localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
   window.dispatchEvent(new Event('agendaUpdate'));
 }
@@ -87,7 +85,7 @@ export function getRooms(): string[] {
 }
 
 export async function saveRooms(rooms: string[]) {
-  await saveSalasCloud(rooms);
+  await saveSalasMutation(rooms);
   localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
   window.dispatchEvent(new Event('agendaUpdate'));
 }

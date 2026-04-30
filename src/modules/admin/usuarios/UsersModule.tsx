@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getAllUsersCloud, updateUserData, invalidatePayment, type UserData } from '../../../utils/auth';
+import { getAllUsersQuery } from '../../../api/supabase/users/userQueries';
+import { updateUserDataMutation, invalidatePaymentMutation } from '../../../api/supabase/users/userMutations';
+import { type UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
@@ -20,13 +22,13 @@ export default function UsersModule() {
   }, []);
 
   const loadUsers = async () => {
-    const data = await getAllUsersCloud();
+    const data = await getAllUsersQuery();
     setUsers(data);
   };
 
   const handleValidateUser = async (user: UserData) => {
     const updated = { ...user, pagoValidado: true };
-    await updateUserData(updated);
+    await updateUserDataMutation(updated);
     await loadUsers();
     showToast(`Pago validado para ${user.nombres} ${user.apellidos}`, 'success');
   };
@@ -40,7 +42,7 @@ export default function UsersModule() {
       true
     );
     if (confirmed) {
-      const result = await invalidatePayment(user.id!);
+      const result = await invalidatePaymentMutation(user.id!);
       if (result.success) {
         showToast(result.message, 'success');
         await loadUsers();
@@ -54,7 +56,7 @@ export default function UsersModule() {
     const confirmed = await showConfirm('Desactivar Usuario', `¿Estás seguro de desactivar a ${user.nombres} ${user.apellidos}? No aparecerá en los informes y reportes.`, 'Desactivar', true);
     if (confirmed) {
       const updated = { ...user, desactivado: true };
-      await updateUserData(updated);
+      await updateUserDataMutation(updated);
       await loadUsers();
     }
   };
@@ -63,7 +65,7 @@ export default function UsersModule() {
     const confirmed = await showConfirm('Activar Usuario', `¿Estás seguro de activar nuevamente a ${user.nombres} ${user.apellidos}?`, 'Activar', false);
     if (confirmed) {
       const updated = { ...user, desactivado: false };
-      await updateUserData(updated);
+      await updateUserDataMutation(updated);
       await loadUsers();
     }
   };
@@ -72,7 +74,7 @@ export default function UsersModule() {
     const confirmed = await showConfirm('Promover a Administrador', `¿Estás seguro de promover a ${user.nombres} ${user.apellidos} a Administrador?`, 'Promover', false);
     if (confirmed) {
       const updated = { ...user, rol: 'admin' as const };
-      await updateUserData(updated);
+      await updateUserDataMutation(updated);
       await loadUsers();
     }
   };
@@ -81,7 +83,7 @@ export default function UsersModule() {
     const confirmed = await showConfirm('Degradar a Usuario', `¿Estás seguro de degradar a ${user.nombres} ${user.apellidos} a Usuario participante?`, 'Degradar', true);
     if (confirmed) {
       const updated = { ...user, rol: 'usuario' as const };
-      await updateUserData(updated);
+      await updateUserDataMutation(updated);
       await loadUsers();
     }
   };

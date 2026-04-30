@@ -27,19 +27,35 @@ export default function PonentesPage() {
         </div>
 
         <div className="speakers-grid">
-          {speakers.map(speaker => (
-            <div key={speaker.id} className="speaker-card" onClick={() => setSelectedSpeaker(speaker)}>
-              <div
-                className="speaker-avatar"
-                style={{ background: speaker.bgColor, color: speaker.textColor }}
-              >
-                {speaker.initials}
-              </div>
-              <h3 className="speaker-name">{speaker.name}</h3>
-              <p className="speaker-role">{speaker.role}</p>
-              <WorkshopBadge tag={speaker.tag} className="speaker-tag-component" />
+          {speakers.length === 0 ? (
+            <div style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: '4rem 2rem',
+              color: 'var(--text-secondary)'
+            }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎙️</div>
+              <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Ponentes próximamente</h3>
+              <p style={{ fontSize: '0.95rem' }}>
+                Los ponentes confirmados serán publicados en cuanto estén disponibles.<br />
+                Vuelve pronto para conocer a los expertos del evento.
+              </p>
             </div>
-          ))}
+          ) : (
+            speakers.map(speaker => (
+              <div key={speaker.id} className="speaker-card" onClick={() => setSelectedSpeaker(speaker)}>
+                <div
+                  className="speaker-avatar"
+                  style={{ background: speaker.bgColor, color: speaker.textColor }}
+                >
+                  {speaker.initials}
+                </div>
+                <h3 className="speaker-name">{speaker.name}</h3>
+                <p className="speaker-role">{speaker.role}</p>
+                <WorkshopBadge tag={speaker.tag} className="speaker-tag-component" />
+              </div>
+            ))
+          )}
         </div>
 
         <SpeakerModal

@@ -1,4 +1,13 @@
 import { supabase } from './supabase';
+import { getTokensQuery, getAllUsersQuery } from '../api/supabase/users/userQueries';
+import { 
+  registerUserMutation, 
+  updateUserDataMutation, 
+  invalidatePaymentMutation, 
+  deleteTokenMutation, 
+  generateTokenMutation, 
+  validateTokenMutation 
+} from '../api/supabase/users/userMutations';
 
 export interface UserData {
   id?: string;
@@ -39,47 +48,7 @@ const STORAGE_KEY = 'congreso_users';
 const SESSION_KEY = 'congreso_current_user';
 
 export async function getTokens(): Promise<TokenData[]> {
-  const { data, error } = await supabase
-    .from('tokens_pago')
-    .select(`
-      codigo, 
-      usado, 
-      usado_por,
-      creado_por,
-      fecha_creacion,
-      fecha_uso,
-      usado_por_user:usuarios!usado_por(nombres, apellidos, correo, tipo_participante),
-      creado_por_user:usuarios!creado_por(nombres, apellidos)
-    `);
-  if (error || !data) return [];
-
-  return data.map(d => {
-    // Datos del usuario que usó el token
-    const u = Array.isArray(d.usado_por_user) ? d.usado_por_user[0] : d.usado_por_user;
-    const name = u ? `${(u as any).nombres} ${(u as any).apellidos}`.trim() : '';
-    
-    // Datos del administrador que creó el token
-    const creator = Array.isArray(d.creado_por_user) ? d.creado_por_user[0] : d.creado_por_user;
-    const creatorName = creator ? `${(creator as any).nombres} ${(creator as any).apellidos}`.trim() : '';
-
-    // Normalizar el tipo de participante
-    let type = (u as any)?.tipo_participante;
-    if (type) {
-      type = type.toLowerCase();
-    }
-
-    return {
-      code: d.codigo,
-      used: d.usado,
-      usedBy: u ? (u as any).correo : undefined,
-      usedByName: name || undefined,
-      usedByType: type || undefined,
-      createdAt: d.fecha_creacion,
-      usedAt: d.fecha_uso,
-      createdBy: d.creado_por,
-      createdByName: creatorName || undefined
-    };
-  });
+  return getTokensQuery();
 }
 
 // Función auxiliar para generar bloques de caracteres aleatorios
@@ -99,23 +68,15 @@ export async function generateToken(): Promise<string> {
 
   while (!success) {
     code = `C2026-${generateRandomBlock(4)}-${generateRandomBlock(4)}-${generateRandomBlock(4)}`;
-
-    // Regla estricta: Nunca generar el código de ejemplo del placeholder
     if (code === PROHIBITED_CODE) continue;
 
-    // Intentar insertarlo en Supabase
     const user = getCurrentUser();
-    const { error } = await supabase.from('tokens_pago').insert({ 
-      codigo: code,
-      creado_por: user?.id
-    });
+    const result = await generateTokenMutation(code, user?.id);
 
-    if (!error) {
-      success = true; // Se insertó correctamente
-    } else if (error.code !== '23505') {
-      // 23505 es el código de Postgres para "llave duplicada" (colisión).
-      // Si el error es otro (ej. sin internet), salimos del bucle para no quedarnos atrapados.
-      console.error("Error inesperado al generar token:", error);
+    if (result.success) {
+      success = true;
+    } else if (result.error?.code !== '23505') {
+      console.error("Error inesperado al generar token:", result.error);
       break;
     }
   }
@@ -124,54 +85,15 @@ export async function generateToken(): Promise<string> {
 }
 
 export async function deleteToken(code: string): Promise<void> {
-  await supabase.from('tokens_pago').delete().eq('codigo', code);
+  await deleteTokenMutation(code);
 }
 
 export async function validateToken(code: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'error' }> {
   const user = getCurrentUser();
   if (!user || !user.id) return { success: false, errorType: 'error' };
 
-  // 1. Verificar si existe (sensible a mayúsculas/minúsculas, omitiendo espacios)
-  const { data: tokenData, error: fetchError } = await supabase
-    .from('tokens_pago')
-    .select('*')
-    .eq('codigo', code.trim())
-    .maybeSingle();
-
-  if (fetchError) {
-    console.error("Error fetching token:", fetchError);
-    return { success: false, errorType: 'error' };
-  }
-
-  if (!tokenData) {
-    console.warn("Token not found:", code);
-    return { success: false, errorType: 'not_found' };
-  }
-
-  if (tokenData.usado) {
-    console.warn("Token already used:", code);
-    return { success: false, errorType: 'already_used' };
-  }
-
-  // 2. Marcar como usado (usando el código exacto que tiene la DB)
-  const { error: updateError } = await supabase
-    .from('tokens_pago')
-    .update({
-      usado: true,
-      usado_por: user.id,
-      fecha_uso: new Date().toISOString()
-    })
-    .eq('codigo', tokenData.codigo);
-
-  if (updateError) {
-    console.error("Error updating token:", updateError);
-    return { success: false, errorType: 'error' };
-  }
-
-  // 3. Actualizar al usuario en la nube
-  await supabase.from('usuarios').update({ pago_validado: true }).eq('id', user.id);
-
-  return { success: true };
+  const result = await validateTokenMutation(code, user.id);
+  return result;
 }
 
 export function getRegisteredUsers(): UserData[] {
@@ -190,101 +112,22 @@ export function getRegisteredUsers(): UserData[] {
 }
 
 export async function getAllUsersCloud(): Promise<UserData[]> {
-  const { data, error } = await supabase
-    .from('usuarios')
-    .select('*')
-    .order('apellidos', { ascending: true });
-
-  if (error || !data) return [];
-
-  // Mapear los datos básicos
-  const mappedUsers: UserData[] = data.map(userData => ({
-    id: userData.id,
-    nombres: userData.nombres,
-    apellidos: userData.apellidos,
-    sexo: userData.sexo || 'M',
-    correo: userData.correo,
-    contrasena: 'auth_managed',
-    rol: userData.rol as any,
-    pagoValidado: userData.pago_validado,
-    nombreDiploma: userData.nombre_diploma,
-    tipoParticipante: userData.tipo_participante,
-    carnet: userData.carnet,
-    ciclo: userData.ciclo,
-    telefono: userData.telefono,
-    correoDiploma: userData.correo_diploma,
-    desactivado: userData.desactivado || false,
-    dpi: userData.dpi
-  }));
-
-  // Cargar talleres y asistencias para cada uno (esto es pesado pero necesario para el reporte)
-  // Nota: En una app más grande esto se haría con un Join, pero para este congreso funciona bien así.
-  const finalUsers = await Promise.all(mappedUsers.map(async (u) => {
-    const talleres = await getEnrolledWorkshopsCloud(u.id!);
-    const asistencias = await getAttendancesCloud(u.id!);
-    return { ...u, talleres, asistencias };
-  }));
-
-  return finalUsers;
+  return getAllUsersQuery();
 }
 
 export async function registerUser(user: UserData): Promise<{ success: boolean; message: string }> {
-  // 1. Crear el usuario en Supabase Auth
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: user.correo,
-    password: user.contrasena,
-  });
-
-  if (authError) {
-    console.error("Supabase SignUp Error:", authError);
-    if (authError.message.includes('already registered') || authError.status === 422) {
-      return { success: false, message: 'El correo electrónico ya está registrado en el sistema.' };
-    }
-    return { success: false, message: `Error al crear cuenta: ${authError.message}` };
+  const result = await registerUserMutation(user);
+  
+  if (result.success && result.userId) {
+    const users = getRegisteredUsers();
+    users.push({ ...user, id: result.userId });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
   }
 
-  if (!authData.user) {
-    return { success: false, message: 'No se pudo crear el usuario. Inténtalo de nuevo.' };
-  }
-
-  // 2. Insertar el perfil en public.usuarios
-  const { error: profileError } = await supabase.from('usuarios').insert({
-    id: authData.user.id,
-    nombres: user.nombres,
-    apellidos: user.apellidos,
-    sexo: user.sexo,
-    correo: user.correo,
-    contrasena: 'auth_managed', // Para satisfacer la restricción NOT NULL si existe
-    rol: 'participante',
-    pago_validado: false,
-    tipo_participante: user.tipoParticipante,
-    carnet: user.carnet,
-    ciclo: user.ciclo,
-    desactivado: false,
-    dpi: user.dpi
-  });
-
-  if (profileError) {
-    console.error("Supabase Profile Insert Error:", profileError);
-
-    if (profileError.message.includes('duplicate key value') || profileError.code === '23505') {
-      return { success: false, message: 'Este correo electrónico ya se encuentra registrado.' };
-    }
-
-    // Podríamos borrar el usuario de auth aquí si falla el perfil, 
-    // pero requeriría privilegios de admin. Por ahora mostramos error.
-    return { success: false, message: `Error al guardar el perfil: ${profileError.message}. Verifica las columnas y los permisos (RLS).` };
-  }
-
-  // Fallback local (opcional, para compatibilidad)
-  const users = getRegisteredUsers();
-  users.push({ ...user, id: authData.user.id });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-
-  return { success: true, message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
+  return { success: result.success, message: result.message };
 }
 
-import { getEnrolledWorkshopsCloud, getAttendancesCloud } from './supabaseEnrollment';
+import { getEnrolledWorkshopsQuery, getAttendancesQuery } from '../api/supabase/enrollment/enrollmentQueries';
 
 export async function loginUser(correo: string, contrasena: string): Promise<{ success: boolean; message: string; user?: UserData }> {
   // 1. Intentar Login en Supabase Auth
@@ -320,8 +163,8 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
   }
 
   // 3. Obtener inscripciones y asistencias de la nube
-  const talleres = await getEnrolledWorkshopsCloud(userData.id);
-  const asistencias = await getAttendancesCloud(userData.id);
+  const talleres = await getEnrolledWorkshopsQuery(userData.id);
+  const asistencias = await getAttendancesQuery(userData.id);
 
   const user: UserData = {
     id: userData.id,
@@ -376,34 +219,13 @@ export function logout() {
 
 export async function updateUserData(updatedData: UserData): Promise<{ success: boolean; message: string }> {
   // 1. Actualizar en Supabase
-  if (updatedData.id) {
-    const { error } = await supabase
-      .from('usuarios')
-      .update({
-        nombres: updatedData.nombres,
-        apellidos: updatedData.apellidos,
-        pago_validado: updatedData.pagoValidado,
-        pago_enviado: updatedData.pagoEnviado,
-        dpi: updatedData.dpi,
-        rol: updatedData.rol,
-        desactivado: updatedData.desactivado,
-        nombre_diploma: updatedData.nombreDiploma,
-        tipo_participante: updatedData.tipoParticipante,
-        carnet: updatedData.carnet,
-        ciclo: updatedData.ciclo,
-        telefono: updatedData.telefono,
-        correo_diploma: updatedData.correoDiploma,
-        diploma_editado: updatedData.diplomaEditado
-      })
-      .eq('id', updatedData.id);
-
-    if (error) {
-      console.error("Error updating user in cloud:", error);
-      if (error.code === '23505') {
-        return { success: false, message: 'Este DPI ya está registrado por otro participante.' };
-      }
-      return { success: false, message: 'Error al actualizar en la nube.' };
+  const result = await updateUserDataMutation(updatedData);
+  if (!result.success) {
+    console.error("Error updating user in cloud:", result.error);
+    if (result.error?.code === '23505') {
+      return { success: false, message: 'Este DPI ya está registrado por otro participante.' };
     }
+    return { success: false, message: 'Error al actualizar en la nube.' };
   }
 
   // 2. Sincronización Local (MUY IMPORTANTE)
@@ -519,28 +341,5 @@ export async function resetPasswordWithOTP(email: string, token: string, newPass
 }
 
 export async function invalidatePayment(userId: string): Promise<{ success: boolean; message: string }> {
-  // 1. Actualizar al usuario
-  const { error: userError } = await supabase
-    .from('usuarios')
-    .update({ pago_validado: false })
-    .eq('id', userId);
-
-  if (userError) return { success: false, message: 'Error al invalidar el pago del usuario.' };
-
-  // 2. Liberar el token usado por este usuario
-  const { error: tokenError } = await supabase
-    .from('tokens_pago')
-    .update({
-      usado: false,
-      usado_por: null,
-      fecha_uso: null
-    })
-    .eq('usado_por', userId);
-
-  if (tokenError) {
-    console.error("Error releasing token:", tokenError);
-    // No fallamos completamente si el token no se pudo liberar, pero avisamos.
-  }
-
-  return { success: true, message: 'Pago anulado correctamente. El token ha sido liberado.' };
+  return invalidatePaymentMutation(userId);
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getAllUsersCloud, type UserData } from '../../../utils/auth';
+import { getAllUsersQuery } from '../../../api/supabase/users/userQueries';
+import { type UserData } from '../../../utils/auth';
 import { getAgenda, saveAgenda, generateSlug, type AgendaItem } from '../../../utils/agendaStore';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
@@ -24,7 +25,7 @@ export default function AttendanceModule() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   useEffect(() => {
-    getAllUsersCloud().then(setUsers);
+    getAllUsersQuery().then(setUsers);
   }, []);
 
   const handleUpdateGracePeriod = (workshopId: string) => {
