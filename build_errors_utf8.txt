@@ -1,0 +1,64 @@
+﻿src/api/hooks/useAgenda.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+src/api/hooks/useAuth.ts(1,42): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+src/api/hooks/useEnrollment.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+src/api/hooks/useEnrollment.ts(30,17): error TS7006: Parameter '_' implicitly has an 'any' type.
+src/api/hooks/useEnrollment.ts(30,20): error TS7006: Parameter 'variables' implicitly has an 'any' type.
+src/api/hooks/useEnrollment.ts(42,17): error TS7006: Parameter '_' implicitly has an 'any' type.
+src/api/hooks/useEnrollment.ts(42,20): error TS7006: Parameter 'variables' implicitly has an 'any' type.
+src/api/hooks/useReports.ts(1,26): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+src/api/hooks/useUsers.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+src/components/admin/AttendanceQR.tsx(2,27): error TS2307: Cannot find module 'qr-code-styling' or its corresponding type declarations.
+src/main.tsx(3,50): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+src/main.tsx(4,36): error TS2307: Cannot find module '@tanstack/react-query-devtools' or its corresponding type declarations.
+src/modules/admin/agenda/AgendaModule.tsx(48,37): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(49,22): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(67,43): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(81,41): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(82,24): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(96,47): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(144,32): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(166,41): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(278,31): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(325,63): error TS18046: 'style' is of type 'unknown'.
+src/modules/admin/agenda/AgendaModule.tsx(325,80): error TS18046: 'style' is of type 'unknown'.
+src/modules/admin/agenda/AgendaModule.tsx(327,105): error TS2322: Type 'unknown' is not assignable to type 'CategoryStyle'.
+src/modules/admin/agenda/AgendaModule.tsx(365,28): error TS7006: Parameter 'room' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(441,38): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(458,43): error TS7006: Parameter 'sp' implicitly has an 'any' type.
+src/modules/admin/agenda/AgendaModule.tsx(464,35): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(13,23): error TS2307: Cannot find module 'html-to-image' or its corresponding type declarations.
+src/modules/admin/asistencia/AttendanceModule.tsx(53,34): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(67,34): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(75,34): error TS7006: Parameter 'w' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(83,34): error TS7006: Parameter 'w' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(93,40): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(125,36): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(147,37): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(152,37): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/modules/admin/asistencia/AttendanceModule.tsx(152,62): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(25,27): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(29,38): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(29,87): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(73,27): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(78,28): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(123,27): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(128,28): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(180,32): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(180,52): error TS7006: Parameter 'w' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(221,35): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/modules/admin/reportes/ReportsModule.tsx(234,43): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+src/modules/admin/tokens/TokensModule.tsx(57,40): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/admin/tokens/TokensModule.tsx(84,54): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/admin/tokens/TokensModule.tsx(88,54): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/admin/tokens/TokensModule.tsx(142,28): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/admin/tokens/TokensModule.tsx(200,29): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/admin/tokens/TokensModule.tsx(200,32): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/modules/admin/tokens/TokensModule.tsx(351,90): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/admin/tokens/TokensModule.tsx(368,40): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/admin/usuarios/UsersModule.tsx(152,37): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/pages/AgendaPage.tsx(27,13): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/pages/AgendaPage.tsx(28,12): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/pages/AgendaPage.tsx(28,15): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/pages/AgendaPage.tsx(94,34): error TS7006: Parameter 'charla' implicitly has an 'any' type.
+src/pages/AttendancePage.tsx(62,32): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/pages/Ponentes.tsx(49,26): error TS7006: Parameter 'speaker' implicitly has an 'any' type.

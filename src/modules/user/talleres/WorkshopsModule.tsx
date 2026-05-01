@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, updateUserData } from '../../../utils/auth';
+import { useAuth } from '../../../api/hooks/useAuth';
+import { updateUserDataMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
-import { getAgenda, getRooms } from '../../../utils/agendaStore';
-import { syncUserEnrollmentsCloud } from '../../../utils/supabaseEnrollment';
+import { useCharlas, useSalas } from '../../../api/hooks/useAgenda';
+import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
 import type { AgendaItem } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(getCurrentUser());
-  const [agenda, setAgenda] = useState<AgendaItem[]>([]);
-  const [rooms, setRooms] = useState<string[]>([]);
+  const { user, refetchProfile } = useAuth();
+  const { data: charlas } = useCharlas();
+  const { data: salas } = useSalas();
+  
+  const agenda = charlas || [];
+  const rooms = salas || [];
+
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -19,33 +24,11 @@ export default function WorkshopsModule() {
   const isPaid = user?.pagoValidado;
 
   useEffect(() => {
-    setAgenda(getAgenda());
-    setRooms(getRooms());
-    
-    const handleAgendaUpdate = () => {
-      setAgenda(getAgenda());
-      setRooms(getRooms());
-    };
-    window.addEventListener('agendaUpdate', handleAgendaUpdate);
-    return () => window.removeEventListener('agendaUpdate', handleAgendaUpdate);
-  }, []);
-
-  useEffect(() => {
     if (!user) {
-      navigate('/');
+      // In a real scenario, useAuth handles redirects or unauthenticated states,
+      // but we keep this to prevent rendering errors.
       return;
     }
-
-    const handleUpdate = () => {
-      const updatedUser = getCurrentUser();
-      if (updatedUser) setUser(updatedUser);
-    };
-
-    window.addEventListener('sessionUpdate', handleUpdate);
-
-    return () => {
-      window.removeEventListener('sessionUpdate', handleUpdate);
-    };
   }, [navigate, user]);
 
   useEffect(() => {
@@ -86,8 +69,8 @@ export default function WorkshopsModule() {
   let minHour = 8;
   let maxHour = 18;
   if (agenda.length > 0) {
-    const startHours = agenda.map(w => Math.floor(parseTime(w.time)));
-    const endHours = agenda.map(w => Math.ceil(parseTime(w.endTime)));
+    const startHours = agenda.map((w: AgendaItem) => Math.floor(parseTime(w.time)));
+    const endHours = agenda.map((w: AgendaItem) => Math.ceil(parseTime(w.endTime)));
     minHour = Math.min(...startHours);
     maxHour = Math.max(...endHours);
   }
@@ -129,7 +112,7 @@ export default function WorkshopsModule() {
     const end = parseTime(workshop.endTime);
     
     return enrolledIds.some(id => {
-      const other = agenda.find(a => a.id === id);
+      const other = agenda.find((a: AgendaItem) => a.id === id);
       if (!other || other.id === workshop.id) return false;
       const oStart = parseTime(other.time);
       const oEnd = parseTime(other.endTime);
@@ -158,17 +141,17 @@ export default function WorkshopsModule() {
     
     if (user && user.id) {
       // 1. Guardar en la nube
-      const { success } = await syncUserEnrollmentsCloud(user.id, enrolledIds);
+      const { success } = await syncUserEnrollmentsMutation(user.id, enrolledIds);
       
       if (success) {
         // 2. Actualizar estado local
-        updateUserData({ ...user, talleres: enrolledIds });
+        await updateUserDataMutation({ ...user, talleres: enrolledIds });
         localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
         
         setIsConfirmed(true);
         setShowSuccessModal(true);
         setSaveStatus('saved');
-        window.dispatchEvent(new Event('sessionUpdate'));
+        refetchProfile();
       } else {
         showAlert('Error', 'Hubo un error al guardar tus inscripciones en la nube.', 'error');
         setSaveStatus('idle');
@@ -199,7 +182,7 @@ export default function WorkshopsModule() {
       setIsConfirmed(false);
       setSaveStatus('idle');
       localStorage.setItem(`workshops_confirmed_${user.correo}`, 'false');
-      window.dispatchEvent(new Event('sessionUpdate'));
+      refetchProfile();
     }
   };
 
@@ -228,7 +211,7 @@ export default function WorkshopsModule() {
       <div className={`calendar-container ${isConfirmed ? 'confirmed' : ''}`}>
         <div className="calendar-grid" style={{ gridTemplateColumns: `80px repeat(${rooms.length}, 1fr)`, gridTemplateRows: `60px repeat(${HOURS.length}, 80px)` }}>
           <div className="grid-header time-label">HORA</div>
-          {rooms.map((room, idx) => {
+          {rooms.map((room: string, idx: number) => {
             const colorTheme = roomColors[idx % roomColors.length];
             return (
               <div key={room} className="grid-header room-label" style={{ backgroundColor: colorTheme.bg, color: colorTheme.text }}>
@@ -247,7 +230,7 @@ export default function WorkshopsModule() {
             <div key={`line-${hour}`} className="hour-grid-line" style={{ gridRow: hour - minHour + 1 }}></div>
           ))}
 
-          {agenda.filter(w => w.speaker).map(workshop => {
+          {agenda.filter((w: AgendaItem) => w.speaker).map((workshop: AgendaItem) => {
             const isSelected = enrolledIds.includes(workshop.id);
             const isBlocked = !isSelected && (isTimeCollision(workshop) || isConfirmed);
             
@@ -271,7 +254,7 @@ export default function WorkshopsModule() {
       </div>
 
       <div className="calendar-legend">
-        {rooms.map((room, idx) => {
+        {rooms.map((room: string, idx: number) => {
           const colorTheme = roomColors[idx % roomColors.length];
           return (
             <div key={room} className="legend-item">
