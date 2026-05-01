@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { agendaCompleta, categoryStyles, type AgendaItem } from '../data/agendaData';
+import { type AgendaItem } from '../data/agendaData';
+import { useCharlas, useCategorias } from '../api/hooks/useAgenda';
 
 // Constantes de configuración
 const START_H = 8, END_H = 21; 
@@ -7,11 +8,15 @@ const SLOT_H = 40;
 const SALAS = ['Salón A', 'Salón B', 'Salón C', 'Auditorio'];
 
 export default function ScheduleGrid() {
+  const { data: agenda = [], isLoading } = useCharlas();
+  const { data: categoryStyles = {} } = useCategorias();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [conflictMsg, setConflictMsg] = useState(false);
 
+  if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--primary)' }}>Cargando agenda oficial...</div>;
+
   // Filtrar solo talleres con ponente
-  const tallaresData = agendaCompleta.filter(item => item.speaker !== undefined);
+  const tallaresData = agenda.filter(item => item.speaker !== undefined);
 
   // Mapear salas a índices para el grid
   const getSalaIndex = (location: string) => {

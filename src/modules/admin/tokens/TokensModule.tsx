@@ -427,15 +427,18 @@ export default function TokensModule() {
       {isMassModalOpen && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1rem', fontFamily: 'Syne', fontWeight: 800 }}>Generación Masiva</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>Generación Masiva</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
+            
             <div className="form-group">
-              <label>CANTIDAD DE TOKENS</label>
+              <label>CANTIDAD DE TOKENS <span style={{ color: '#ef4444' }}>*</span></label>
               <input 
                 type="number" 
                 className="dashboard-input" 
                 value={massQuantity} 
                 onChange={e => setMassQuantity(parseInt(e.target.value))}
                 min="1" max="100"
+                required
               />
             </div>
             <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>

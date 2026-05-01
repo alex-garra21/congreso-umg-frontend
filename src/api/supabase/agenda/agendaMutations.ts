@@ -6,26 +6,33 @@ import type { AgendaItem, CategoryStyle, Speaker } from '../../../data/agendaDat
  */
 
 export async function saveSalasMutation(rooms: string[]): Promise<void> {
-  const { data: actuales } = await supabase.from('salas').select('nombre');
+  const { data: actuales, error: fetchError } = await supabase.from('salas').select('nombre');
+  if (fetchError) throw fetchError;
+
   const nombresActuales = actuales?.map(a => a.nombre) || [];
-  
+
   const toDelete = nombresActuales.filter(n => !rooms.includes(n));
   if (toDelete.length > 0) {
-    await supabase.from('salas').delete().in('nombre', toDelete);
+    const { error: deleteError } = await supabase.from('salas').delete().in('nombre', toDelete);
+    if (deleteError) throw deleteError;
   }
-  
+
   const toInsert = rooms.map(r => ({ nombre: r }));
-  await supabase.from('salas').upsert(toInsert);
+  const { error: upsertError } = await supabase.from('salas').upsert(toInsert);
+  if (upsertError) throw upsertError;
 }
 
 export async function saveCategoriasMutation(categories: Record<string, CategoryStyle>): Promise<void> {
-  const { data: actuales } = await supabase.from('categorias').select('nombre');
+  const { data: actuales, error: fetchError } = await supabase.from('categorias').select('nombre');
+  if (fetchError) throw fetchError;
+
   const nombresActuales = actuales?.map(a => a.nombre) || [];
   const nuevosNombres = Object.keys(categories);
-  
+
   const toDelete = nombresActuales.filter(n => !nuevosNombres.includes(n));
   if (toDelete.length > 0) {
-    await supabase.from('categorias').delete().in('nombre', toDelete);
+    const { error: deleteError } = await supabase.from('categorias').delete().in('nombre', toDelete);
+    if (deleteError) throw deleteError;
   }
 
   const mapped = Object.entries(categories).map(([nombre, style]) => ({
@@ -33,7 +40,8 @@ export async function saveCategoriasMutation(categories: Record<string, Category
     bg_color: style.bg,
     text_color: style.text
   }));
-  await supabase.from('categorias').upsert(mapped);
+  const { error: upsertError } = await supabase.from('categorias').upsert(mapped);
+  if (upsertError) throw upsertError;
 }
 
 export async function saveAgendaMutation(agenda: AgendaItem[]): Promise<void> {
@@ -64,7 +72,7 @@ export async function saveAgendaMutation(agenda: AgendaItem[]): Promise<void> {
 
     const { error: upsertError } = await supabase.from('charlas').upsert(mapped);
     if (upsertError) throw upsertError;
-    
+
     console.log("Agenda sincronizada con la nube correctamente");
   } catch (err) {
     console.error("Error en saveAgendaMutation:", err);
@@ -73,13 +81,16 @@ export async function saveAgendaMutation(agenda: AgendaItem[]): Promise<void> {
 }
 
 export async function savePonentesMutation(ponentes: Speaker[]): Promise<void> {
-  const { data: actuales } = await supabase.from('ponentes').select('id');
+  const { data: actuales, error: fetchError } = await supabase.from('ponentes').select('id');
+  if (fetchError) throw fetchError;
+
   const idsActuales = actuales?.map(a => a.id) || [];
   const nuevosIds = ponentes.map(p => p.id);
 
   const toDelete = idsActuales.filter(id => !nuevosIds.includes(id));
   if (toDelete.length > 0) {
-    await supabase.from('ponentes').delete().in('id', toDelete);
+    const { error: deleteError } = await supabase.from('ponentes').delete().in('id', toDelete);
+    if (deleteError) throw deleteError;
   }
 
   const mapped = ponentes.map(p => ({
@@ -90,8 +101,10 @@ export async function savePonentesMutation(ponentes: Speaker[]): Promise<void> {
     avatar_url: p.avatar,
     bg_color: p.bgColor,
     text_color: p.textColor,
-    tag: p.tag
+    tag: p.tag,
+    redes_sociales: (p as any).socials || [] // En caso de que añadas redes sociales más adelante
   }));
 
-  await supabase.from('ponentes').upsert(mapped);
+  const { error: upsertError } = await supabase.from('ponentes').upsert(mapped);
+  if (upsertError) throw upsertError;
 }

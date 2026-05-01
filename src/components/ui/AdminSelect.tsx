@@ -9,10 +9,11 @@ interface AdminSelectProps {
   options: Option[];
   value: string | number;
   onChange: (e: { target: { value: string } }) => void;
-  label?: string;
+  label?: React.ReactNode;
   containerStyle?: React.CSSProperties;
   className?: string;
   placeholder?: string;
+  required?: boolean;
 }
 
 const AdminSelect: React.FC<AdminSelectProps> = ({ 
