@@ -1,23 +1,52 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../api/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { getCurrentUser, updateUserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
-import { useCharlas, useSalas } from '../../../api/hooks/useAgenda';
-import { useSyncUserEnrollments } from '../../../api/hooks/useEnrollment';
+import { getAgenda, getRooms } from '../../../utils/agendaStore';
+import { syncUserEnrollmentsCloud } from '../../../utils/supabaseEnrollment';
 import type { AgendaItem } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
 
 export default function WorkshopsModule() {
-  const { user } = useAuth();
-  const { data: agenda = [], isLoading: isLoadingAgenda } = useCharlas();
-  const { data: rooms = [] } = useSalas();
+  const navigate = useNavigate();
+  const [user, setUser] = useState(getCurrentUser());
+  const [agenda, setAgenda] = useState<AgendaItem[]>([]);
+  const [rooms, setRooms] = useState<string[]>([]);
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const isPaid = user?.pagoValidado;
-  
-  const syncEnrollmentsMutation = useSyncUserEnrollments();
 
+  useEffect(() => {
+    setAgenda(getAgenda());
+    setRooms(getRooms());
+    
+    const handleAgendaUpdate = () => {
+      setAgenda(getAgenda());
+      setRooms(getRooms());
+    };
+    window.addEventListener('agendaUpdate', handleAgendaUpdate);
+    return () => window.removeEventListener('agendaUpdate', handleAgendaUpdate);
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+      return;
+    }
+
+    const handleUpdate = () => {
+      const updatedUser = getCurrentUser();
+      if (updatedUser) setUser(updatedUser);
+    };
+
+    window.addEventListener('sessionUpdate', handleUpdate);
+
+    return () => {
+      window.removeEventListener('sessionUpdate', handleUpdate);
+    };
+  }, [navigate, user]);
 
   useEffect(() => {
     if (user?.correo) {
@@ -99,7 +128,7 @@ export default function WorkshopsModule() {
     const start = parseTime(workshop.time);
     const end = parseTime(workshop.endTime);
     
-    return enrolledIds.some((id: string) => {
+    return enrolledIds.some(id => {
       const other = agenda.find(a => a.id === id);
       if (!other || other.id === workshop.id) return false;
       const oStart = parseTime(other.time);
@@ -114,13 +143,13 @@ export default function WorkshopsModule() {
     setSaveStatus('idle');
 
     if (enrolledIds.includes(workshop.id)) {
-      setEnrolledIds((prev: string[]) => prev.filter((id: string) => id !== workshop.id));
+      setEnrolledIds(prev => prev.filter(id => id !== workshop.id));
     } else {
       if (isTimeCollision(workshop)) {
         showAlert('Traslape detectado', 'Este taller tiene un traslape de horario con uno que ya seleccionaste.', 'warning');
         return;
       }
-      setEnrolledIds((prev: string[]) => [...prev, workshop.id]);
+      setEnrolledIds(prev => [...prev, workshop.id]);
     }
   };
 
@@ -129,17 +158,18 @@ export default function WorkshopsModule() {
     
     if (user && user.id) {
       // 1. Guardar en la nube
-      try {
-        await syncEnrollmentsMutation.mutateAsync({ userId: user.id, workshopIds: enrolledIds });
-        
-        // 2. Actualizar estado local (Ya no es necesario con React Query, pero mantenemos por compatibilidad de otras partes si hace falta)
+      const { success } = await syncUserEnrollmentsCloud(user.id, enrolledIds);
+      
+      if (success) {
+        // 2. Actualizar estado local
+        updateUserData({ ...user, talleres: enrolledIds });
         localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
         
         setIsConfirmed(true);
         setShowSuccessModal(true);
         setSaveStatus('saved');
         window.dispatchEvent(new Event('sessionUpdate'));
-      } catch (error) {
+      } else {
         showAlert('Error', 'Hubo un error al guardar tus inscripciones en la nube.', 'error');
         setSaveStatus('idle');
       }
@@ -176,10 +206,6 @@ export default function WorkshopsModule() {
   return (
     <div className="workshops-module">
       <ModuleTitle title="Inscripción de Talleres" />
-      <p className="dashboard-description">
-        Configura tu itinerario seleccionando los talleres a los que deseas asistir.
-        {isLoadingAgenda && <span style={{ marginLeft: '10px', color: '#63b3ed' }}>Cargando agenda...</span>}
-      </p>
 
       {!isPaid && (
         <div className="alert-banner warning">
@@ -291,6 +317,13 @@ export default function WorkshopsModule() {
           </div>
         </div>
       )}
+
+      {/* Botón regresar al inicio */}
+      <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
+        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => window.location.href = '/dashboard'}>
+          Ir al Inicio
+        </button>
+      </div>
 
       <style>{`
         .calendar-container {

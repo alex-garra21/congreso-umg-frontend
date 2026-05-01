@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../api/hooks/useAuth';
-import { useUpdateUserData } from '../../../api/hooks/useUsers';
-import { type UserData } from '../../../utils/auth';
+import { getCurrentUser, updateUserData, type UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import diplomaTemplate from '../../../assets/diploma-template.png';
 import { showAlert } from '../../../utils/swal';
 
 export default function DiplomaModule() {
-  const { user } = useAuth();
-  const updateUserDataMutation = useUpdateUserData();
+  const [user, setUser] = useState<UserData | null>(getCurrentUser());
   const [formData, setFormData] = useState({
     nombreDiploma: '',
     correoDiploma: ''
@@ -26,12 +23,12 @@ export default function DiplomaModule() {
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ ]/g, '');
-    setFormData((prev: any) => ({ ...prev, nombreDiploma: value }));
+    setFormData(prev => ({ ...prev, nombreDiploma: value }));
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
-    setFormData((prev: any) => ({ ...prev, correoDiploma: value }));
+    setFormData(prev => ({ ...prev, correoDiploma: value }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -45,11 +42,12 @@ export default function DiplomaModule() {
       diplomaEditado: true
     };
 
-    try {
-      await updateUserDataMutation.mutateAsync(updatedUser);
+    const result = await updateUserData(updatedUser);
+    if (result.success) {
       setIsSuccessModalOpen(true);
-    } catch (error: any) {
-      showAlert('Error', error?.message || 'Error al actualizar datos', 'error');
+      setUser(getCurrentUser());
+    } else {
+      showAlert('Error', result.message, 'error');
     }
   };
 
@@ -322,6 +320,13 @@ export default function DiplomaModule() {
           </div>
         </div>
       )}
+
+      {/* Botón regresar al inicio */}
+      <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
+        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => window.location.href = '/dashboard'}>
+          Ir al Inicio
+        </button>
+      </div>
     </div>
   );
 }
