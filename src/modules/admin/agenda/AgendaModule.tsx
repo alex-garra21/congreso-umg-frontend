@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import {
   type AgendaItem, type Speaker, type CategoryStyle
 } from '../../../data/agendaData';
+import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
+import SearchBar from '../../../components/ui/SearchBar';
 import {
   useCharlas, usePonentes, useCategorias, useSalas,
   useSaveAgenda, useSavePonentes, useSaveCategorias, useSaveSalas
@@ -253,7 +255,7 @@ export default function AgendaModule() {
           <div style={{ marginBottom: '1.5rem' }}>
             <SearchBar
               value={searchTerm}
-              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+              onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
               placeholder="Buscar..."
             />
           </div>
@@ -317,7 +319,7 @@ export default function AgendaModule() {
           <div style={{ marginBottom: '1.5rem' }}>
             <SearchBar
               value={searchTerm}
-              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+              onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
               placeholder="Buscar..."
             />
           </div>
@@ -373,7 +375,7 @@ export default function AgendaModule() {
           <div style={{ marginBottom: '1.5rem' }}>
             <SearchBar
               value={searchTerm}
-              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+              onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
               placeholder="Buscar..."
             />
           </div>
