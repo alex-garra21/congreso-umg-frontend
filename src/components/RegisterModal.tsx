@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRegisterUser } from '../api/hooks/useUsers';
 import PasswordField from './PasswordField';
+import { Icons } from './Icons';
+import { showToast } from '../utils/swal';
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToLogin?: () => void;
 }
-
-import { showToast } from '../utils/swal';
 
 export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModalProps) {
   const registerUserMutation = useRegisterUser();
@@ -132,16 +132,14 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   return (
     <div className="modal-bg open" style={{ zIndex: 9999 }}>
       <div className="modal" style={{ maxWidth: '440px', padding: '2.5rem 2rem' }} onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={handleClose}>✕</button>
+        <button className="modal-close" onClick={handleClose}>
+          <Icons.X size={20} />
+        </button>
 
         {isRegistered ? (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#7ed321" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '80px', height: '80px' }}>
-                <circle cx="12" cy="12" r="10" />
-                {/* Checkmark SVG paths */}
-                <path d="M8 12l3 3 5-5" strokeWidth="2.5" />
-              </svg>
+              <Icons.CheckCircle size={80} color="#7ed321" strokeWidth={1.5} />
             </div>
             <h3 style={{ fontSize: '28px', marginBottom: '12px', fontFamily: 'Syne', fontWeight: 800 }}>¡Registro Exitoso!</h3>
             <p className="modal-sub" style={{ marginBottom: '2rem' }}>Tu cuenta ha sido creada correctamente. Ahora puedes acceder a la plataforma.</p>

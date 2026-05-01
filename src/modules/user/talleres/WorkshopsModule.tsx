@@ -7,6 +7,7 @@ import { useCharlas, useSalas } from '../../../api/hooks/useAgenda';
 import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
 import type { AgendaItem } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
+import { Icons } from '../../../components/Icons';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
@@ -25,8 +26,6 @@ export default function WorkshopsModule() {
 
   useEffect(() => {
     if (!user) {
-      // In a real scenario, useAuth handles redirects or unauthenticated states,
-      // but we keep this to prevent rendering errors.
       return;
     }
   }, [navigate, user]);
@@ -62,10 +61,9 @@ export default function WorkshopsModule() {
     let [hours, minutes] = time.split(':').map(Number);
     if (modifier === 'PM' && hours < 12) hours += 12;
     if (modifier === 'AM' && hours === 12) hours = 0;
-    return hours + (minutes / 60); // Permite posiciones fraccionarias
+    return hours + (minutes / 60);
   };
 
-  // Determinar los límites de hora dinámicamente
   let minHour = 8;
   let maxHour = 18;
   if (agenda.length > 0) {
@@ -140,11 +138,9 @@ export default function WorkshopsModule() {
     setSaveStatus('saving');
     
     if (user && user.id) {
-      // 1. Guardar en la nube
       const { success } = await syncUserEnrollmentsMutation(user.id, enrolledIds);
       
       if (success) {
-        // 2. Actualizar estado local
         await updateUserDataMutation({ ...user, talleres: enrolledIds });
         localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
         
@@ -192,7 +188,9 @@ export default function WorkshopsModule() {
 
       {!isPaid && (
         <div className="alert-banner warning">
-          <div className="alert-icon">⚠️</div>
+          <div className="alert-icon">
+            <Icons.AlertTriangle size={24} />
+          </div>
           <div className="alert-text">
             <strong>Pago pendiente</strong>. Valida tu pago para inscribirte. No puedes seleccionar talleres con traslape de horario.
           </div>
@@ -201,7 +199,9 @@ export default function WorkshopsModule() {
 
       {isConfirmed && (
         <div className="alert-banner success">
-          <div className="alert-icon">✅</div>
+          <div className="alert-icon">
+            <Icons.CheckCircle size={24} />
+          </div>
           <div className="alert-text">
             <strong>Talleres confirmados</strong>. Tu selección ha sido guardada.
           </div>
@@ -246,7 +246,11 @@ export default function WorkshopsModule() {
                   <span className="w-time">{workshop.time.replace(' AM', '').replace(' PM', '')} - {workshop.endTime.replace(' AM', '').replace(' PM', '')}</span>
                   <span className="w-speaker">{workshop.speaker?.name || 'General'}</span>
                 </div>
-                {isSelected && <div className="selected-check">✓</div>}
+                {isSelected && (
+                  <div className="selected-check">
+                    <Icons.Check size={12} strokeWidth={4} />
+                  </div>
+                )}
               </div>
             );
           })}
@@ -293,7 +297,9 @@ export default function WorkshopsModule() {
       {showSuccessModal && (
         <div className="modal-bg open">
           <div className="modal success-modal" onClick={e => e.stopPropagation()}>
-            <div className="success-icon">✓</div>
+            <div className="success-icon">
+              <Icons.Check size={32} strokeWidth={3} />
+            </div>
             <h3>¡Inscripción Exitosa!</h3>
             <p>Tus talleres han sido registrados. Puedes ver tu horario en la sección de inicio.</p>
             <button className="btn-solid" onClick={() => setShowSuccessModal(false)}>Aceptar</button>
@@ -321,7 +327,6 @@ export default function WorkshopsModule() {
 
         .calendar-grid {
           display: grid;
-          /* Grid dimensions are now set dynamically inline via React */
           min-width: 1000px;
           position: relative;
         }
@@ -406,8 +411,6 @@ export default function WorkshopsModule() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 12px;
-          font-weight: 900;
         }
 
         .calendar-legend {
@@ -454,6 +457,19 @@ export default function WorkshopsModule() {
         .alert-banner { display: flex; gap: 1rem; padding: 1.25rem; border-radius: 16px; margin-bottom: 2rem; align-items: center; }
         .alert-banner.warning { background: #fff9db; border: 1px solid #ffe066; color: #856404; }
         .alert-banner.success { background: #ebfbee; border: 1px solid #c3fae8; color: #087f5b; }
+
+        .success-icon {
+          width: 64px;
+          height: 64px;
+          background: #22c55e;
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem;
+          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
 
         @media (max-width: 768px) {
           .calendar-container { padding: 1rem; border-radius: 0; margin: 0 -1.5rem 2rem; }

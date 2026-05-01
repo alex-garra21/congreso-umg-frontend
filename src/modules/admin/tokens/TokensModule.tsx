@@ -13,6 +13,7 @@ import FormattedDate from '../../../components/ui/FormattedDate';
 import { isDateInRange, formatFullDate } from '../../../utils/dateUtils';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { Icons } from '../../../components/Icons';
 
 export default function TokensModule() {
   const { data: tokens = [], isLoading } = useTokens();
@@ -308,11 +309,7 @@ export default function TokensModule() {
             gap: '0.5rem',
             paddingLeft: '4px'
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
+            <Icons.AlertTriangle size={14} strokeWidth={3} />
             La fecha de inicio no puede ser posterior a la fecha de fin.
           </div>
         )}
@@ -329,11 +326,7 @@ export default function TokensModule() {
             gap: '0.5rem',
             paddingLeft: '4px'
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
+            <Icons.Info size={14} strokeWidth={3} />
             Se ha seleccionado una sola fecha. El reporte se generará únicamente para el día {new Date((startDate || endDate) + 'T00:00:00').toLocaleDateString('es-GT')}.
           </div>
         )}

@@ -5,6 +5,7 @@ import { useCharlas } from '../api/hooks/useAgenda';
 import { useAuth } from '../api/hooks/useAuth';
 import { loginUser, type UserData } from '../utils/auth';
 import { useMarkAttendance } from '../api/hooks/useEnrollment';
+import { Icons } from '../components/Icons';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
 function parseTimeStr(timeStr: string, baseDate?: string): Date {
@@ -17,10 +18,8 @@ function parseTimeStr(timeStr: string, baseDate?: string): Date {
     hours += 12;
   }
 
-  // Si hay una fecha base (YYYY-MM-DD), la usamos. Si no, usamos hoy.
   let date: Date;
   if (baseDate) {
-    // Usamos T00:00:00 para evitar problemas de zona horaria al crear el objeto Date
     date = new Date(`${baseDate}T00:00:00`);
   } else {
     date = new Date();
@@ -48,7 +47,6 @@ export default function AttendancePage() {
 
   const { data: agenda = [], isLoading } = useCharlas();
 
-  // Actualizar el tiempo cada 30 segundos para que la página sea reactiva al horario
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -57,7 +55,6 @@ export default function AttendancePage() {
   }, []);
 
   useEffect(() => {
-    // Cargar Taller
     if (workshopId && agenda.length > 0) {
       const item = agenda.find(a => a.id === workshopId || generateSlug(a.title) === workshopId);
       if (item) {
@@ -91,7 +88,6 @@ export default function AttendancePage() {
         setError('Por favor, ingresa tus credenciales.');
         return;
       }
-      // Verificación de Usuario
       const loginResult = await loginUser(email, password);
       if (!loginResult.success || !loginResult.user) {
         setError(loginResult.message);
@@ -105,18 +101,15 @@ export default function AttendancePage() {
       return;
     }
 
-    // 2. Verificación de Inscripción al taller
     const isEnrolled = user.talleres?.includes(workshop.id);
     if (!isEnrolled) {
       setError('No apareces inscrito en este taller. Primero debes agregarlo a tu agenda en la sección "Mis Talleres" de tu perfil.');
       return;
     }
 
-    // 3. Verificación de Horario (Usando currentTime para consistencia)
     const startTime = parseTimeStr(workshop.time, workshop.date);
     const endTime = parseTimeStr(workshop.endTime, workshop.date);
 
-    // Usar el tiempo de gracia configurado o 10 minutos por defecto
     const graceMinutes = workshop.gracePeriod !== undefined ? workshop.gracePeriod : 10;
     endTime.setMinutes(endTime.getMinutes() + graceMinutes);
 
@@ -125,7 +118,6 @@ export default function AttendancePage() {
       return;
     }
 
-    // 4. Verificación si ya confirmó antes
     const existingConfirmation = user.asistencias?.find(a => a.workshopId === workshop.id);
     if (existingConfirmation) {
       setConfirmedUser(user);
@@ -134,7 +126,6 @@ export default function AttendancePage() {
       return;
     }
 
-    // 5. Registrar asistencia en la NUBE
     try {
       await markAttendanceMutation.mutateAsync({ userId: user.id, workshopId: workshop.id });
     } catch (error) {
@@ -142,7 +133,6 @@ export default function AttendancePage() {
       return;
     }
 
-    // 6. Registrar asistencia en la nube (Ya se hizo arriba, esto dispara el éxito visual)
     const timestamp = new Date().toISOString();
     setConfirmedUser(user);
     setConfirmationTime(timestamp);
@@ -161,7 +151,6 @@ export default function AttendancePage() {
     });
   };
 
-  // Determinar si el taller está fuera de horario
   const checkIsOutOfTime = () => {
     if (!workshop) return true;
     const startTime = parseTimeStr(workshop.time, workshop.date);
@@ -209,7 +198,6 @@ export default function AttendancePage() {
         overflow: 'hidden',
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
       }}>
-        {/* Decoración circular */}
         <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
 
         <div style={{ position: 'relative', zIndex: 1 }}>
@@ -229,22 +217,22 @@ export default function AttendancePage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '1.5rem', fontSize: '14px', color: '#e2e8f0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '12px' }}>🕒</span>
+              <Icons.Clock size={16} />
               {workshop.time} – {workshop.endTime}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '12px' }}>🎤</span>
+              <Icons.Users size={16} />
               {speaker ? speaker.name : 'General'}
             </div>
           </div>
 
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '100px', fontSize: '13px', fontWeight: 600 }}>
-            <span style={{ color: '#fc8181' }}>📍</span> {workshop.room}
+            <Icons.MapPin size={14} color="#fc8181" /> {workshop.room}
           </div>
         </div>
       </div>
 
-      {/* Formulario / Estado de Éxito - Solo se muestra si NO está fuera de horario o si ya tuvo éxito */}
+      {/* Formulario / Estado de Éxito */}
       {(!isOutOfTime || isSuccess) && (
         <div style={{
           width: '100%',
@@ -257,7 +245,6 @@ export default function AttendancePage() {
           {!isSuccess ? (
             <>
               {authUser ? (
-                /* Vista de Confirmación Rápida */
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ 
                     width: '60px', 
@@ -326,7 +313,6 @@ export default function AttendancePage() {
                   </button>
                 </div>
               ) : (
-                /* Formulario Tradicional */
                 <>
                   <h2 style={{ fontSize: '22px', fontFamily: 'Syne', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
                     Identifícate para confirmar
@@ -376,15 +362,9 @@ export default function AttendancePage() {
                           aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                         >
                           {showPassword ? (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                              <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
+                            <Icons.Eye size={18} color="#a0aec0" />
                           ) : (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                              <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
+                            <Icons.EyeOff size={18} color="#a0aec0" />
                           )}
                         </button>
                       </div>
@@ -417,7 +397,6 @@ export default function AttendancePage() {
           ) : (
             <div style={{ textAlign: 'center' }}>
 
-              {/* Header del usuario confirmado */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #edf2f7' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#eef6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1971c2', fontWeight: 700, fontSize: '18px' }}>
                   {(confirmedUser?.nombres?.[0] || '')}{(confirmedUser?.apellidos?.[0] || '')}
@@ -437,9 +416,7 @@ export default function AttendancePage() {
                 alignItems: 'center'
               }}>
                 <div style={{ width: '64px', height: '64px', backgroundColor: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#0ca678" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '32px', height: '32px' }}>
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Icons.Check size={32} color="#0ca678" strokeWidth={2.5} />
                 </div>
 
                 <h2 style={{ fontSize: '24px', fontFamily: 'Syne', fontWeight: 800, color: '#1a365d', marginBottom: '1rem', lineHeight: 1.2 }}>
@@ -473,7 +450,6 @@ export default function AttendancePage() {
         </div>
       )}
 
-      {/* Mensaje informativo si está fuera de horario */}
       {isOutOfTime && !isSuccess && (
         <div style={{
           width: '100%',

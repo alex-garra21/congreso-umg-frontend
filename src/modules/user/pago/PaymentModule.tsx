@@ -3,6 +3,7 @@ import { useAuth } from '../../../api/hooks/useAuth';
 import { validateTokenMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showAlert } from '../../../utils/swal';
+import { Icons } from '../../../components/Icons';
 
 export default function PaymentModule() {
   const [codigo, setCodigo] = useState('');
@@ -38,7 +39,7 @@ export default function PaymentModule() {
         <ModuleTitle title="Estado de pago" />
         <section className="dashboard-section" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
           <div style={{ fontSize: '4rem', marginBottom: '1.5rem', color: '#40c057', display: 'flex', justifyContent: 'center' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '80px', height: '80px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            <Icons.CheckCircle size={80} strokeWidth={2} />
           </div>
           <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '32px', marginBottom: '1rem' }}>¡Pago Completado!</h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2.5rem', fontSize: '16px', lineHeight: '1.6' }}>

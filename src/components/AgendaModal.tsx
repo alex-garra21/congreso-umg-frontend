@@ -1,5 +1,6 @@
 import type { Speaker } from "../data/agendaData";
 import WorkshopBadge from "./workshops/WorkshopBadge";
+import { Icons } from "./Icons";
 
 export interface AgendaItem {
   id: string;
@@ -24,7 +25,9 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
   return (
     <div className="modal-bg open" style={{ zIndex: 9999 }}>
       <div className="modal" style={{ maxWidth: '600px', padding: '2.5rem 2rem' }} onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>✕</button>
+        <button className="modal-close" onClick={onClose}>
+          <Icons.X size={20} />
+        </button>
 
         <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
           <WorkshopBadge tag={item.tag} />
@@ -32,17 +35,17 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
 
           <div style={{ display: 'flex', gap: '15px', color: 'var(--text-secondary)', fontSize: '14px', alignItems: 'center', marginTop: '15px', flexWrap: 'wrap' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <Icons.Calendar size={16} />
               Jornada: {item.period}
             </span>
             <span style={{ flex: 1, minWidth: '1px', maxWidth: '1px', height: '15px', background: 'var(--border-soft)' }}></span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64b5f6', fontWeight: 600 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <Icons.Clock size={16} />
               {item.time}
             </span>
             <span style={{ flex: 1, minWidth: '1px', maxWidth: '1px', height: '15px', background: 'var(--border-soft)' }}></span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#81c784', fontWeight: 600 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <Icons.MapPin size={16} />
               {item.location}
             </span>
           </div>

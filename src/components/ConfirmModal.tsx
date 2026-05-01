@@ -1,4 +1,4 @@
-
+import { Icons } from './Icons';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -26,22 +26,16 @@ export default function ConfirmModal({
   return (
     <div className="modal-bg open" style={{ zIndex: 10002 }}>
       <div className="modal" style={{ maxWidth: '400px', padding: '2.5rem 2rem' }} onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onCancel}>✕</button>
+        <button className="modal-close" onClick={onCancel}>
+          <Icons.X size={20} />
+        </button>
         
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
             {isDestructive ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fa5252" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '48px', height: '48px' }}>
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
+              <Icons.AlertTriangle size={48} color="#fa5252" strokeWidth={2} />
             ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '48px', height: '48px' }}>
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+              <Icons.Info size={48} color="#1c7ed6" strokeWidth={2} />
             )}
           </div>
           

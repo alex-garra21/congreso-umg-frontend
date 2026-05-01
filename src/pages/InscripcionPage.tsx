@@ -1,53 +1,34 @@
 import { useState } from 'react';
 import LoginModal from '../components/LoginModal';
 import RegisterModal from '../components/RegisterModal';
+import { Icons } from '../components/Icons';
 
 const steps = [
   {
     id: '01',
-    iconColor: '#9c27b0', // purple
-    icon: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ba68c8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-        <circle cx="12" cy="7" r="4"></circle>
-      </svg>
-    ),
+    iconColor: '#ba68c8',
+    Icon: Icons.User,
     title: 'Crea tu cuenta',
     desc: 'Regístrate con tu nombre, correo y tipo de participante (alumno UMG o externo).'
   },
   {
     id: '02',
-    iconColor: '#e91e63', // pink/colorful
-    icon: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f06292" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        <rect x="7" y="7" width="14" height="14" rx="2" ry="2" fill="rgba(240, 98, 146, 0.2)"></rect>
-      </svg>
-    ),
+    iconColor: '#f06292',
+    Icon: Icons.Calendar,
     title: 'Selecciona charlas',
     desc: 'Elige las charlas de tu interés. El sistema evita automáticamente conflictos de horario.'
   },
   {
     id: '03',
-    iconColor: '#1976d2', // blue
-    icon: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64b5f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-        <line x1="2" y1="10" x2="22" y2="10"></line>
-      </svg>
-    ),
+    iconColor: '#64b5f6',
+    Icon: Icons.CreditCard,
     title: 'Realiza tu pago',
     desc: 'Paga en efectivo con código único o sube tu comprobante de transferencia bancaria.'
   },
   {
     id: '04',
-    iconColor: '#388e3c', // green
-    icon: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#81c784" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        <path d="M9 12l2 2 4-4"></path>
-      </svg>
-    ),
+    iconColor: '#81c784',
+    Icon: Icons.CheckCircle,
     title: 'Confirmación QR',
     desc: 'Con el pago validado, en el evento escanea el QR dinámico para registrar tu asistencia.'
   }
@@ -78,7 +59,6 @@ export default function InscripcionPage() {
   return (
     <>
       <div style={{ flex: 1, position: 'relative', minHeight: '100%' }}>
-        {/* Fondo estático */}
         <div className="hero-grid" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}></div>
         <div className="hero-accent" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}></div>
 
@@ -112,7 +92,7 @@ export default function InscripcionPage() {
                 </div>
 
                 <div style={{ marginBottom: '1.2rem', height: '40px', display: 'flex', alignItems: 'center' }}>
-                  {step.icon}
+                  <step.Icon size={40} color={step.iconColor} />
                 </div>
 
                 <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '10px 0' }}>{step.title}</h3>

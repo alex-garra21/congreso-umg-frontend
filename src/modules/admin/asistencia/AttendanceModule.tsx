@@ -11,6 +11,8 @@ import ModuleCard from '../../../components/ui/ModuleCard';
 import AdminSelect from '../../../components/ui/AdminSelect';
 import AttendanceQR, { type AttendanceQRHandle } from '../../../components/admin/AttendanceQR';
 import { toPng } from 'html-to-image';
+import { Icons } from '../../../components/Icons';
+
 export default function AttendanceModule() {
   const { data: users = [] } = useAllUsers();
   const { data: agenda = [] } = useCharlas();
@@ -36,8 +38,8 @@ export default function AttendanceModule() {
         try {
           const dataUrl = await toPng(node, { 
             quality: 1,
-            pixelRatio: 2, // Mayor calidad
-            backgroundColor: '#ffffff' // Fondo blanco para la imagen descargada
+            pixelRatio: 2,
+            backgroundColor: '#ffffff'
           });
           const link = document.createElement('a');
           link.download = `QR-Asistencia-${qrWorkshop.title.replace(/\s+/g, '-')}.png`;
@@ -49,6 +51,7 @@ export default function AttendanceModule() {
       }
     }
   };
+
   const handleUpdateGracePeriod = (workshopId: string) => {
     const workshop = agenda.find(a => a.id === workshopId);
     if (!workshop) return;
@@ -270,23 +273,21 @@ export default function AttendanceModule() {
                   gap: '10px'
                 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
+                <Icons.Download size={18} strokeWidth={2.5} />
                 Descargar
               </button>
             </div>
           </div>
         </div>
       )}
- 
+
       {/* Modal Éxito */}
       {isSuccessModalOpen && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#40c057' }}>✓</div>
+            <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+              <Icons.CheckCircle size={64} color="#40c057" />
+            </div>
             <h3>¡Configuración Guardada!</h3>
             <p>El tiempo de gracia ha sido actualizado.</p>
             <button className="btn-lg btn-lg-primary" onClick={() => setIsSuccessModalOpen(false)} style={{ marginTop: '1.5rem' }}>Aceptar</button>

@@ -5,6 +5,7 @@ import { type UserData } from '../../../utils/auth';
 import ChangePasswordModal from '../../../components/ChangePasswordModal';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showAlert } from '../../../utils/swal';
+import { Icons } from '../../../components/Icons';
 
 export default function ProfileModule() {
   const { user } = useAuth();
@@ -90,7 +91,6 @@ export default function ProfileModule() {
     const updatedUser: UserData = {
       ...user,
       ...formData,
-      // Aseguramos que si no es alumno, no se guarden carnet/ciclo
       carnet: formData.tipoParticipante === 'alumno' ? formData.carnet : '',
       ciclo: formData.tipoParticipante === 'alumno' ? formData.ciclo : ''
     };
@@ -186,8 +186,6 @@ export default function ProfileModule() {
             <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="0000 0000" />
           </div>
 
-
-
           <div className="profile-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
             <button
               type="submit"
@@ -216,10 +214,7 @@ export default function ProfileModule() {
         <div className="modal-bg open" style={{ zIndex: 10000 }}>
           <div className="modal" style={{ maxWidth: '400px', textAlign: 'center', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#7ed321" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '64px', height: '64px' }}>
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 12l3 3 5-5" />
-              </svg>
+              <Icons.CheckCircle size={64} color="#7ed321" />
             </div>
             <h3 style={{ fontSize: '24px', marginBottom: '10px', fontFamily: 'Syne', fontWeight: 800 }}>¡Cambios Guardados!</h3>
             <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu información ha sido actualizada correctamente.</p>

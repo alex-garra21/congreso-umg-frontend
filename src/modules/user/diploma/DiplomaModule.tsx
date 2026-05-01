@@ -5,6 +5,7 @@ import type { UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import diplomaTemplate from '../../../assets/diploma-template.png';
 import { showAlert } from '../../../utils/swal';
+import { Icons } from '../../../components/Icons';
 
 export default function DiplomaModule() {
   const { user, refetchProfile } = useAuth();
@@ -55,7 +56,6 @@ export default function DiplomaModule() {
 
   const isDiplomaNameTooLong = formData.nombreDiploma.length > 25;
   const isLocked = user?.diplomaEditado || false;
-  //const isLocked = false; // Cambiado temporalmente de user?.diplomaEditado para pruebas
 
   if (!user) return null;
 
@@ -82,7 +82,7 @@ export default function DiplomaModule() {
             gap: '12px',
             alignItems: 'center'
           }}>
-            <span style={{ fontSize: '24px' }}>⚠️</span>
+            <Icons.AlertTriangle size={24} />
             <p style={{ fontSize: '14px', fontWeight: 600 }}>
               IMPORTANTE: Solo puedes modificar estos datos UNA VEZ. Una vez guardados, los campos se bloquearán permanentemente.
             </p>
@@ -99,7 +99,7 @@ export default function DiplomaModule() {
           color: '#2c5282'
         }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '16px', marginBottom: '10px', color: '#1a365d' }}>
-            <span role="img" aria-label="grad-cap">🎓</span> ¿Cuándo recibirás tu diploma?
+            <Icons.Award size={20} /> ¿Cuándo recibirás tu diploma?
           </h3>
           <p style={{ fontSize: '14px', marginBottom: '1rem' }}>
             El diploma se genera y envía automáticamente por cada taller en el que cumplas <strong>los tres requisitos</strong>:
@@ -113,7 +113,6 @@ export default function DiplomaModule() {
 
         <form onSubmit={handleSave} className="diploma-form" style={{ display: 'flex', gap: '3rem', alignItems: 'flex-start' }}>
 
-          {/* Columna Izquierda: Campos y Avisos */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
             <div className="form-group">
@@ -181,7 +180,6 @@ export default function DiplomaModule() {
               </p>
             </div>
 
-            {/* Warning Box */}
             <div style={{
               backgroundColor: '#fffaf0',
               border: '1px solid #feebc8',
@@ -192,7 +190,7 @@ export default function DiplomaModule() {
               gap: '12px',
               alignItems: 'flex-start'
             }}>
-              <span style={{ fontSize: '20px' }}>⚠️</span>
+              <Icons.AlertTriangle size={20} />
               <div>
                 <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px' }}>Verifica bien tus datos</strong>
                 <p style={{ fontSize: '13px', lineHeight: '1.5' }}>
@@ -201,7 +199,6 @@ export default function DiplomaModule() {
               </div>
             </div>
 
-            {/* Botones / Mensaje de bloqueo */}
             {!isLocked ? (
               <div className="diploma-actions" style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                 <button
@@ -245,7 +242,6 @@ export default function DiplomaModule() {
             )}
           </div>
 
-          {/* Columna Derecha: Previsualización */}
           <div style={{ flex: 1, position: 'sticky', top: '2rem' }}>
             <label style={{ fontSize: '12px', fontWeight: 700, color: '#4a5568', marginBottom: '8px', display: 'block' }}>
               ASÍ APARECERÁ EN TU DIPLOMA
@@ -311,10 +307,7 @@ export default function DiplomaModule() {
         <div className="modal-bg open" style={{ zIndex: 10000 }}>
           <div className="modal" style={{ maxWidth: '400px', textAlign: 'center', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#7ed321" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '64px', height: '64px' }}>
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 12l3 3 5-5" />
-              </svg>
+              <Icons.CheckCircle size={64} color="#7ed321" />
             </div>
             <h3 style={{ fontSize: '24px', marginBottom: '10px', fontFamily: 'Syne', fontWeight: 800 }}>¡Datos bloqueados!</h3>
             <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tus datos para diplomas han sido guardados y no podrán ser editados nuevamente.</p>

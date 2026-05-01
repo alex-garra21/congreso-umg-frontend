@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { changePassword } from '../utils/auth';
 import PasswordField from './PasswordField';
+import { Icons } from './Icons';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -48,15 +49,14 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   return (
     <div className="modal-bg open" style={{ zIndex: 10001 }}>
       <div className="modal" style={{ maxWidth: '400px', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={handleClose}>✕</button>
+        <button className="modal-close" onClick={handleClose}>
+          <Icons.X size={20} />
+        </button>
 
         {showSuccess ? (
           <div style={{ textAlign: 'center' }}>
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#7ed321" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '64px', height: '64px' }}>
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 12l3 3 5-5" />
-              </svg>
+              <Icons.CheckCircle size={64} color="#7ed321" />
             </div>
             <h3 style={{ fontSize: '24px', marginBottom: '10px', fontFamily: 'Syne', fontWeight: 800 }}>¡Contraseña Cambiada!</h3>
             <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu contraseña ha sido actualizada con éxito.</p>
