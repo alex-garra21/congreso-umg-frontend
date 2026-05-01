@@ -41,12 +41,34 @@ export default function AgendaModule() {
   const [editingRoom, setEditingRoom] = useState<{ oldName: string, newName: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Utilidad para traducir errores de la base de datos
+  const translateError = (errorMsg: string) => {
+    if (errorMsg.includes('violates foreign key constraint')) {
+      if (errorMsg.includes('id_categoria')) return 'La categoría seleccionada no es válida o debe elegir una.';
+      if (errorMsg.includes('id_ponente')) return 'El ponente seleccionado no existe.';
+      return 'Hay un error de relación con otros datos.';
+    }
+    if (errorMsg.includes('not-null constraint')) return 'Faltan campos obligatorios por llenar.';
+    if (errorMsg.includes('unique constraint')) return 'Ya existe un registro con ese nombre.';
+    return errorMsg;
+  };
 
 
 
   const handleSaveAgendaItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItem) return;
+    
+    // Validación específica por campo
+    let hasErrors = false;
+    if (!editingItem.title) { showToast('El Título es obligatorio.', 'error'); hasErrors = true; }
+    if (!editingItem.time) { showToast('Debe seleccionar una Hora de Inicio.', 'error'); hasErrors = true; }
+    if (!editingItem.endTime) { showToast('Debe seleccionar una Hora de Fin.', 'error'); hasErrors = true; }
+    if (!editingItem.room) { showToast('Debe seleccionar una Sala / Ubicación.', 'error'); hasErrors = true; }
+    if (!editingItem.tag) { showToast('Debe seleccionar una Categoría.', 'error'); hasErrors = true; }
+
+    if (hasErrors) return;
 
     try {
       const newAgenda = agenda.some(a => a.id === editingItem.id)
@@ -60,7 +82,7 @@ export default function AgendaModule() {
       showToast('Cambios guardados correctamente', 'success');
     } catch (error: any) {
       console.error("Error al guardar actividad:", error);
-      showToast(`Error al guardar: ${error.message || 'Error de conexión'}`, 'error');
+      showToast(`Error al guardar: ${translateError(error.message || 'Error de conexión')}`, 'error');
     }
   };
 
@@ -81,6 +103,12 @@ export default function AgendaModule() {
   const handleSaveSpeaker = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSpeaker) return;
+
+    let hasErrors = false;
+    if (!editingSpeaker.name) { showToast('El Nombre del ponente es obligatorio.', 'error'); hasErrors = true; }
+    if (!editingSpeaker.role) { showToast('El Cargo / Rol es obligatorio.', 'error'); hasErrors = true; }
+    
+    if (hasErrors) return;
     try {
       const speakerWithInitials = {
         ...editingSpeaker,
@@ -95,7 +123,7 @@ export default function AgendaModule() {
       setIsSpeakerModalOpen(false);
       showToast('Ponente guardado', 'success');
     } catch (error: any) {
-      showToast(`Error al guardar ponente: ${error.message}`, 'error');
+      showToast(`Error al guardar ponente: ${translateError(error.message)}`, 'error');
     }
   };
 
@@ -116,13 +144,22 @@ export default function AgendaModule() {
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCategory) return;
+
+    let hasErrors = false;
+    if (!editingCategory.name) { showToast('El Nombre de la categoría es obligatorio.', 'error'); hasErrors = true; }
+    if (!editingCategory.style.bg || !editingCategory.style.text) { 
+      showToast('Debe seleccionar colores para la categoría.', 'error'); 
+      hasErrors = true; 
+    }
+
+    if (hasErrors) return;
     try {
       const newCategories = { ...categories, [editingCategory.name]: editingCategory.style };
       await saveCategoriasMutation.mutateAsync(newCategories);
       setIsCategoryModalOpen(false);
       showToast('Categoría guardada', 'success');
     } catch (error: any) {
-      showToast(`Error: ${error.message}`, 'error');
+      showToast(`Error al guardar categoría: ${translateError(error.message)}`, 'error');
     }
   };
 
@@ -143,7 +180,12 @@ export default function AgendaModule() {
 
   const handleSaveRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingRoom || !editingRoom.newName.trim()) return;
+    if (!editingRoom) return;
+
+    if (!editingRoom.newName.trim()) {
+      showToast('Por favor, ingrese el nombre de la sala.', 'error');
+      return;
+    }
 
     try {
       let newRooms = [...rooms];
@@ -165,7 +207,7 @@ export default function AgendaModule() {
       setIsRoomModalOpen(false);
       showToast('Sala actualizada correctamente', 'success');
     } catch (error: any) {
-      showToast(`Error al guardar sala: ${error.message}`, 'error');
+      showToast(`Error al guardar sala: ${translateError(error.message)}`, 'error');
     }
   };
 
@@ -463,17 +505,19 @@ export default function AgendaModule() {
       {isAgendaModalOpen && editingItem && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingItem.id ? 'Editar' : 'Nueva'} Actividad</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingItem.id ? 'Editar' : 'Nueva'} Actividad</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
             <form onSubmit={handleSaveAgendaItem} className="admin-form">
               <div className="form-group">
-                <label>TÍTULO</label>
+                <label>TÍTULO <span style={{ color: '#ef4444' }}>*</span></label>
                 <input type="text" className="dashboard-input" value={editingItem.title} onChange={e => setEditingItem({ ...editingItem, title: e.target.value })} required />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <AdminSelect
-                  label="HORA INICIO"
+                  label={<>HORA INICIO <span style={{ color: '#ef4444' }}>*</span></>}
                   value={editingItem.time}
                   onChange={e => setEditingItem({ ...editingItem, time: e.target.value })}
+                  required
                   containerStyle={{ flex: 1 }}
                   options={[
                     ...Array.from({ length: 15 * 4 }).map((_, i) => {
@@ -489,9 +533,10 @@ export default function AgendaModule() {
                   ]}
                 />
                 <AdminSelect
-                  label="HORA FIN"
+                  label={<>HORA FIN <span style={{ color: '#ef4444' }}>*</span></>}
                   value={editingItem.endTime}
                   onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })}
+                  required
                   containerStyle={{ flex: 1 }}
                   options={[
                     ...Array.from({ length: 15 * 4 }).map((_, i) => {
@@ -509,19 +554,21 @@ export default function AgendaModule() {
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <AdminSelect
-                  label="SALA / UBICACIÓN"
+                  label={<>SALA / UBICACIÓN <span style={{ color: '#ef4444' }}>*</span></>}
                   value={editingItem.room}
                   onChange={e => setEditingItem({ ...editingItem, room: e.target.value, location: e.target.value })}
+                  required
                   containerStyle={{ flex: 1 }}
                   options={rooms.map(r => ({ value: r, label: r }))}
                 />
                 <AdminSelect
-                  label="CATEGORÍA"
+                  label={<>CATEGORÍA <span style={{ color: '#ef4444' }}>*</span></>}
                   value={editingItem.tag}
                   onChange={e => setEditingItem({ ...editingItem, tag: e.target.value })}
+                  required
                   containerStyle={{ flex: 1 }}
                   options={[
-                    { value: '', label: 'Ninguna' },
+                    { value: '', label: 'Seleccionar...' },
                     ...Object.keys(categories).map(c => ({ value: c, label: c }))
                   ]}
                 />
@@ -552,10 +599,12 @@ export default function AgendaModule() {
       {isSpeakerModalOpen && editingSpeaker && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1.5rem', fontFamily: 'Syne', fontWeight: 800 }}>Editar Ponente</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingSpeaker.id ? 'Editar' : 'Nuevo'} Ponente</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
+            
             <form onSubmit={handleSaveSpeaker} className="admin-form">
-              <div className="form-group"><label>NOMBRE</label><input type="text" className="dashboard-input" value={editingSpeaker.name} onChange={e => setEditingSpeaker({ ...editingSpeaker, name: e.target.value })} required /></div>
-              <div className="form-group"><label>CARGO / ROL</label><input type="text" className="dashboard-input" value={editingSpeaker.role} onChange={e => setEditingSpeaker({ ...editingSpeaker, role: e.target.value })} required /></div>
+              <div className="form-group"><label>NOMBRE <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingSpeaker.name} onChange={e => setEditingSpeaker({ ...editingSpeaker, name: e.target.value })} required /></div>
+              <div className="form-group"><label>CARGO / ROL <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingSpeaker.role} onChange={e => setEditingSpeaker({ ...editingSpeaker, role: e.target.value })} required /></div>
               <div className="form-group"><label>BIO (Opcional)</label><textarea className="dashboard-input" value={editingSpeaker.bio} onChange={e => setEditingSpeaker({ ...editingSpeaker, bio: e.target.value })} style={{ minHeight: '100px' }} /></div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
                 <AdminButton type="submit" style={{ flex: 1 }}>Guardar Ponente</AdminButton>
@@ -570,12 +619,13 @@ export default function AgendaModule() {
       {isCategoryModalOpen && editingCategory && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1.5rem', fontFamily: 'Syne', fontWeight: 800 }}>Editar Categoría</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingCategory.name ? 'Editar' : 'Nueva'} Categoría</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
             <form onSubmit={handleSaveCategory} className="admin-form">
-              <div className="form-group"><label>NOMBRE DE CATEGORÍA</label><input type="text" className="dashboard-input" value={editingCategory.name} onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })} required /></div>
+              <div className="form-group"><label>NOMBRE DE CATEGORÍA <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingCategory.name} onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })} required /></div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>COLOR TEXTO</label>
+                  <label>COLOR TEXTO <span style={{ color: '#ef4444' }}>*</span></label>
                   <ColorPicker
                     selectedColor={editingCategory.style.text}
                     onSelect={c => {
@@ -609,10 +659,11 @@ export default function AgendaModule() {
       {isRoomModalOpen && editingRoom && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingRoom.oldName ? 'Editar' : 'Nueva'} Sala</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingRoom.oldName ? 'Editar' : 'Nueva'} Sala</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
             <form onSubmit={handleSaveRoom} className="admin-form">
               <div className="form-group">
-                <label>NOMBRE DE LA SALA</label>
+                <label>NOMBRE DE LA SALA <span style={{ color: '#ef4444' }}>*</span></label>
                 <input type="text" className="dashboard-input" value={editingRoom.newName} onChange={e => setEditingRoom({ ...editingRoom, newName: e.target.value })} required />
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>

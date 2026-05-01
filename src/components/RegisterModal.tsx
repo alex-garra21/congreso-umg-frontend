@@ -8,6 +8,8 @@ interface RegisterModalProps {
   onSwitchToLogin?: () => void;
 }
 
+import { showToast } from '../utils/swal';
+
 export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModalProps) {
   const registerUserMutation = useRegisterUser();
   const [isRegistered, setIsRegistered] = useState(false);
@@ -80,7 +82,23 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Validación detallada
+    let hasErrors = false;
+    if (!formData.nombres) { showToast('Los Nombres son obligatorios.', 'error'); hasErrors = true; }
+    if (!formData.apellidos) { showToast('Los Apellidos son obligatorios.', 'error'); hasErrors = true; }
+    if (!formData.sexo) { showToast('Debe seleccionar su Sexo.', 'error'); hasErrors = true; }
+    if (!formData.correo) { showToast('El Correo Electrónico es obligatorio.', 'error'); hasErrors = true; }
+    if (formData.tipoParticipante === 'alumno') {
+      if (!formData.carnet) { showToast('El Número de Carnet es obligatorio para alumnos.', 'error'); hasErrors = true; }
+      if (!formData.ciclo) { showToast('Debe seleccionar su Ciclo.', 'error'); hasErrors = true; }
+    }
+    if (!formData.contrasena) { showToast('La Contraseña es obligatoria.', 'error'); hasErrors = true; }
+    
+    if (hasErrors) return;
+
     if (formData.contrasena !== formData.confirmarContrasena) {
+      showToast('Las contraseñas no coinciden.', 'error');
       return;
     }
 
@@ -140,8 +158,9 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           </div>
         ) : (
           <>
-            <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>Regístrate aquí</h3>
-            <p className="modal-sub">Crea una cuenta para apartar tu lugar en el congreso</p>
+            <h3 style={{ fontSize: '24px', marginBottom: '4px', fontFamily: 'Syne', fontWeight: 800 }}>Regístrate aquí</h3>
+            <p className="modal-sub" style={{ marginBottom: '0.5rem' }}>Crea una cuenta para participar en el congreso</p>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
 
             {error && (
               <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
@@ -152,17 +171,17 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
             <form onSubmit={handleSubmit}>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Nombres</label>
+                  <label>Nombres <span style={{ color: '#ef4444' }}>*</span></label>
                   <input type="text" name="nombres" value={formData.nombres} onChange={handleChange} placeholder="Ej. Juan Manuel" required />
                 </div>
                 <div className="form-group">
-                  <label>Apellidos</label>
+                  <label>Apellidos <span style={{ color: '#ef4444' }}>*</span></label>
                   <input type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} placeholder="Ej. Pérez López" required />
                 </div>
               </div>
 
               <div className="form-group">
-                <label>Tipo de Participante</label>
+                <label>Tipo de Participante <span style={{ color: '#ef4444' }}>*</span></label>
                 <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required>
                   <option value="externo">Participante externo</option>
                   <option value="alumno">Alumno UMG</option>
@@ -172,11 +191,11 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               {formData.tipoParticipante === 'alumno' && (
                 <div className="form-row">
                   <div className="form-group" style={{ flex: 2 }}>
-                    <label>Número de Carnet</label>
-                    <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="Ej: 20230001234" required />
+                    <label>Número de Carnet <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="Ej: 2023-00-1234" required />
                   </div>
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label>Ciclo</label>
+                    <label>Ciclo <span style={{ color: '#ef4444' }}>*</span></label>
                     <select name="ciclo" value={formData.ciclo} onChange={handleChange} required>
                       <option value="">Selección</option>
                       <option value="I">I</option>
@@ -195,7 +214,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               )}
 
               <div className="form-group">
-                <label>Sexo</label>
+                <label>Sexo <span style={{ color: '#ef4444' }}>*</span></label>
                 <select name="sexo" value={formData.sexo} onChange={handleChange} required>
                   <option value="">Selección</option>
                   <option value="M">Hombre</option>
@@ -204,12 +223,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               </div>
 
               <div className="form-group">
-                <label>Correo Electrónico al que se enviarán los diplomas</label>
+                <label>Correo Electrónico <span style={{ color: '#ef4444' }}>*</span></label>
                 <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@ejemplo.com" required />
               </div>
 
               <PasswordField
-                label="Contraseña"
+                label={<>Contraseña <span style={{ color: '#ef4444' }}>*</span></>}
                 name="contrasena"
                 value={formData.contrasena}
                 onChange={handleChange}
@@ -220,7 +239,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               />
 
               <PasswordField
-                label="Confirmar Contraseña"
+                label={<>Confirmar Contraseña <span style={{ color: '#ef4444' }}>*</span></>}
                 name="confirmarContrasena"
                 value={formData.confirmarContrasena}
                 onChange={handleChange}
