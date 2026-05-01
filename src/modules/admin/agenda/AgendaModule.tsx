@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   type AgendaItem, type Speaker, type CategoryStyle
 } from '../../../data/agendaData';
@@ -195,28 +195,31 @@ export default function AgendaModule() {
     return hours * 60 + minutes;
   };
 
-  // Filtrado y Paginación para Horario
-  const filteredAgenda = agenda.filter(item =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const currentAgenda = filteredAgenda
-    .sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time))
-    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  // Filtrado y Paginación optimizados con useMemo
+  const { filteredAgenda, currentAgenda } = useMemo(() => {
+    const filtered = agenda.filter(item =>
+      item.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const sorted = [...filtered].sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time));
+    const paginated = sorted.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    return { filteredAgenda: filtered, currentAgenda: paginated };
+  }, [agenda, searchTerm, currentPage]);
 
-  // Filtrado y Paginación para Ponentes
-  const filteredSpeakers = speakers.filter(s =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const currentSpeakers = filteredSpeakers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const { filteredSpeakers, currentSpeakers } = useMemo(() => {
+    const filtered = speakers.filter(s =>
+      s.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    return { filteredSpeakers: filtered, currentSpeakers: paginated };
+  }, [speakers, searchTerm, currentPage]);
 
-  // Filtrado y Paginación para Categorías
-  const filteredCategories = Object.entries(categories).filter(([name]) =>
-    name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const currentCategories = filteredCategories.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const { filteredCategories, currentCategories } = useMemo(() => {
+    const filtered = Object.entries(categories).filter(([name]) =>
+      name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    return { filteredCategories: filtered, currentCategories: paginated };
+  }, [categories, searchTerm, currentPage]);
 
 
   return (
