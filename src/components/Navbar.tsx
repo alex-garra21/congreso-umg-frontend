@@ -67,11 +67,6 @@ export default function Navbar() {
         </ul>
 
         <div className="nav-right">
-          {isAuthenticated && (
-            <Link to="/dashboard" className="btn-solid" style={{ marginRight: '12px' }}>
-              Ir al Dashboard
-            </Link>
-          )}
           <button className="btn-ghost" onClick={() => setIsLoginOpen(true)}>
             Iniciar sesión
           </button>
@@ -107,11 +102,6 @@ export default function Navbar() {
           </ul>
 
           <div className="sidebar-footer-mobile">
-            {isAuthenticated && (
-              <Link to="/dashboard" className="btn-sidebar-register" style={{ textAlign: 'center', marginBottom: '10px' }} onClick={() => setIsMenuOpen(false)}>
-                Ir al Dashboard
-              </Link>
-            )}
             <button className="btn-sidebar-login" onClick={openLogin}>Iniciar sesión</button>
             <button className="btn-sidebar-register" onClick={openRegister}>Regístrate aquí</button>
           </div>
