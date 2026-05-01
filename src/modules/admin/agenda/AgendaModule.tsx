@@ -37,6 +37,8 @@ export default function AgendaModule() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<{ oldName: string, newName: string } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
 
 
@@ -46,7 +48,7 @@ export default function AgendaModule() {
 
     try {
       const newAgenda = agenda.some(a => a.id === editingItem.id)
-        ? currentAgenda.map(a => a.id === editingItem.id ? editingItem : a)
+        ? agenda.map(a => a.id === editingItem.id ? editingItem : a)
         : [...agenda, editingItem];
 
       // Intentar guardar (esto ahora lanzará error si falla la nube)
@@ -78,9 +80,15 @@ export default function AgendaModule() {
     e.preventDefault();
     if (!editingSpeaker) return;
     try {
-      const newSpeakers = speakers.some(s => s.id === editingSpeaker.id)
-        ? speakers.map(s => s.id === editingSpeaker.id ? editingSpeaker : s)
-        : [...speakers, editingSpeaker];
+      const speakerWithInitials = {
+        ...editingSpeaker,
+        initials: editingSpeaker.initials || editingSpeaker.name.split(' ').map(n => n[0]).join('').toUpperCase()
+      };
+
+      const newSpeakers = speakers.some(s => s.id === speakerWithInitials.id)
+        ? speakers.map(s => s.id === speakerWithInitials.id ? speakerWithInitials : s)
+        : [...speakers, speakerWithInitials];
+
       await savePonentesMutation.mutateAsync(newSpeakers);
       setIsSpeakerModalOpen(false);
       showToast('Ponente guardado', 'success');
@@ -297,7 +305,8 @@ export default function AgendaModule() {
           description="Listado de expertos que participarán en el evento."
           headerActions={
             <AdminButton onClick={() => {
-              setEditingSpeaker({ id: Date.now(), name: '', role: '', avatar: '', bio: '', initials: '', tag: '', bgColor: '#ffffff', textColor: '#01579b' });
+              const nextId = speakers.length > 0 ? Math.max(...speakers.map(s => s.id)) + 1 : 1;
+              setEditingSpeaker({ id: nextId, name: '', role: '', avatar: '', bio: '', initials: '', tag: '', bgColor: '#ffffff', textColor: '#01579b' });
               setIsSpeakerModalOpen(true);
             }}>+ Agregar Ponente</AdminButton>
           }
