@@ -1,7 +1,7 @@
-
-
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { supabase } from './utils/supabase';
+import ResetPasswordModal from './components/ResetPasswordModal';
 
 // Importar el Layout
 import Layout from './components/Layout';
@@ -54,6 +54,21 @@ const PageLoader = () => (
 );
 
 function App() {
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Escuchar cambios en la autenticación de Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // Si el evento es recuperación de contraseña (viene de un Magic Link de Reset Password)
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsResetModalOpen(true);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <BrowserRouter>
@@ -93,8 +108,13 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
+
+      <ResetPasswordModal 
+        isOpen={isResetModalOpen} 
+        onClose={() => setIsResetModalOpen(false)} 
+      />
     </BrowserRouter>
   );
 }
 
-export default App;
+export default App;
