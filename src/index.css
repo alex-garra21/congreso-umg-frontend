@@ -734,6 +734,12 @@ h1 span {
   display: flex;
 }
 
+/* Evitar efecto de doble blur cuando hay modales anidados */
+.modal-bg .modal-bg,
+.modal-bg ~ .modal-bg {
+  backdrop-filter: none;
+}
+
 .modal {
   background: var(--bg-primary);
   border-radius: 14px;

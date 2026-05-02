@@ -1,7 +1,6 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { supabase } from './utils/supabase';
-import ResetPasswordModal from './components/ResetPasswordModal';
 
 // Importar el Layout
 import Layout from './components/Layout';
@@ -24,24 +23,25 @@ const ProfileModule = lazy(() => import('./modules/general/perfil/ProfileModule'
 const WorkshopsModule = lazy(() => import('./modules/user/talleres/WorkshopsModule'));
 const DiplomaModule = lazy(() => import('./modules/user/diploma/DiplomaModule'));
 const AdminModule = lazy(() => import('./pages/AdminModule'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 import { DashboardTitleProvider } from './utils/DashboardTitleContext';
 
 // Componente de carga premium
 const PageLoader = () => (
-  <div style={{ 
-    display: 'flex', 
+  <div style={{
+    display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center', 
-    justifyContent: 'center', 
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: '60vh',
     width: '100%',
     color: 'var(--text-secondary)'
   }}>
-    <div className="loader-spinner" style={{ 
-      width: '40px', 
-      height: '40px', 
-      border: '3px solid rgba(99, 179, 237, 0.2)', 
-      borderTop: '3px solid var(--accent-primary)', 
+    <div className="loader-spinner" style={{
+      width: '40px',
+      height: '40px',
+      border: '3px solid rgba(99, 179, 237, 0.2)',
+      borderTop: '3px solid var(--accent-primary)',
       borderRadius: '50%',
       animation: 'spin 1s linear infinite',
       marginBottom: '1rem'
@@ -54,14 +54,19 @@ const PageLoader = () => (
 );
 
 function App() {
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   useEffect(() => {
     // Escuchar cambios en la autenticación de Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      // Si el evento es recuperación de contraseña (viene de un Magic Link de Reset Password)
+      // Si el evento es recuperación de contraseña
       if (event === 'PASSWORD_RECOVERY') {
-        setIsResetModalOpen(true);
+        // Establecer bandera de seguridad
+        sessionStorage.setItem('is_recovering_pw', 'true');
+        
+        // Redirigir a la página dedicada de restablecimiento
+        if (window.location.pathname !== '/reset-password') {
+          window.location.href = '/reset-password';
+        }
       }
     });
 
@@ -87,6 +92,9 @@ function App() {
             <Route path="*" element={<div style={{ padding: '4rem 2rem', color: 'var(--text-primary)' }}><h2>Página no encontrada</h2></div>} />
           </Route>
 
+          {/* Ruta Protegida de Restablecimiento de Contraseña (Fuera del layout normal) */}
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+
           {/* Rutas Privadas (Dashboard) envolviendo con el proveedor de títulos */}
           <Route path="/dashboard" element={
             <DashboardTitleProvider>
@@ -108,13 +116,8 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
-
-      <ResetPasswordModal 
-        isOpen={isResetModalOpen} 
-        onClose={() => setIsResetModalOpen(false)} 
-      />
     </BrowserRouter>
   );
 }
 
-export default App;
+export default App;
