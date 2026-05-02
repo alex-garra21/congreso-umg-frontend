@@ -13,7 +13,10 @@ import FormattedDate from '../../../components/ui/FormattedDate';
 import { isDateInRange, formatFullDate } from '../../../utils/dateUtils';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { Icons } from '../../../components/Icons';
+import AdminTable from '../../../components/ui/AdminTable';
+import Modal from '../../../components/ui/Modal';
+import FormField from '../../../components/ui/FormField';
+import Alert from '../../../components/ui/Alert';
 
 export default function TokensModule() {
   const { data: tokens = [], isLoading } = useTokens();
@@ -32,7 +35,6 @@ export default function TokensModule() {
   const [endDate, setEndDate] = useState('');
 
   const handleGenerateToken = async () => {
-    // Generate a random block for the token code
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let code = '';
     for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -54,7 +56,6 @@ export default function TokensModule() {
     setPage(1);
   };
 
-  // Lógica de filtrado
   const filteredTokens = tokens.filter(t => {
     const matchesSearch = !searchTerm || 
       (t.usedByName?.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -120,15 +121,8 @@ export default function TokensModule() {
       showToast('El rango de fechas no es válido.', 'error');
       return;
     }
-
-    if (filteredTokens.length === 0) {
-      showToast('No hay tokens para exportar con los filtros actuales.', 'warning');
-      return;
-    }
-
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Tokens');
-
     worksheet.columns = [
       { header: 'Token de Activación', key: 'code', width: 25 },
       { header: 'Estado', key: 'status', width: 20 },
@@ -139,7 +133,6 @@ export default function TokensModule() {
       { header: 'Validado el', key: 'usedAt', width: 25 },
       { header: 'Fecha Creación', key: 'createdAt', width: 25 }
     ];
-
     filteredTokens.forEach(t => {
       worksheet.addRow({
         code: t.code,
@@ -152,68 +145,9 @@ export default function TokensModule() {
         createdAt: formatFullDate(t.createdAt)
       });
     });
-
     worksheet.getRow(1).font = { bold: true };
-
-    const suffix = searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || startDate || endDate ? '_Filtrado' : '';
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Tokens_Acceso_Congreso_2026${suffix}.xlsx`);
-  };
-
-  const exportForUsageToExcel = async () => {
-    const isStatusAvailable = statusFilter === 'available';
-    const isDateSelected = !!startDate || !!endDate;
-
-    if (!isStatusAvailable && !isDateSelected) {
-      showToast('Es obligatorio seleccionar el estado "Disponibles" y al menos una fecha.', 'warning');
-      return;
-    }
-
-    if (!isStatusAvailable) {
-      showToast('Es obligatorio seleccionar el estado "Disponibles".', 'warning');
-      return;
-    }
-
-    if (!isDateSelected) {
-      showToast('Es obligatorio seleccionar al menos una fecha (Inicio o Fin).', 'warning');
-      return;
-    }
-
-    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      showToast('El rango de fechas no es válido.', 'error');
-      return;
-    }
-
-    if (filteredTokens.length === 0) {
-      showToast('No hay tokens disponibles para exportar con los filtros actuales.', 'warning');
-      return;
-    }
-
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Tokens para Uso');
-
-    worksheet.columns = [
-      { header: 'No.', key: 'index', width: 10 },
-      { header: 'Token de Activación', key: 'code', width: 30 },
-      { header: 'Fecha Creación', key: 'createdAt', width: 25 }
-    ];
-
-    filteredTokens.forEach((t, i) => {
-      worksheet.addRow({
-        index: i + 1,
-        code: t.code,
-        createdAt: formatFullDate(t.createdAt)
-      });
-    });
-
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getColumn(1).alignment = { horizontal: 'center' };
-
-    const buffer = await workbook.xlsx.writeBuffer();
-    const dateRange = (startDate && endDate) 
-      ? `${startDate}_al_${endDate}` 
-      : `${startDate || endDate}_unico_dia`;
-    saveAs(new Blob([buffer]), `Tokens_PARA_USO_${dateRange}.xlsx`);
+    saveAs(new Blob([buffer]), `Tokens_Acceso_Congreso_2026.xlsx`);
   };
 
   return (
@@ -232,215 +166,88 @@ export default function TokensModule() {
             )}
             <AdminButton onClick={handleGenerateToken}>+ Generar Token</AdminButton>
             <AdminButton variant="outline" onClick={() => setIsMassModalOpen(true)}>Generación Masiva</AdminButton>
-            <AdminButton variant="secondary" onClick={exportForUsageToExcel}>Exportar para Uso</AdminButton>
             <AdminButton variant="success" onClick={exportTokensToExcel}>Exportar Excel</AdminButton>
           </div>
         }
       >
         <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div style={{ flex: 2, minWidth: '300px' }}>
-            <SearchBar 
-              placeholder="Buscar por nombre, correo o código de token..." 
-              value={searchTerm} 
-              onChange={setSearchTerm} 
-            />
+            <SearchBar placeholder="Buscar por nombre, correo o código..." value={searchTerm} onChange={setSearchTerm} />
           </div>
           <div style={{ flex: 1, minWidth: '180px' }}>
-            <AdminSelect 
-              label="ESTADO"
-              value={statusFilter}
-              onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-              options={[
-                { value: 'all', label: 'Todos los estados' },
-                { value: 'available', label: 'Disponibles' },
-                { value: 'used', label: 'Utilizados' }
-              ]}
-            />
+            <AdminSelect label="ESTADO" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos' }, { value: 'available', label: 'Disponibles' }, { value: 'used', label: 'Utilizados' }]} />
           </div>
           <div style={{ flex: 1, minWidth: '180px' }}>
-            <AdminSelect 
-              label="TIPO DE PARTICIPANTE"
-              value={typeFilter}
-              onChange={e => { setTypeFilter(e.target.value); setPage(1); }}
-              options={[
-                { value: 'all', label: 'Todos los tipos' },
-                { value: 'alumno', label: 'Estudiantes UMG' },
-                { value: 'externo', label: 'Externos' }
-              ]}
-            />
+            <AdminSelect label="TIPO" value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos' }, { value: 'alumno', label: 'Estudiantes' }, { value: 'externo', label: 'Externos' }]} />
           </div>
           <div style={{ flex: 2, minWidth: '350px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ 
-              fontSize: '12px', 
-              fontWeight: 700, 
-              color: 'var(--text-secondary)', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.8px',
-              marginLeft: '4px'
-            }}>
-              Rango de Fecha de Creación
-            </span>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <AdminDateInput 
-                label="FECHA INICIO"
-                value={startDate}
-                onChange={e => { setStartDate(e.target.value); setPage(1); }}
-                containerStyle={{ flex: 1 }}
-              />
-              <AdminDateInput 
-                label="FECHA FIN"
-                value={endDate}
-                onChange={e => { setEndDate(e.target.value); setPage(1); }}
-                containerStyle={{ flex: 1 }}
-              />
-            </div>
+             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Rango de Fecha</span>
+             <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <AdminDateInput label="INICIO" value={startDate} onChange={e => setStartDate(e.target.value)} containerStyle={{ flex: 1 }} />
+                <AdminDateInput label="FIN" value={endDate} onChange={e => setEndDate(e.target.value)} containerStyle={{ flex: 1 }} />
+             </div>
           </div>
         </div>
 
         {startDate && endDate && new Date(startDate) > new Date(endDate) && (
-          <div style={{ 
-            color: '#dc3545', 
-            fontSize: '0.8rem', 
-            fontWeight: 600, 
-            marginTop: '-1rem', 
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            paddingLeft: '4px'
-          }}>
-            <Icons.AlertTriangle size={14} strokeWidth={3} />
-            La fecha de inicio no puede ser posterior a la fecha de fin.
-          </div>
+          <Alert variant="error" style={{ marginBottom: '1rem' }}>La fecha de inicio no puede ser posterior a la fecha de fin.</Alert>
         )}
 
-        {((startDate && !endDate) || (!startDate && endDate)) && (
-          <div style={{ 
-            color: 'var(--blue)', 
-            fontSize: '0.8rem', 
-            fontWeight: 600, 
-            marginTop: '-1rem', 
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            paddingLeft: '4px'
-          }}>
-            <Icons.Info size={14} strokeWidth={3} />
-            Se ha seleccionado una sola fecha. El reporte se generará únicamente para el día {new Date((startDate || endDate) + 'T00:00:00').toLocaleDateString('es-GT')}.
-          </div>
-        )}
-
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Cargando tokens...</div>
-        ) : (
-          <div className="table-responsive">
-            <table className="admin-table">
-            <thead>
-              <tr>
-                <th style={{ width: '40px' }}>
-                  <input
-                    type="checkbox"
-                    checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))}
-                    onChange={handleSelectAllTokens}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </th>
-                <th>Token</th>
-                <th>Estado</th>
-                <th>Nombre</th>
-                <th>Correo</th>
-                <th>Tipo</th>
-                <th>Generado por</th>
-                <th>Validado el</th>
-                <th>Creado el</th>
-                <th style={{ textAlign: 'right' }}>Opciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentTokensOnPage.map(t => (
-                <tr key={t.code}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedTokens.includes(t.code)}
-                      onChange={() => handleSelectToken(t.code)}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  </td>
-                  <td style={{ fontWeight: 700, color: 'var(--blue)' }}>{t.code}</td>
-                  <td>
-                    {t.used ? (
-                      <AdminBadge variant="danger" dot>Utilizado</AdminBadge>
-                    ) : (
-                      <AdminBadge variant="success" dot>Disponible</AdminBadge>
-                    )}
-                  </td>
-                  <td>{t.usedByName || '-'}</td>
-                  <td>{t.usedBy || '-'}</td>
-                  <td>
-                    {t.usedByType ? (
-                      <AdminBadge variant="neutral">
-                        {t.usedByType === 'alumno' ? 'Estudiante UMG' : 'Externo'}
-                      </AdminBadge>
-                    ) : (
-                      t.used && '-'
-                    )}
-                  </td>
-                  <td style={{ fontSize: '0.85rem' }}>{t.createdByName || '-'}</td>
-                  <td style={{ fontSize: '0.85rem', color: 'var(--blue)' }}>
-                    <FormattedDate date={t.usedAt} />
-                  </td>
-                  <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    <FormattedDate date={t.createdAt} />
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <AdminButton size="sm" variant="danger" onClick={() => handleDeleteToken(t.code)}>
-                      Eliminar
-                    </AdminButton>
-                  </td>
-                </tr>
-              ))}
-              {currentTokensOnPage.length === 0 && (
-                <tr>
-                  <td colSpan={10} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                    No se encontraron tokens con los filtros seleccionados.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        )}
+        <AdminTable
+          isLoading={isLoading}
+          headers={[
+            <input 
+              type="checkbox" 
+              checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))} 
+              onChange={handleSelectAllTokens} 
+            />,
+            "Token", "Estado", "Nombre", "Correo", "Tipo", "Generado por", "Validado el", "Creado el", "Opciones"
+          ]}
+        >
+          {currentTokensOnPage.map(t => (
+            <tr key={t.code}>
+              <td><input type="checkbox" checked={selectedTokens.includes(t.code)} onChange={() => handleSelectToken(t.code)} /></td>
+              <td style={{ fontWeight: 700, color: 'var(--blue)' }}>{t.code}</td>
+              <td><AdminBadge variant={t.used ? "danger" : "success"} dot>{t.used ? "Utilizado" : "Disponible"}</AdminBadge></td>
+              <td>{t.usedByName || '-'}</td>
+              <td>{t.usedBy || '-'}</td>
+              <td>{t.usedByType ? <AdminBadge variant="neutral">{t.usedByType === 'alumno' ? 'Estudiante' : 'Externo'}</AdminBadge> : '-'}</td>
+              <td style={{ fontSize: '0.85rem' }}>{t.createdByName || '-'}</td>
+              <td><FormattedDate date={t.usedAt} /></td>
+              <td><FormattedDate date={t.createdAt} /></td>
+              <td style={{ textAlign: 'right' }}>
+                <AdminButton size="sm" variant="danger" onClick={() => handleDeleteToken(t.code)}>Eliminar</AdminButton>
+              </td>
+            </tr>
+          ))}
+        </AdminTable>
         
         <Pagination current={page} total={filteredTokens.length} onPageChange={setPage} />
       </ModuleCard>
 
-      {/* Modal Masivo */}
-      {isMassModalOpen && (
-        <div className="modal-bg open">
-          <div className="modal" style={{ maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>Generación Masiva</h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
-            
-            <div className="form-group">
-              <label>CANTIDAD DE TOKENS <span style={{ color: '#ef4444' }}>*</span></label>
-              <input 
-                type="number" 
-                className="dashboard-input" 
-                value={massQuantity} 
-                onChange={e => setMassQuantity(parseInt(e.target.value))}
-                min="1" max="100"
-                required
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-              <AdminButton onClick={handleMassGenerate} style={{ flex: 1 }}>Generar</AdminButton>
-              <AdminButton variant="secondary" onClick={() => setIsMassModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
-            </div>
-          </div>
+      <Modal
+        isOpen={isMassModalOpen}
+        onClose={() => setIsMassModalOpen(false)}
+        title="Generación Masiva"
+        maxWidth="400px"
+      >
+        <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Ingresa la cantidad de tokens que deseas generar automáticamente.</p>
+        
+        <FormField label="Cantidad de tokens" required>
+          <input 
+            type="number" 
+            className="dashboard-input" 
+            value={massQuantity} 
+            onChange={e => setMassQuantity(parseInt(e.target.value))}
+            min="1" max="100"
+          />
+        </FormField>
+
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+          <AdminButton onClick={handleMassGenerate} style={{ flex: 1 }}>Generar</AdminButton>
+          <AdminButton variant="secondary" onClick={() => setIsMassModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
         </div>
-      )}
+      </Modal>
     </section>
   );
 }

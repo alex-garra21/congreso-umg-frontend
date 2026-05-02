@@ -16,6 +16,9 @@ import AdminBadge from '../../../components/ui/AdminBadge';
 import AdminTabs from '../../../components/ui/AdminTabs';
 import AdminSelect from '../../../components/ui/AdminSelect';
 import ModuleCard from '../../../components/ui/ModuleCard';
+import Modal from '../../../components/ui/Modal';
+import FormField from '../../../components/ui/FormField';
+import AdminTable from '../../../components/ui/AdminTable';
 
 export default function AgendaModule() {
   const { data: agenda = [] } = useCharlas();
@@ -54,30 +57,16 @@ export default function AgendaModule() {
     return errorMsg;
   };
 
-
-
   const handleSaveAgendaItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItem) return;
     
-    // Validación específica por campo
-    let hasErrors = false;
-    if (!editingItem.title) { showToast('El Título es obligatorio.', 'error'); hasErrors = true; }
-    if (!editingItem.time) { showToast('Debe seleccionar una Hora de Inicio.', 'error'); hasErrors = true; }
-    if (!editingItem.endTime) { showToast('Debe seleccionar una Hora de Fin.', 'error'); hasErrors = true; }
-    if (!editingItem.room) { showToast('Debe seleccionar una Sala / Ubicación.', 'error'); hasErrors = true; }
-    if (!editingItem.tag) { showToast('Debe seleccionar una Categoría.', 'error'); hasErrors = true; }
-
-    if (hasErrors) return;
-
     try {
       const newAgenda = agenda.some(a => a.id === editingItem.id)
         ? agenda.map(a => a.id === editingItem.id ? editingItem : a)
         : [...agenda, editingItem];
 
-      // Intentar guardar (esto ahora lanzará error si falla la nube)
       await saveAgendaMutation.mutateAsync(newAgenda);
-
       setIsAgendaModalOpen(false);
       showToast('Cambios guardados correctamente', 'success');
     } catch (error: any) {
@@ -104,11 +93,6 @@ export default function AgendaModule() {
     e.preventDefault();
     if (!editingSpeaker) return;
 
-    let hasErrors = false;
-    if (!editingSpeaker.name) { showToast('El Nombre del ponente es obligatorio.', 'error'); hasErrors = true; }
-    if (!editingSpeaker.role) { showToast('El Cargo / Rol es obligatorio.', 'error'); hasErrors = true; }
-    
-    if (hasErrors) return;
     try {
       const speakerWithInitials = {
         ...editingSpeaker,
@@ -145,14 +129,6 @@ export default function AgendaModule() {
     e.preventDefault();
     if (!editingCategory) return;
 
-    let hasErrors = false;
-    if (!editingCategory.name) { showToast('El Nombre de la categoría es obligatorio.', 'error'); hasErrors = true; }
-    if (!editingCategory.style.bg || !editingCategory.style.text) { 
-      showToast('Debe seleccionar colores para la categoría.', 'error'); 
-      hasErrors = true; 
-    }
-
-    if (hasErrors) return;
     try {
       const newCategories = { ...categories, [editingCategory.name]: editingCategory.style };
       await saveCategoriasMutation.mutateAsync(newCategories);
@@ -182,11 +158,6 @@ export default function AgendaModule() {
     e.preventDefault();
     if (!editingRoom) return;
 
-    if (!editingRoom.newName.trim()) {
-      showToast('Por favor, ingrese el nombre de la sala.', 'error');
-      return;
-    }
-
     try {
       let newRooms = [...rooms];
       let newAgenda = [...agenda];
@@ -198,7 +169,6 @@ export default function AgendaModule() {
         newRooms.push(editingRoom.newName);
       }
 
-      // Guardar ambos en la nube
       await Promise.all([
         saveSalasMutation.mutateAsync(newRooms),
         saveAgendaMutation.mutateAsync(newAgenda)
@@ -225,7 +195,6 @@ export default function AgendaModule() {
     });
   };
 
-  // Función para convertir "8:00 AM" en un valor numérico comparable
   const parseTimeToNumber = (timeStr: string) => {
     if (!timeStr) return 0;
     const [time, modifier] = timeStr.split(' ');
@@ -239,7 +208,6 @@ export default function AgendaModule() {
     return hours * 60 + minutes;
   };
 
-  // Filtrado y Paginación optimizados con useMemo
   const { filteredAgenda, currentAgenda } = useMemo(() => {
     const filtered = agenda.filter(item =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -278,7 +246,7 @@ export default function AgendaModule() {
             { id: 'rooms', label: 'Salas' }
           ]}
           activeTab={agendaTab}
-          onTabChange={(id) => setAgendaTab(id as any)}
+          onTabChange={(id) => { setAgendaTab(id as any); setCurrentPage(1); setSearchTerm(''); }}
         />
       </div>
 
@@ -290,59 +258,37 @@ export default function AgendaModule() {
             <AdminButton onClick={() => {
               setEditingItem({ id: Math.random().toString(36).substr(2, 9), title: '', time: '', endTime: '', room: rooms[0] || '', location: rooms[0] || '', tag: '', speaker: undefined, gracePeriod: 10, description: '', period: 'Mañana' });
               setIsAgendaModalOpen(true);
-            }}>+ Agregar Charla/Taller</AdminButton>
-
+            }}>+ Agregar Actividad</AdminButton>
           }
         >
           <div style={{ marginBottom: '1.5rem' }}>
             <SearchBar
               value={searchTerm}
               onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
-              placeholder="Buscar..."
+              placeholder="Buscar actividad..."
             />
           </div>
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Horario</th>
-                  <th>Actividad</th>
-                  <th>Ubicación</th>
-                  <th>Categoría</th>
-                  <th style={{ textAlign: 'right' }}>Opciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentAgenda.map(item => (
-                  <tr key={item.id}>
-                    <td>{item.time} - {item.endTime}</td>
-                    <td>
-                      <strong>{item.title}</strong>
-                      {item.speaker && <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Ponente: {item.speaker.name}</div>}
-                    </td>
-                    <td>{item.room}</td>
-                    <td>{item.tag && <AdminBadge variant="neutral" style={{ backgroundColor: categories[item.tag]?.bg, color: categories[item.tag]?.text }}>{item.tag}</AdminBadge>}</td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <AdminButton size="sm" variant="info" onClick={() => { setEditingItem(item); setIsAgendaModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
-                      <AdminButton size="sm" variant="danger" onClick={() => handleDeleteAgendaItem(item.id)}>Eliminar</AdminButton>
-                    </td>
-                  </tr>
-                ))}
-                {currentAgenda.length === 0 && (
-                  <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay actividades registradas en la agenda.</div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            current={currentPage}
-            total={filteredAgenda.length}
-            onPageChange={setCurrentPage}
-          />
+          <AdminTable 
+            headers={["Horario", "Actividad", "Ubicación", "Categoría", "Opciones"]}
+            emptyMessage="No hay actividades registradas."
+          >
+            {currentAgenda.map(item => (
+              <tr key={item.id}>
+                <td>{item.time} - {item.endTime}</td>
+                <td>
+                  <strong>{item.title}</strong>
+                  {item.speaker && <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Ponente: {item.speaker.name}</div>}
+                </td>
+                <td>{item.room}</td>
+                <td>{item.tag && <AdminBadge variant="neutral" style={{ backgroundColor: categories[item.tag]?.bg, color: categories[item.tag]?.text }}>{item.tag}</AdminBadge>}</td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <AdminButton size="sm" variant="info" onClick={() => { setEditingItem(item); setIsAgendaModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
+                  <AdminButton size="sm" variant="danger" onClick={() => handleDeleteAgendaItem(item.id)}>Eliminar</AdminButton>
+                </td>
+              </tr>
+            ))}
+          </AdminTable>
+          <Pagination current={currentPage} total={filteredAgenda.length} onPageChange={setCurrentPage} />
         </ModuleCard>
       )}
 
@@ -362,44 +308,22 @@ export default function AgendaModule() {
             <SearchBar
               value={searchTerm}
               onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
-              placeholder="Buscar..."
+              placeholder="Buscar ponente..."
             />
           </div>
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Cargo / Rol</th>
-                  <th style={{ textAlign: 'right' }}>Opciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentSpeakers.map(s => (
-                  <tr key={s.id}>
-                    <td><strong>{s.name}</strong></td>
-                    <td>{s.role}</td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <AdminButton size="sm" variant="info" onClick={() => { setEditingSpeaker(s); setIsSpeakerModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
-                      <AdminButton size="sm" variant="danger" onClick={() => handleDeleteSpeaker(s.id)}>Eliminar</AdminButton>
-                    </td>
-                  </tr>
-                ))}
-                {currentSpeakers.length === 0 && (
-                  <tr>
-                    <td colSpan={3} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay ponentes registrados.</div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            current={currentPage}
-            total={filteredSpeakers.length}
-            onPageChange={setCurrentPage}
-          />
+          <AdminTable headers={["Nombre", "Cargo / Rol", "Opciones"]} emptyMessage="No hay ponentes registrados.">
+            {currentSpeakers.map(s => (
+              <tr key={s.id}>
+                <td><strong>{s.name}</strong></td>
+                <td>{s.role}</td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <AdminButton size="sm" variant="info" onClick={() => { setEditingSpeaker(s); setIsSpeakerModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
+                  <AdminButton size="sm" variant="danger" onClick={() => handleDeleteSpeaker(s.id)}>Eliminar</AdminButton>
+                </td>
+              </tr>
+            ))}
+          </AdminTable>
+          <Pagination current={currentPage} total={filteredSpeakers.length} onPageChange={setCurrentPage} />
         </ModuleCard>
       )}
 
@@ -418,44 +342,22 @@ export default function AgendaModule() {
             <SearchBar
               value={searchTerm}
               onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
-              placeholder="Buscar..."
+              placeholder="Buscar categoría..."
             />
           </div>
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Vista Previa</th>
-                  <th style={{ textAlign: 'right' }}>Opciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentCategories.map(([name, style]) => (
-                  <tr key={name}>
-                    <td><strong>{name}</strong></td>
-                    <td><AdminBadge style={{ backgroundColor: style.bg, color: style.text }}>{name}</AdminBadge></td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <AdminButton size="sm" variant="info" onClick={() => { setEditingCategory({ name, style }); setIsCategoryModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
-                      <AdminButton size="sm" variant="danger" onClick={() => handleDeleteCategory(name)}>Eliminar</AdminButton>
-                    </td>
-                  </tr>
-                ))}
-                {currentCategories.length === 0 && (
-                  <tr>
-                    <td colSpan={3} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay categorías registradas.</div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            current={currentPage}
-            total={filteredCategories.length}
-            onPageChange={setCurrentPage}
-          />
+          <AdminTable headers={["Nombre", "Vista Previa", "Opciones"]} emptyMessage="No hay categorías registradas.">
+            {currentCategories.map(([name, style]) => (
+              <tr key={name}>
+                <td><strong>{name}</strong></td>
+                <td><AdminBadge style={{ backgroundColor: style.bg, color: style.text }}>{name}</AdminBadge></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <AdminButton size="sm" variant="info" onClick={() => { setEditingCategory({ name, style }); setIsCategoryModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
+                  <AdminButton size="sm" variant="danger" onClick={() => handleDeleteCategory(name)}>Eliminar</AdminButton>
+                </td>
+              </tr>
+            ))}
+          </AdminTable>
+          <Pagination current={currentPage} total={filteredCategories.length} onPageChange={setCurrentPage} />
         </ModuleCard>
       )}
 
@@ -470,55 +372,42 @@ export default function AgendaModule() {
             }}>+ Nueva Sala</AdminButton>
           }
         >
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Nombre de la Sala</th>
-                  <th style={{ textAlign: 'right' }}>Opciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rooms.map(room => (
-                  <tr key={room}>
-                    <td><strong>{room}</strong></td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <AdminButton size="sm" variant="info" onClick={() => { setEditingRoom({ oldName: room, newName: room }); setIsRoomModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
-                      <AdminButton size="sm" variant="danger" onClick={() => handleDeleteRoom(room)}>Eliminar</AdminButton>
-                    </td>
-                  </tr>
-                ))}
-                {rooms.length === 0 && (
-                  <tr>
-                    <td colSpan={2} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 500 }}>No hay salas registradas.</div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable headers={["Nombre de la Sala", "Opciones"]} emptyMessage="No hay salas registradas.">
+            {rooms.map(room => (
+              <tr key={room}>
+                <td><strong>{room}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <AdminButton size="sm" variant="info" onClick={() => { setEditingRoom({ oldName: room, newName: room }); setIsRoomModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
+                  <AdminButton size="sm" variant="danger" onClick={() => handleDeleteRoom(room)}>Eliminar</AdminButton>
+                </td>
+              </tr>
+            ))}
+          </AdminTable>
         </ModuleCard>
       )}
 
       {/* Agenda Modal */}
       {isAgendaModalOpen && editingItem && (
-        <div className="modal-bg open">
-          <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingItem.id ? 'Editar' : 'Nueva'} Actividad</h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
-            <form onSubmit={handleSaveAgendaItem} className="admin-form">
-              <div className="form-group">
-                <label>TÍTULO <span style={{ color: '#ef4444' }}>*</span></label>
-                <input type="text" className="dashboard-input" value={editingItem.title} onChange={e => setEditingItem({ ...editingItem, title: e.target.value })} required />
-              </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
+        <Modal
+          isOpen={isAgendaModalOpen}
+          onClose={() => setIsAgendaModalOpen(false)}
+          title={`${agenda.some(a => a.id === editingItem.id) ? 'Editar' : 'Nueva'} Actividad`}
+          maxWidth="600px"
+        >
+          <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>
+            Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
+          </p>
+          <form onSubmit={handleSaveAgendaItem}>
+            <FormField label="TÍTULO" required>
+              <input type="text" className="dashboard-input" value={editingItem.title} onChange={e => setEditingItem({ ...editingItem, title: e.target.value })} required />
+            </FormField>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <FormField label="HORA INICIO" required style={{ flex: 1 }}>
                 <AdminSelect
-                  label={<>HORA INICIO <span style={{ color: '#ef4444' }}>*</span></>}
                   value={editingItem.time}
                   onChange={e => setEditingItem({ ...editingItem, time: e.target.value })}
                   required
-                  containerStyle={{ flex: 1 }}
                   options={[
                     ...Array.from({ length: 15 * 4 }).map((_, i) => {
                       const totalMinutes = (7 * 60) + (i * 15);
@@ -532,12 +421,12 @@ export default function AgendaModule() {
                     })
                   ]}
                 />
+              </FormField>
+              <FormField label="HORA FIN" required style={{ flex: 1 }}>
                 <AdminSelect
-                  label={<>HORA FIN <span style={{ color: '#ef4444' }}>*</span></>}
                   value={editingItem.endTime}
                   onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })}
                   required
-                  containerStyle={{ flex: 1 }}
                   options={[
                     ...Array.from({ length: 15 * 4 }).map((_, i) => {
                       const totalMinutes = (7 * 60) + (i * 15);
@@ -551,128 +440,146 @@ export default function AgendaModule() {
                     })
                   ]}
                 />
-              </div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              </FormField>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <FormField label="SALA / UBICACIÓN" required style={{ flex: 1 }}>
                 <AdminSelect
-                  label={<>SALA / UBICACIÓN <span style={{ color: '#ef4444' }}>*</span></>}
                   value={editingItem.room}
                   onChange={e => setEditingItem({ ...editingItem, room: e.target.value, location: e.target.value })}
                   required
-                  containerStyle={{ flex: 1 }}
                   options={rooms.map(r => ({ value: r, label: r }))}
                 />
+              </FormField>
+              <FormField label="CATEGORÍA" required style={{ flex: 1 }}>
                 <AdminSelect
-                  label={<>CATEGORÍA <span style={{ color: '#ef4444' }}>*</span></>}
                   value={editingItem.tag}
                   onChange={e => setEditingItem({ ...editingItem, tag: e.target.value })}
                   required
-                  containerStyle={{ flex: 1 }}
                   options={[
                     { value: '', label: 'Seleccionar...' },
                     ...Object.keys(categories).map(c => ({ value: c, label: c }))
                   ]}
                 />
-              </div>
+              </FormField>
+            </div>
+
+            <FormField label="PONENTE (Opcional)">
               <AdminSelect
-                label="PONENTE (Opcional)"
                 value={editingItem.speaker?.id || ''}
                 onChange={e => {
                   const s = speakers.find(sp => sp.id === parseInt(e.target.value));
                   setEditingItem({ ...editingItem, speaker: s });
                 }}
-                containerStyle={{ marginTop: '1rem' }}
                 options={[
                   { value: '', label: 'Sin ponente' },
                   ...speakers.map(s => ({ value: s.id.toString(), label: s.name }))
                 ]}
               />
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-                <AdminButton type="submit" style={{ flex: 1 }}>Guardar Actividad</AdminButton>
-                <AdminButton type="button" variant="secondary" onClick={() => setIsAgendaModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
-              </div>
-            </form>
-          </div>
-        </div>
+            </FormField>
+
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+              <AdminButton type="submit" style={{ flex: 1 }}>Guardar Actividad</AdminButton>
+              <AdminButton type="button" variant="secondary" onClick={() => setIsAgendaModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Speaker Modal */}
       {isSpeakerModalOpen && editingSpeaker && (
-        <div className="modal-bg open">
-          <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingSpeaker.id ? 'Editar' : 'Nuevo'} Ponente</h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
-            
-            <form onSubmit={handleSaveSpeaker} className="admin-form">
-              <div className="form-group"><label>NOMBRE <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingSpeaker.name} onChange={e => setEditingSpeaker({ ...editingSpeaker, name: e.target.value })} required /></div>
-              <div className="form-group"><label>CARGO / ROL <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingSpeaker.role} onChange={e => setEditingSpeaker({ ...editingSpeaker, role: e.target.value })} required /></div>
-              <div className="form-group"><label>BIO (Opcional)</label><textarea className="dashboard-input" value={editingSpeaker.bio} onChange={e => setEditingSpeaker({ ...editingSpeaker, bio: e.target.value })} style={{ minHeight: '100px' }} /></div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-                <AdminButton type="submit" style={{ flex: 1 }}>Guardar Ponente</AdminButton>
-                <AdminButton type="button" variant="secondary" onClick={() => setIsSpeakerModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
-              </div>
-            </form>
-          </div>
-        </div>
+        <Modal
+          isOpen={isSpeakerModalOpen}
+          onClose={() => setIsSpeakerModalOpen(false)}
+          title={`${speakers.some(s => s.id === editingSpeaker.id) ? 'Editar' : 'Nuevo'} Ponente`}
+          maxWidth="600px"
+        >
+          <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>
+            Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
+          </p>
+          <form onSubmit={handleSaveSpeaker}>
+            <FormField label="NOMBRE" required>
+              <input type="text" className="dashboard-input" value={editingSpeaker.name} onChange={e => setEditingSpeaker({ ...editingSpeaker, name: e.target.value })} required />
+            </FormField>
+            <FormField label="CARGO / ROL" required>
+              <input type="text" className="dashboard-input" value={editingSpeaker.role} onChange={e => setEditingSpeaker({ ...editingSpeaker, role: e.target.value })} required />
+            </FormField>
+            <FormField label="BIO (Opcional)">
+              <textarea className="dashboard-input" value={editingSpeaker.bio} onChange={e => setEditingSpeaker({ ...editingSpeaker, bio: e.target.value })} style={{ minHeight: '100px' }} />
+            </FormField>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+              <AdminButton type="submit" style={{ flex: 1 }}>Guardar Ponente</AdminButton>
+              <AdminButton type="button" variant="secondary" onClick={() => setIsSpeakerModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Category Modal */}
       {isCategoryModalOpen && editingCategory && (
-        <div className="modal-bg open">
-          <div className="modal" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingCategory.name ? 'Editar' : 'Nueva'} Categoría</h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
-            <form onSubmit={handleSaveCategory} className="admin-form">
-              <div className="form-group"><label>NOMBRE DE CATEGORÍA <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingCategory.name} onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })} required /></div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>COLOR TEXTO <span style={{ color: '#ef4444' }}>*</span></label>
-                  <ColorPicker
-                    selectedColor={editingCategory.style.text}
-                    onSelect={c => {
-                      const bgWithAlpha = c.startsWith('#') ? c + '26' : c;
-                      setEditingCategory({
-                        ...editingCategory,
-                        style: { ...editingCategory.style, text: c, bg: bgWithAlpha }
-                      });
-                    }}
-                  />
-                </div>
-              </div>
+        <Modal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setIsCategoryModalOpen(false)}
+          title={`${editingCategory.name ? 'Editar' : 'Nueva'} Categoría`}
+          maxWidth="450px"
+        >
+          <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>
+            Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
+          </p>
+          <form onSubmit={handleSaveCategory}>
+            <FormField label="NOMBRE DE CATEGORÍA" required>
+              <input type="text" className="dashboard-input" value={editingCategory.name} onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })} required />
+            </FormField>
+            <FormField label="COLOR TEXTO" required>
+              <ColorPicker
+                selectedColor={editingCategory.style.text}
+                onSelect={c => {
+                  const bgWithAlpha = c.startsWith('#') ? c + '26' : c;
+                  setEditingCategory({
+                    ...editingCategory,
+                    style: { ...editingCategory.style, text: c, bg: bgWithAlpha }
+                  });
+                }}
+              />
+            </FormField>
 
-              <div style={{ marginTop: '1.5rem', textAlign: 'center', padding: '1rem', background: '#f8f9fa', borderRadius: '12px' }}>
-                <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '10px', color: '#868e96', fontWeight: 700, textTransform: 'uppercase' }}>Previsualización</label>
-                <AdminBadge style={{ backgroundColor: editingCategory.style.bg, color: editingCategory.style.text, fontSize: '14px', padding: '6px 16px' }}>
-                  {editingCategory.name || 'Ejemplo'}
-                </AdminBadge>
-              </div>
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', padding: '1rem', background: '#f8f9fa', borderRadius: '12px' }}>
+              <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '10px', color: '#868e96', fontWeight: 700, textTransform: 'uppercase' }}>Previsualización</label>
+              <AdminBadge style={{ backgroundColor: editingCategory.style.bg, color: editingCategory.style.text, fontSize: '14px', padding: '6px 16px' }}>
+                {editingCategory.name || 'Ejemplo'}
+              </AdminBadge>
+            </div>
 
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                <AdminButton type="submit" style={{ flex: 1 }}>Guardar Categoría</AdminButton>
-                <AdminButton type="button" variant="secondary" onClick={() => setIsCategoryModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+              <AdminButton type="submit" style={{ flex: 1 }}>Guardar Categoría</AdminButton>
+              <AdminButton type="button" variant="secondary" onClick={() => setIsCategoryModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Room Modal */}
       {isRoomModalOpen && editingRoom && (
-        <div className="modal-bg open">
-          <div className="modal" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingRoom.oldName ? 'Editar' : 'Nueva'} Sala</h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
-            <form onSubmit={handleSaveRoom} className="admin-form">
-              <div className="form-group">
-                <label>NOMBRE DE LA SALA <span style={{ color: '#ef4444' }}>*</span></label>
-                <input type="text" className="dashboard-input" value={editingRoom.newName} onChange={e => setEditingRoom({ ...editingRoom, newName: e.target.value })} required />
-              </div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-                <AdminButton type="submit" style={{ flex: 1 }}>Guardar Sala</AdminButton>
-                <AdminButton type="button" variant="secondary" onClick={() => setIsRoomModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
-              </div>
-            </form>
-          </div>
-        </div>
+        <Modal
+          isOpen={isRoomModalOpen}
+          onClose={() => setIsRoomModalOpen(false)}
+          title={`${editingRoom.oldName ? 'Editar' : 'Nueva'} Sala`}
+          maxWidth="450px"
+        >
+          <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>
+            Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
+          </p>
+          <form onSubmit={handleSaveRoom}>
+            <FormField label="NOMBRE DE LA SALA" required>
+              <input type="text" className="dashboard-input" value={editingRoom.newName} onChange={e => setEditingRoom({ ...editingRoom, newName: e.target.value })} required />
+            </FormField>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+              <AdminButton type="submit" style={{ flex: 1 }}>Guardar Sala</AdminButton>
+              <AdminButton type="button" variant="secondary" onClick={() => setIsRoomModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
+            </div>
+          </form>
+        </Modal>
       )}
     </section>
   );

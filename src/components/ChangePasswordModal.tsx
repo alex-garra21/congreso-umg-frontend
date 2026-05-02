@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { changePassword } from '../utils/auth';
 import PasswordField from './PasswordField';
 import { Icons } from './Icons';
+import Modal from './ui/Modal';
+import Alert from './ui/Alert';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -44,73 +46,69 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-bg open" style={{ zIndex: 10001 }}>
-      <div className="modal" style={{ maxWidth: '400px', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={handleClose}>
-          <Icons.X size={20} />
-        </button>
-
-        {showSuccess ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-              <Icons.CheckCircle size={64} color="#7ed321" />
-            </div>
-            <h3 style={{ fontSize: '24px', marginBottom: '10px', fontFamily: 'Syne', fontWeight: 800 }}>¡Contraseña Cambiada!</h3>
-            <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu contraseña ha sido actualizada con éxito.</p>
-            <button className="submit-btn" onClick={handleClose}>Cerrar</button>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={showSuccess ? "¡Contraseña Cambiada!" : "Cambiar contraseña"}
+      maxWidth="400px"
+      zIndex={10001}
+    >
+      {showSuccess ? (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+            <Icons.CheckCircle size={64} color="#7ed321" />
           </div>
-        ) : (
-          <>
-            <h3 style={{ fontSize: '24px', marginBottom: '8px', fontFamily: 'Syne', fontWeight: 800 }}>Cambiar contraseña</h3>
-            <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Ingresa tu nueva contraseña a continuación.</p>
+          <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu contraseña ha sido actualizada con éxito.</p>
+          <button className="submit-btn" onClick={handleClose}>Cerrar</button>
+        </div>
+      ) : (
+        <>
+          <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Ingresa tu nueva contraseña a continuación.</p>
 
-            {error && (
-              <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
-                {error}
-              </div>
-            )}
+          {error && (
+            <Alert variant="error" style={{ marginBottom: '1.5rem' }}>
+              {error}
+            </Alert>
+          )}
 
-            <form onSubmit={handleSubmit}>
-              <PasswordField
-                label="Nueva Contraseña"
-                value={passwords.newPassword}
-                onChange={e => setPasswords({...passwords, newPassword: e.target.value})}
-                placeholder="********"
-                required
-              />
+          <form onSubmit={handleSubmit}>
+            <PasswordField
+              label="Nueva Contraseña"
+              value={passwords.newPassword}
+              onChange={e => setPasswords({...passwords, newPassword: e.target.value})}
+              placeholder="********"
+              required
+            />
 
-              <PasswordField
-                label="Confirmar Nueva Contraseña"
-                value={passwords.confirmPassword}
-                onChange={e => setPasswords({...passwords, confirmPassword: e.target.value})}
-                placeholder="********"
-                required
-                style={{ marginBottom: '2rem' }}
-              />
+            <PasswordField
+              label="Confirmar Nueva Contraseña"
+              value={passwords.confirmPassword}
+              onChange={e => setPasswords({...passwords, confirmPassword: e.target.value})}
+              placeholder="********"
+              required
+              style={{ marginBottom: '2rem' }}
+            />
 
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="submit" className="submit-btn" style={{ flex: 2 }}>Actualizar Contraseña</button>
-                <button 
-                  type="button" 
-                  className="submit-btn" 
-                  onClick={handleClose}
-                  style={{ 
-                    flex: 1, 
-                    backgroundColor: '#fff5f5', 
-                    color: '#e53e3e', 
-                    border: '1px solid #fed7d7' 
-                  }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </>
-        )}
-      </div>
-    </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button type="submit" className="submit-btn" style={{ flex: 2 }}>Actualizar</button>
+              <button 
+                type="button" 
+                className="submit-btn" 
+                onClick={handleClose}
+                style={{ 
+                  flex: 1, 
+                  backgroundColor: '#fff5f5', 
+                  color: '#e53e3e', 
+                  border: '1px solid #fed7d7' 
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </>
+      )}
+    </Modal>
   );
 }

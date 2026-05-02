@@ -6,6 +6,8 @@ import ChangePasswordModal from '../../../components/ChangePasswordModal';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showAlert } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
+import Modal from '../../../components/ui/Modal';
+import FormField from '../../../components/ui/FormField';
 
 export default function ProfileModule() {
   const { user } = useAuth();
@@ -117,54 +119,73 @@ export default function ProfileModule() {
 
         <form onSubmit={handleSave} className="profile-form">
           <div className="form-row">
-            <div className="form-group">
-              <label>NOMBRES</label>
-              <input type="text" name="nombres" value={formData.nombres} onChange={handleChange} placeholder="Nombres" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
-            </div>
-            <div className="form-group">
-              <label>APELLIDOS</label>
-              <input type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} placeholder="Apellidos" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
-            </div>
+            <FormField label="Nombres" style={{ flex: 1 }}>
+              <input 
+                type="text" 
+                name="nombres" 
+                value={formData.nombres} 
+                onChange={handleChange} 
+                placeholder="Nombres" 
+                readOnly 
+                className="dashboard-input"
+                style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} 
+              />
+            </FormField>
+            <FormField label="Apellidos" style={{ flex: 1 }}>
+              <input 
+                type="text" 
+                name="apellidos" 
+                value={formData.apellidos} 
+                onChange={handleChange} 
+                placeholder="Apellidos" 
+                readOnly 
+                className="dashboard-input"
+                style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} 
+              />
+            </FormField>
           </div>
 
           <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
-            <div className="form-group" style={{ flex: 3 }}>
-              <label>DPI</label>
-              <input type="text" name="dpi" value={formData.dpi} onChange={handleChange} placeholder="0000 00000 0000" required />
-            </div>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label>SEXO</label>
-              <select name="sexo" value={formData.sexo} onChange={handleChange} required>
-                <option value="">Selecciona una opción</option>
+            <FormField label="DPI" required style={{ flex: 3 }}>
+              <input type="text" name="dpi" value={formData.dpi} onChange={handleChange} placeholder="0000 00000 0000" required className="dashboard-input" />
+            </FormField>
+            <FormField label="Sexo" required style={{ flex: 1 }}>
+              <select name="sexo" value={formData.sexo} onChange={handleChange} required className="dashboard-input">
+                <option value="">Selección</option>
                 <option value="M">Hombre</option>
                 <option value="F">Mujer</option>
               </select>
-            </div>
+            </FormField>
           </div>
 
           <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
-            <div className="form-group" style={{ flex: 2 }}>
-              <label>CORREO ELECTRÓNICO AL QUE SE ENVIARÁN LOS DIPLOMAS</label>
-              <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@miumg.edu.gt" readOnly style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} />
-            </div>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label>TIPO DE PARTICIPANTE</label>
-              <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required>
+            <FormField label="Correo electrónico (diplomas)" style={{ flex: 2 }}>
+              <input 
+                type="email" 
+                name="correo" 
+                value={formData.correo} 
+                onChange={handleChange} 
+                placeholder="correo@miumg.edu.gt" 
+                readOnly 
+                className="dashboard-input"
+                style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} 
+              />
+            </FormField>
+            <FormField label="Tipo de participante" required style={{ flex: 1 }}>
+              <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required className="dashboard-input">
                 <option value="externo">Participante externo</option>
                 <option value="alumno">Alumno UMG</option>
               </select>
-            </div>
+            </FormField>
           </div>
 
           {formData.tipoParticipante === 'alumno' && (
             <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
-              <div className="form-group" style={{ flex: 3 }}>
-                <label>NÚMERO DE CARNET</label>
-                <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="20230001234" required />
-              </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label>CICLO</label>
-                <select name="ciclo" value={formData.ciclo} onChange={handleChange} required>
+              <FormField label="Número de carnet" required style={{ flex: 3 }}>
+                <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="20230001234" required className="dashboard-input" />
+              </FormField>
+              <FormField label="Ciclo" required style={{ flex: 1 }}>
+                <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
                   <option value="">Selección</option>
                   <option value="I">I</option>
                   <option value="II">II</option>
@@ -177,30 +198,22 @@ export default function ProfileModule() {
                   <option value="IX">IX</option>
                   <option value="X">X</option>
                 </select>
-              </div>
+              </FormField>
             </div>
           )}
 
-          <div className="form-group">
-            <label>TELÉFONO (OPCIONAL)</label>
-            <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="0000 0000" />
-          </div>
+          <FormField label="Teléfono (opcional)">
+            <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="0000 0000" className="dashboard-input" />
+          </FormField>
 
           <div className="profile-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-            <button
-              type="submit"
-              className="submit-btn"
-              style={{
-                width: 'auto',
-                padding: '12px 24px',
-              }}
-            >
+            <button type="submit" className="submit-btn" style={{ width: 'auto', padding: '12px 32px' }}>
               Guardar cambios
             </button>
             <button
               type="button"
               className="btn-ghost"
-              style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid rgba(4, 20, 90, 1)', color: '#000000ff', backgroundColor: '#fbfdffff' }}
+              style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid var(--blue)', color: 'var(--blue)', backgroundColor: 'transparent' }}
               onClick={() => setIsPasswordModalOpen(true)}
             >
               Cambiar contraseña
@@ -209,21 +222,21 @@ export default function ProfileModule() {
         </form>
       </section>
 
-      {/* Modal de Éxito */}
-      {isSuccessModalOpen && (
-        <div className="modal-bg open" style={{ zIndex: 10000 }}>
-          <div className="modal" style={{ maxWidth: '400px', textAlign: 'center', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
-            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-              <Icons.CheckCircle size={64} color="#7ed321" />
-            </div>
-            <h3 style={{ fontSize: '24px', marginBottom: '10px', fontFamily: 'Syne', fontWeight: 800 }}>¡Cambios Guardados!</h3>
-            <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu información ha sido actualizada correctamente.</p>
-            <button className="submit-btn" onClick={() => setIsSuccessModalOpen(false)}>Entendido</button>
+      <Modal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="¡Cambios Guardados!"
+        maxWidth="400px"
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+            <Icons.CheckCircle size={64} color="#7ed321" />
           </div>
+          <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu información ha sido actualizada correctamente.</p>
+          <button className="submit-btn" onClick={() => setIsSuccessModalOpen(false)}>Entendido</button>
         </div>
-      )}
+      </Modal>
 
-      {/* Modal de Cambio de Contraseña */}
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}

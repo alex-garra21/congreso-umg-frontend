@@ -6,6 +6,9 @@ import ModuleTitle from '../../../components/ModuleTitle';
 import diplomaTemplate from '../../../assets/diploma-template.png';
 import { showAlert } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
+import Modal from '../../../components/ui/Modal';
+import Alert from '../../../components/ui/Alert';
+import FormField from '../../../components/ui/FormField';
 
 export default function DiplomaModule() {
   const { user, refetchProfile } = useAuth();
@@ -62,6 +65,7 @@ export default function DiplomaModule() {
   return (
     <div className="diploma-module">
       <ModuleTitle title="Datos para diploma" />
+      
       <section className="dashboard-section diploma-container">
         <div className="diploma-header">
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '2rem' }}>
@@ -69,135 +73,77 @@ export default function DiplomaModule() {
           </p>
         </div>
 
-        {/* Warning Only Once */}
         {!isLocked && (
-          <div style={{
-            backgroundColor: '#fff5f5',
-            border: '1.5px solid #feb2b2',
-            borderRadius: '12px',
-            padding: '1rem 1.5rem',
-            marginBottom: '2rem',
-            color: '#c53030',
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center'
-          }}>
-            <Icons.AlertTriangle size={24} />
-            <p style={{ fontSize: '14px', fontWeight: 600 }}>
-              IMPORTANTE: Solo puedes modificar estos datos UNA VEZ. Una vez guardados, los campos se bloquearán permanentemente.
-            </p>
-          </div>
+          <Alert variant="error" title="ATENCIÓN">
+            IMPORTANTE: Solo puedes modificar estos datos UNA VEZ. Una vez guardados, los campos se bloquearán permanentemente.
+          </Alert>
         )}
 
-        {/* Info Box */}
-        <div style={{
-          backgroundColor: '#eef6ff',
-          border: '1px solid #cce3ff',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          marginBottom: '2rem',
-          color: '#2c5282'
-        }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '16px', marginBottom: '10px', color: '#1a365d' }}>
-            <Icons.Award size={20} /> ¿Cuándo recibirás tu diploma?
-          </h3>
-          <p style={{ fontSize: '14px', marginBottom: '1rem' }}>
-            El diploma se genera y envía automáticamente por cada taller en el que cumplas <strong>los tres requisitos</strong>:
-          </p>
-          <ul style={{ fontSize: '14px', listStyleType: 'disc', paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <Alert variant="info" title="¿Cuándo recibirás tu diploma?" icon={<Icons.Award size={20} />}>
+          <p>El diploma se genera y envía automáticamente por cada taller en el que cumplas <strong>los tres requisitos</strong>:</p>
+          <ul style={{ listStyleType: 'disc', paddingLeft: '1.2rem', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <li>Estar inscrito al Congreso 2026 con pago validado</li>
             <li>Haber seleccionado el taller específico en tu agenda</li>
             <li>Haber confirmado tu asistencia escaneando el QR durante el taller</li>
           </ul>
-        </div>
+        </Alert>
 
         <form onSubmit={handleSave} className="diploma-form" style={{ display: 'flex', gap: '3rem', alignItems: 'flex-start' }}>
-
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-            <div className="form-group">
-              <label style={{ fontSize: '12px', fontWeight: 700, color: '#4a5568', marginBottom: '8px', display: 'block' }}>
-                NOMBRE PARA EL DIPLOMA *
-              </label>
-              <input
-                type="text"
-                name="nombreDiploma"
-                value={formData.nombreDiploma}
-                onChange={handleNameChange}
-                placeholder="EJ: MARÍA ELENA GARCÍA LÓPEZ"
-                required
-                readOnly={isLocked}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  border: '1.5px solid #e2e8f0',
-                  fontSize: '16px',
-                  transition: 'all 0.2s ease',
-                  borderColor: isDiplomaNameTooLong ? '#d32f2f' : '#e2e8f0',
-                  backgroundColor: isLocked ? '#f8fafc' : '#fff',
-                  color: isLocked ? '#64748b' : 'inherit',
-                  cursor: isLocked ? 'not-allowed' : 'text'
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-                <span style={{ fontSize: '12px', color: isDiplomaNameTooLong ? '#d32f2f' : '#718096' }}>
-                  {formData.nombreDiploma.length} / 25 caracteres
-                </span>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            
+            <FormField 
+              label="Nombre para el diploma" 
+              required 
+              error={isDiplomaNameTooLong ? "El nombre es demasiado largo (máximo 25 caracteres)." : undefined}
+            >
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={formData.nombreDiploma}
+                  onChange={handleNameChange}
+                  placeholder="EJ: MARÍA ELENA GARCÍA LÓPEZ"
+                  required
+                  readOnly={isLocked}
+                  className="dashboard-input"
+                  style={{
+                    borderColor: isDiplomaNameTooLong ? '#d32f2f' : undefined,
+                    backgroundColor: isLocked ? '#f8fafc' : undefined,
+                    color: isLocked ? '#64748b' : undefined,
+                    cursor: isLocked ? 'not-allowed' : 'text'
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                  <span style={{ fontSize: '12px', color: isDiplomaNameTooLong ? '#d32f2f' : '#718096' }}>
+                    {formData.nombreDiploma.length} / 25 caracteres
+                  </span>
+                </div>
               </div>
-              {isDiplomaNameTooLong && (
-                <span style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px', display: 'block', fontWeight: 500 }}>
-                  El nombre es demasiado largo (máximo 25 caracteres).
-                </span>
-              )}
-            </div>
+            </FormField>
 
-            <div className="form-group">
-              <label style={{ fontSize: '12px', fontWeight: 700, color: '#4a5568', marginBottom: '8px', display: 'block' }}>
-                CORREO PARA RECIBIR EL DIPLOMA *
-              </label>
+            <FormField 
+              label="Correo para recibir el diploma" 
+              required
+              description="Se enviará un diploma por cada taller donde se confirme tu asistencia."
+            >
               <input
                 type="email"
-                name="correoDiploma"
                 value={formData.correoDiploma}
                 onChange={handleEmailChange}
                 placeholder="ejemplo@correo.com"
                 required
                 readOnly={isLocked}
+                className="dashboard-input"
                 style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  border: '1.5px solid #e2e8f0',
-                  fontSize: '16px',
-                  backgroundColor: isLocked ? '#f8fafc' : '#fff',
-                  color: isLocked ? '#64748b' : 'inherit',
+                  backgroundColor: isLocked ? '#f8fafc' : undefined,
+                  color: isLocked ? '#64748b' : undefined,
                   cursor: isLocked ? 'not-allowed' : 'text'
                 }}
               />
-              <p style={{ fontSize: '12px', color: '#718096', marginTop: '8px' }}>
-                Se enviará un diploma por cada taller donde se confirme tu asistencia.
-              </p>
-            </div>
+            </FormField>
 
-            <div style={{
-              backgroundColor: '#fffaf0',
-              border: '1px solid #feebc8',
-              borderRadius: '12px',
-              padding: '1.25rem',
-              color: '#7b341e',
-              display: 'flex',
-              gap: '12px',
-              alignItems: 'flex-start'
-            }}>
-              <Icons.AlertTriangle size={20} />
-              <div>
-                <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px' }}>Verifica bien tus datos</strong>
-                <p style={{ fontSize: '13px', lineHeight: '1.5' }}>
-                  Una vez emitido el diploma, el nombre <strong>no podrá modificarse</strong>. Asegúrate de que esté escrito correctamente y con las tildes correspondientes.
-                </p>
-              </div>
-            </div>
+            <Alert variant="warning" title="Verifica bien tus datos">
+              Una vez emitido el diploma, el nombre <strong>no podrá modificarse</strong>. Asegúrate de que esté escrito correctamente y con las tildes correspondientes.
+            </Alert>
 
             {!isLocked ? (
               <div className="diploma-actions" style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
@@ -258,11 +204,7 @@ export default function DiplomaModule() {
               flexDirection: 'column',
               alignItems: 'center'
             }}>
-              <img
-                src={diplomaTemplate}
-                alt="Template de Diploma"
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
+              <img src={diplomaTemplate} alt="Template de Diploma" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
 
               <div style={{
                 position: 'absolute',
@@ -298,23 +240,25 @@ export default function DiplomaModule() {
               * Esta imagen es puramente ilustrativa y no representa el diseño final del diploma oficial.
             </p>
           </div>
-
         </form>
       </section>
 
-      {/* Modal de Éxito */}
-      {isSuccessModalOpen && (
-        <div className="modal-bg open" style={{ zIndex: 10000 }}>
-          <div className="modal" style={{ maxWidth: '400px', textAlign: 'center', padding: '2.5rem' }} onClick={e => e.stopPropagation()}>
-            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-              <Icons.CheckCircle size={64} color="#7ed321" />
-            </div>
-            <h3 style={{ fontSize: '24px', marginBottom: '10px', fontFamily: 'Syne', fontWeight: 800 }}>¡Datos bloqueados!</h3>
-            <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tus datos para diplomas han sido guardados y no podrán ser editados nuevamente.</p>
-            <button className="submit-btn" onClick={() => setIsSuccessModalOpen(false)}>Entendido</button>
+      <Modal 
+        isOpen={isSuccessModalOpen} 
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="¡Datos bloqueados!"
+        maxWidth="400px"
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+            <Icons.CheckCircle size={64} color="#7ed321" />
           </div>
+          <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>
+            Tus datos para diplomas han sido guardados y no podrán ser editados nuevamente.
+          </p>
+          <button className="submit-btn" onClick={() => setIsSuccessModalOpen(false)}>Entendido</button>
         </div>
-      )}
+      </Modal>
 
       {/* Botón regresar al inicio */}
       <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>

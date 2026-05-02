@@ -8,6 +8,8 @@ import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/en
 import type { AgendaItem } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
+import Modal from '../../../components/ui/Modal';
+import Alert from '../../../components/ui/Alert';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
@@ -187,25 +189,15 @@ export default function WorkshopsModule() {
       <ModuleTitle title="Inscripción de Talleres" />
 
       {!isPaid && (
-        <div className="alert-banner warning">
-          <div className="alert-icon">
-            <Icons.AlertTriangle size={24} />
-          </div>
-          <div className="alert-text">
-            <strong>Pago pendiente</strong>. Valida tu pago para inscribirte. No puedes seleccionar talleres con traslape de horario.
-          </div>
-        </div>
+        <Alert variant="warning" title="Pago pendiente">
+          Valida tu pago para inscribirte. No puedes seleccionar talleres con traslape de horario.
+        </Alert>
       )}
 
       {isConfirmed && (
-        <div className="alert-banner success">
-          <div className="alert-icon">
-            <Icons.CheckCircle size={24} />
-          </div>
-          <div className="alert-text">
-            <strong>Talleres confirmados</strong>. Tu selección ha sido guardada.
-          </div>
-        </div>
+        <Alert variant="success" title="Talleres confirmados">
+          Tu selección ha sido guardada.
+        </Alert>
       )}
 
       <div className={`calendar-container ${isConfirmed ? 'confirmed' : ''}`}>
@@ -294,18 +286,33 @@ export default function WorkshopsModule() {
         );
       })()}
 
-      {showSuccessModal && (
-        <div className="modal-bg open">
-          <div className="modal success-modal" onClick={e => e.stopPropagation()}>
-            <div className="success-icon">
-              <Icons.Check size={32} strokeWidth={3} />
-            </div>
-            <h3>¡Inscripción Exitosa!</h3>
-            <p>Tus talleres han sido registrados. Puedes ver tu horario en la sección de inicio.</p>
-            <button className="btn-solid" onClick={() => setShowSuccessModal(false)}>Aceptar</button>
+      <Modal 
+        isOpen={showSuccessModal} 
+        onClose={() => setShowSuccessModal(false)}
+        title="¡Inscripción Exitosa!"
+        maxWidth="400px"
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div className="success-icon" style={{ 
+            width: '64px', 
+            height: '64px', 
+            background: '#22c55e', 
+            color: 'white', 
+            borderRadius: '50%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            margin: '0 auto 1.5rem',
+            boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+          }}>
+            <Icons.Check size={32} strokeWidth={3} />
           </div>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+            Tus talleres han sido registrados. Puedes ver tu horario en la sección de inicio.
+          </p>
+          <button className="btn-solid" onClick={() => setShowSuccessModal(false)}>Aceptar</button>
         </div>
-      )}
+      </Modal>
 
       {/* Botón regresar al inicio */}
       <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
@@ -453,23 +460,6 @@ export default function WorkshopsModule() {
           transition: all 0.3s;
         }
         .btn-edit:hover { background: rgba(34, 139, 230, 0.05); }
-
-        .alert-banner { display: flex; gap: 1rem; padding: 1.25rem; border-radius: 16px; margin-bottom: 2rem; align-items: center; }
-        .alert-banner.warning { background: #fff9db; border: 1px solid #ffe066; color: #856404; }
-        .alert-banner.success { background: #ebfbee; border: 1px solid #c3fae8; color: #087f5b; }
-
-        .success-icon {
-          width: 64px;
-          height: 64px;
-          background: #22c55e;
-          color: white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1.5rem;
-          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-        }
 
         @media (max-width: 768px) {
           .calendar-container { padding: 1rem; border-radius: 0; margin: 0 -1.5rem 2rem; }
