@@ -20,7 +20,7 @@ export default function AsistenciaInfo() {
         <div style={{ display: 'grid', gap: '2rem' }}>
           <div className="speaker-card" style={{ padding: '2.5rem', display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{
-              background: 'var(--blue-light)',
+              background: 'var(--accent-light)',
               width: '80px',
               height: '80px',
               borderRadius: '20px',

@@ -58,14 +58,11 @@ const Alert: React.FC<AlertProps> = ({
     <div 
       className={`alert-component ${variant} ${className}`}
       style={{
-        backgroundColor: config.bg,
-        border: `1px solid ${config.border}`,
         borderRadius: '12px',
         padding: '1.25rem',
         display: 'flex',
         gap: '12px',
         alignItems: 'flex-start',
-        color: config.text,
         marginBottom: '1.5rem',
         ...style
       }}
@@ -77,11 +74,10 @@ const Alert: React.FC<AlertProps> = ({
       )}
       <div style={{ flex: 1 }}>
         {title && (
-          <h4 style={{ 
+          <h4 className="alert-title" style={{ 
             fontSize: '15px', 
             fontWeight: 700, 
             marginBottom: '4px', 
-            color: config.titleColor,
             margin: 0
           }}>
             {title}

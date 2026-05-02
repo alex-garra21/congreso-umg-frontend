@@ -57,13 +57,13 @@ const StatusCard: React.FC<StatusCardProps> = ({
 
       <style>{`
         .status-card-reusable {
-          background: #ffffff;
-          border: 1px solid #e9ecef;
-          border-radius: 16px;
+          background: var(--bg-card);
+          border: 1px solid var(--border-soft);
+          border-radius: var(--radius-lg);
           padding: 1.5rem;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+          box-shadow: var(--shadow-sm);
           transition: all 0.2s ease;
           display: flex;
           flex-direction: column;
@@ -74,8 +74,8 @@ const StatusCard: React.FC<StatusCardProps> = ({
         }
         .status-card-reusable.clickable:hover {
           transform: translateY(-4px);
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-          border-color: #dee2e6;
+          box-shadow: var(--shadow-md);
+          border-color: var(--border-med);
         }
         .card-accent {
           position: absolute;
@@ -91,14 +91,14 @@ const StatusCard: React.FC<StatusCardProps> = ({
           margin-bottom: 8px;
         }
         .card-label {
-          color: #495057;
+          color: var(--text-secondary);
           font-weight: 700;
           font-size: 11px;
           letter-spacing: 0.05em;
           text-transform: uppercase;
         }
         .card-icon {
-          color: #adb5bd;
+          color: var(--text-muted);
           display: flex;
           align-items: center;
         }
@@ -111,14 +111,15 @@ const StatusCard: React.FC<StatusCardProps> = ({
           margin: 8px 0;
         }
         .card-number {
+          font-family: 'Syne', sans-serif;
           font-size: 32px;
           font-weight: 800;
-          color: #212529;
+          color: var(--text-primary);
           line-height: 1;
           margin: 8px 0;
         }
         .card-sub {
-          color: #868e96;
+          color: var(--text-secondary);
           font-size: 13px;
           line-height: 1.4;
           margin-top: auto;
@@ -126,8 +127,8 @@ const StatusCard: React.FC<StatusCardProps> = ({
         .card-footer-link {
           margin-top: 12px;
           font-size: 12px;
-          font-weight: 600;
-          color: #228be6;
+          font-weight: 700;
+          color: var(--accent-primary);
           opacity: 0.8;
           transition: opacity 0.2s;
         }

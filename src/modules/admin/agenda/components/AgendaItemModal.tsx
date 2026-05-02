@@ -51,8 +51,8 @@ export default function AgendaItemModal({
       title={`${isNew ? 'Nueva' : 'Editar'} Actividad`}
       maxWidth="600px"
     >
-      <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>
-        Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
+      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+        Los campos marcados con <span style={{ color: 'var(--status-error)' }}>*</span> son obligatorios.
       </p>
       <form onSubmit={handleSubmit}>
         <FormField label="TÍTULO DE LA ACTIVIDAD" required>

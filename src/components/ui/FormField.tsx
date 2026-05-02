@@ -28,7 +28,7 @@ const FormField: React.FC<FormFieldProps> = ({
         textTransform: 'uppercase',
         letterSpacing: '0.05em'
       }}>
-        {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
+        {label} {required && <span style={{ color: 'var(--status-error)' }}>*</span>}
       </label>
       
       {children}
@@ -36,7 +36,7 @@ const FormField: React.FC<FormFieldProps> = ({
       {description && !error && (
         <p style={{ 
           fontSize: '12px', 
-          color: '#718096', 
+          color: 'var(--text-secondary)', 
           marginTop: '8px',
           lineHeight: '1.4'
         }}>
@@ -46,7 +46,7 @@ const FormField: React.FC<FormFieldProps> = ({
 
       {error && (
         <span style={{ 
-          color: '#d32f2f', 
+          color: 'var(--status-error)', 
           fontSize: '12px', 
           marginTop: '4px', 
           display: 'block', 

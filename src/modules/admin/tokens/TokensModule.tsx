@@ -207,7 +207,7 @@ export default function TokensModule() {
           {currentTokensOnPage.map(t => (
             <tr key={t.code}>
               <td><input type="checkbox" checked={selectedTokens.includes(t.code)} onChange={() => handleSelectToken(t.code)} /></td>
-              <td style={{ fontWeight: 700, color: 'var(--blue)' }}>{t.code}</td>
+              <td style={{ fontWeight: 700, color: 'var(--accent-primary)' }}>{t.code}</td>
               <td><AdminBadge variant={t.used ? "danger" : "success"} dot>{t.used ? "Utilizado" : "Disponible"}</AdminBadge></td>
               <td>{t.usedByName || '-'}</td>
               <td>{t.usedBy || '-'}</td>

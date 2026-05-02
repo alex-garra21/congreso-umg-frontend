@@ -148,7 +148,6 @@ export default function ProfileModule() {
                 placeholder="Nombres" 
                 readOnly 
                 className="dashboard-input"
-                style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border-soft)', cursor: 'not-allowed' }} 
               />
             </FormField>
             <FormField label="Apellidos" style={{ flex: 1 }}>
@@ -160,7 +159,6 @@ export default function ProfileModule() {
                 placeholder="Apellidos" 
                 readOnly 
                 className="dashboard-input"
-                style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border-soft)', cursor: 'not-allowed' }} 
               />
             </FormField>
           </div>
@@ -186,7 +184,6 @@ export default function ProfileModule() {
                 value={formData.correo} 
                 readOnly 
                 className="dashboard-input"
-                style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border-soft)', cursor: 'not-allowed' }} 
               />
             </FormField>
             <FormField label="Tipo de participante" required style={{ flex: 1 }}>
@@ -233,7 +230,7 @@ export default function ProfileModule() {
             <button
               type="button"
               className="btn-ghost"
-              style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid var(--blue)', color: 'var(--blue)', backgroundColor: 'transparent' }}
+              style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid var(--accent-primary)', color: 'var(--accent-primary)', backgroundColor: 'transparent' }}
               onClick={() => setIsPasswordModalOpen(true)}
             >
               Cambiar contraseña
@@ -244,7 +241,7 @@ export default function ProfileModule() {
       
       {/* Botón regresar al inicio */}
       <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
-        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
+        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--accent-primary)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
           Ir al Inicio
         </button>
       </div>
@@ -257,7 +254,7 @@ export default function ProfileModule() {
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-            <Icons.CheckCircle size={64} color="#7ed321" />
+            <Icons.CheckCircle size={64} color="var(--status-success)" />
           </div>
           <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu información ha sido actualizada correctamente.</p>
           <button className="submit-btn" onClick={() => setIsSuccessModalOpen(false)}>Entendido</button>

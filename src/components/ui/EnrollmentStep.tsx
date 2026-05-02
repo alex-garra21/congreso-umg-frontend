@@ -39,102 +39,112 @@ const EnrollmentStep: React.FC<EnrollmentStepProps> = ({
           align-items: center;
           gap: 1.5rem;
           padding: 1.25rem;
-          background: #f8f9fa;
-          border-radius: 12px;
+          background: var(--bg-card);
+          border-radius: var(--radius-lg);
           margin-bottom: 1rem;
           transition: all 0.2s ease;
-          border-left: 4px solid transparent;
+          border: 1px solid var(--border-soft);
+          border-left: 4px solid var(--border-med);
         }
         .enrollment-step-item.clickable {
           cursor: pointer;
         }
         .enrollment-step-item.clickable:hover {
-          background: #ffffff;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
           transform: translateX(4px);
-          border-color: #e9ecef;
+          border-color: var(--accent-primary);
+          box-shadow: var(--shadow-sm);
         }
+        
         .enrollment-step-item.completed {
-          background: #f0fdf4;
-          border-left-color: #22c55e;
+          border-left-color: var(--status-success);
+          background: rgba(16, 185, 129, 0.05);
         }
         .enrollment-step-item.in-progress {
-          background: #fffbeb;
-          border-left-color: #f59e0b;
+          border-left-color: var(--status-pending);
+          background: rgba(245, 158, 11, 0.05);
         }
         .enrollment-step-item.pending {
-          background: #fef2f2;
-          border-left-color: #ef4444;
+          border-left-color: var(--status-error);
+          background: rgba(239, 68, 68, 0.05);
         }
 
         .step-check, .step-icon {
           width: 40px;
           height: 40px;
-          border-radius: 50%;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          transition: all 0.2s ease;
         }
         .step-check {
-          background: #22c55e;
+          background: var(--status-success);
           color: white;
+          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
         }
         .step-icon {
-          background: #e9ecef;
-          color: #adb5bd;
+          background: var(--accent-light);
+          color: var(--text-muted);
         }
         .in-progress .step-icon {
-          background: #f59e0b;
+          background: var(--status-pending);
           color: white;
+          box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
         }
         .pending .step-icon {
-          background: #ef4444;
+          background: var(--status-error);
           color: white;
+          box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
         }
 
         .step-check svg, .step-icon svg {
           width: 20px;
           height: 20px;
+          stroke-width: 2.5;
         }
 
         .step-content {
           flex: 1;
         }
         .step-content h3 {
-          font-size: 16px;
+          margin: 0 0 4px 0;
+          font-size: 15px;
           font-weight: 700;
-          margin-bottom: 2px;
-          color: #212529;
+          color: var(--text-primary);
+          font-family: 'Syne', sans-serif;
         }
         .step-content p {
+          margin: 0;
           font-size: 13px;
-          color: #6b7280;
+          color: var(--text-secondary);
+          line-height: 1.4;
         }
 
         .step-badge-reusable {
           padding: 4px 10px;
           border-radius: 6px;
-          font-size: 11px;
-          font-weight: 700;
+          font-size: 10px;
+          font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 0.02em;
+          letter-spacing: 0.5px;
         }
         .step-badge-reusable.success {
-          background: #dcfce7;
-          color: #166534;
+          background: rgba(16, 185, 129, 0.15);
+          color: var(--status-success);
         }
         .step-badge-reusable.warning {
-          background: #fef3c7;
-          color: #92400e;
+          background: rgba(245, 158, 11, 0.15);
+          color: var(--status-pending);
         }
         .step-badge-reusable.danger {
-          background: #fee2e2;
-          color: #991b1b;
+          background: rgba(239, 68, 68, 0.15);
+          color: var(--status-error);
         }
         .step-badge-reusable.neutral {
-          background: #f3f4f6;
-          color: #374151;
+          background: var(--accent-light);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-soft);
         }
       `}</style>
     </div>

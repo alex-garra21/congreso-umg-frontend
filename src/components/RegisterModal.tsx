@@ -288,7 +288,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           </form>
 
           <p className="switch-link" style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            ¿Ya tienes cuenta? <span onClick={handleSwitch} style={{ cursor: 'pointer', color: 'var(--blue)', fontWeight: 700 }}>Inicia sesión aquí</span>
+            ¿Ya tienes cuenta? <span onClick={handleSwitch} style={{ cursor: 'pointer', color: 'var(--accent-primary)', fontWeight: 700 }}>Inicia sesión aquí</span>
           </p>
         </>
       )}

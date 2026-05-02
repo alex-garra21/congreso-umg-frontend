@@ -77,8 +77,8 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
           width: '100%',
           padding: '12px 16px',
           fontSize: '14px',
-          background: 'white',
-          border: isOpen ? '1.5px solid var(--blue)' : '1.5px solid #e9ecef',
+          background: 'var(--bg-card)',
+          border: isOpen ? '1.5px solid var(--accent-primary)' : '1.5px solid var(--border-soft)',
           borderRadius: '12px',
           color: selectedOption ? 'var(--text-primary)' : 'var(--text-secondary)',
           cursor: 'pointer',
@@ -103,7 +103,7 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
         <div style={{ 
           transition: 'transform 0.3s ease',
           transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-          color: isOpen ? 'var(--blue)' : '#adb5bd',
+          color: isOpen ? 'var(--accent-primary)' : 'var(--text-muted)',
           display: 'flex',
           alignItems: 'center'
         }}>
@@ -117,10 +117,10 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
           top: 'calc(100% + 8px)',
           left: 0,
           right: 0,
-          background: 'white',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
-          boxShadow: '0 15px 35px -5px rgba(0, 0, 0, 0.15), 0 10px 15px -10px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #f1f3f5',
+          boxShadow: 'var(--shadow-lg)',
+          border: '1px solid var(--border-soft)',
           zIndex: 1000,
           overflowY: 'auto',
           maxHeight: '250px',
@@ -139,8 +139,8 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
                 borderRadius: '8px',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
-                background: value?.toString() === opt.value.toString() ? '#f1f7ff' : 'transparent',
-                color: value?.toString() === opt.value.toString() ? 'var(--blue)' : 'var(--text-primary)',
+                background: value?.toString() === opt.value.toString() ? 'rgba(24, 95, 165, 0.1)' : 'transparent',
+                color: value?.toString() === opt.value.toString() ? 'var(--accent-primary)' : 'var(--text-primary)',
                 fontWeight: value?.toString() === opt.value.toString() ? 600 : 400,
                 display: 'flex',
                 alignItems: 'center',
@@ -163,8 +163,8 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
           to { opacity: 1; transform: translateY(0); }
         }
         .admin-select-option:hover {
-          background: #f8f9fa !important;
-          color: var(--blue) !important;
+          background: var(--bg-app) !important;
+          color: var(--accent-primary) !important;
           padding-left: 16px !important;
         }
         .admin-select-option:active {

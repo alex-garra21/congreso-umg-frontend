@@ -34,7 +34,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         gridTemplateRows: `60px repeat(${HOURS.length * 2}, 40px)` 
       }}>
         {/* Encabezados */}
-        <div className="grid-header time-label" style={{ gridRow: 1, gridColumn: 1, background: '#f8fafc', color: '#64748b' }}>HORA</div>
+        <div className="grid-header time-label" style={{ gridRow: 1, gridColumn: 1, background: 'var(--bg-app)', color: 'var(--text-secondary)' }}>HORA</div>
         {rooms.map((room, idx) => {
           const colorTheme = roomColors[idx % roomColors.length];
           return (

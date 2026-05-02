@@ -114,7 +114,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
         <>
           {/* Perfil de Usuario Verificado */}
           <div style={{ 
-            background: 'var(--blue-light)', 
+            background: 'var(--accent-light)', 
             padding: '1rem', 
             borderRadius: '12px', 
             marginBottom: '1.5rem',
@@ -125,7 +125,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
           }}>
             {isLoadingProfile ? (
               <div style={{ height: '40px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '12px', color: 'var(--blue)' }}>Verificando cuenta...</span>
+                <span style={{ fontSize: '12px', color: 'var(--accent-primary)' }}>Verificando cuenta...</span>
               </div>
             ) : (
               <>
@@ -133,7 +133,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
                   width: '48px', 
                   height: '48px', 
                   borderRadius: '50%', 
-                  background: 'var(--blue)', 
+                  background: 'var(--accent-primary)', 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
@@ -150,7 +150,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
                   )}
                 </div>
                 <div style={{ overflow: 'hidden' }}>
-                  <h4 style={{ margin: 0, fontSize: '14px', fontFamily: 'Syne', color: 'var(--blue)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <h4 style={{ margin: 0, fontSize: '14px', fontFamily: 'Syne', color: 'var(--accent-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {userProfile?.name || 'Usuario'}
                   </h4>
                   <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

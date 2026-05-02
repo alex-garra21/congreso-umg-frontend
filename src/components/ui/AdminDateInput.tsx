@@ -45,8 +45,8 @@ const AdminDateInput: React.FC<AdminDateInputProps> = ({
           width: '100%',
           padding: '11px 16px',
           fontSize: '14px',
-          background: 'white',
-          border: '1.5px solid #e9ecef',
+          background: 'var(--bg-card)',
+          border: '1.5px solid var(--border-soft)',
           borderRadius: '12px',
           color: 'var(--text-primary)',
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -55,11 +55,11 @@ const AdminDateInput: React.FC<AdminDateInputProps> = ({
           outline: 'none'
         }}
         onFocus={(e) => {
-          e.currentTarget.style.border = '1.5px solid var(--blue)';
+          e.currentTarget.style.border = '1.5px solid var(--accent-primary)';
           e.currentTarget.style.boxShadow = '0 0 0 4px rgba(24, 95, 165, 0.1)';
         }}
         onBlur={(e) => {
-          e.currentTarget.style.border = '1.5px solid #e9ecef';
+          e.currentTarget.style.border = '1.5px solid var(--border-soft)';
           e.currentTarget.style.boxShadow = 'none';
         }}
       />

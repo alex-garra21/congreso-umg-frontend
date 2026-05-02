@@ -99,10 +99,10 @@ export default function AvatarUpload({
           height: '120px',
           borderRadius: '50%',
           cursor: 'pointer',
-          border: '4px solid #fff',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          border: '4px solid var(--bg-card)',
+          boxShadow: 'var(--shadow-md)',
           transition: 'transform 0.2s ease',
-          backgroundColor: '#f1f5f9',
+          backgroundColor: 'var(--accent-light)',
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
@@ -121,7 +121,7 @@ export default function AvatarUpload({
           <span style={{ 
             fontSize: '36px', 
             fontWeight: 800, 
-            color: 'var(--blue)', 
+            color: 'var(--accent-primary)', 
             fontFamily: 'Syne' 
           }}>
             {initials}
@@ -153,7 +153,7 @@ export default function AvatarUpload({
           onClick={triggerUpload}
           style={{ 
             fontSize: '11px', 
-            color: 'var(--blue)', 
+            color: 'var(--accent-primary)', 
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
@@ -162,11 +162,11 @@ export default function AvatarUpload({
             display: 'inline-block'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--blue-dark)';
+            e.currentTarget.style.color = 'var(--accent-dark)';
             e.currentTarget.style.transform = 'scale(1.05)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'var(--blue)';
+            e.currentTarget.style.color = 'var(--accent-primary)';
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >

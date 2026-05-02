@@ -85,7 +85,7 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
             <button 
               className="ghost-btn" 
               onClick={onClose}
-              style={{ width: '100%', border: 'none', background: 'transparent', color: 'var(--blue)', fontWeight: 700, cursor: 'pointer' }}
+              style={{ width: '100%', border: 'none', background: 'transparent', color: 'var(--accent-primary)', fontWeight: 700, cursor: 'pointer' }}
             >
               Cerrar y revisar mi correo
             </button>
@@ -103,7 +103,7 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
 
             <form className="modal-form" onSubmit={handleSendCode}>
               <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--blue)', marginBottom: '8px', display: 'block' }}>CORREO ELECTRÓNICO</label>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent-primary)', marginBottom: '8px', display: 'block' }}>CORREO ELECTRÓNICO</label>
                 <input 
                   type="email" 
                   className="dashboard-input"

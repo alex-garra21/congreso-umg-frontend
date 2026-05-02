@@ -16,64 +16,7 @@ const AdminButton: React.FC<AdminButtonProps> = ({
   ...props 
 }) => {
   const getVariantStyles = () => {
-    switch (variant) {
-      case 'primary': 
-        return { 
-          background: 'var(--blue)', 
-          color: 'white', 
-          border: 'none',
-          boxShadow: '0 4px 12px rgba(24, 95, 165, 0.2)'
-        };
-      case 'secondary': 
-        return { 
-          background: 'rgba(0, 0, 0, 0.05)', 
-          color: 'var(--text-primary)', 
-          border: 'none' 
-        };
-      case 'info': 
-        return { 
-          background: '#e7f5ff', 
-          color: '#1971c2', 
-          border: 'none' 
-        };
-      case 'accent': 
-        return { 
-          background: '#f3f0ff', 
-          color: '#5f3dc4', 
-          border: 'none' 
-        };
-      case 'warning': 
-        return { 
-          background: '#fff9db', 
-          color: '#f08c00', 
-          border: 'none' 
-        };
-      case 'success': 
-        return { 
-          background: '#ebfbee', 
-          color: '#2b8a3e', 
-          border: 'none' 
-        };
-      case 'danger': 
-        return { 
-          background: '#fff5f5', 
-          color: '#e03131', 
-          border: 'none' 
-        };
-      case 'outline': 
-        return { 
-          background: 'transparent', 
-          color: 'var(--blue)', 
-          border: '1.5px solid rgba(24, 95, 165, 0.3)' 
-        };
-      case 'ghost': 
-        return { 
-          background: 'transparent', 
-          color: 'var(--text-secondary)', 
-          border: 'none' 
-        };
-      default: return {};
-    }
+    return {}; // Variant styles are now handled by CSS classes (.admin-btn-variant)
   };
 
   const getSizeStyles = () => {
@@ -104,8 +47,8 @@ const AdminButton: React.FC<AdminButtonProps> = ({
 
   return (
     <button 
-      style={internalStyle} 
-      className={`admin-btn-hover ${className}`} 
+      className={`admin-btn admin-btn-${variant} ${className}`}
+      style={{ ...internalStyle, ...customStyle }}
       {...props}
     >
       {icon && <span className="btn-icon">{icon}</span>}

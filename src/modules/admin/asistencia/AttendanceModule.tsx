@@ -201,7 +201,7 @@ export default function AttendanceModule() {
           color: '#475569',
           lineHeight: 1.5
         }}>
-          La asistencia se cerrará a las: <strong style={{ color: 'var(--blue)' }}>
+          La asistencia se cerrará a las: <strong style={{ color: 'var(--accent-primary)' }}>
             {(() => {
               if (!graceWorkshop) return '';
               const total = (tempGraceHours * 60) + tempGraceMinutes;

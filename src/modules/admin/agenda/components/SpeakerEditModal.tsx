@@ -72,7 +72,7 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
           />
         </FormField>
 
-        <h4 style={{ fontSize: '14px', fontWeight: 800, margin: '2rem 0 1rem', fontFamily: 'Syne', color: 'var(--blue)' }}>Redes Sociales</h4>
+        <h4 style={{ fontSize: '14px', fontWeight: 800, margin: '2rem 0 1rem', fontFamily: 'Syne', color: 'var(--accent-primary)' }}>Redes Sociales</h4>
         
         <div style={{ background: '#f8f9fa', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border-soft)' }}>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
@@ -123,26 +123,26 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {editingSpeaker.socialLinks && Object.entries(editingSpeaker.socialLinks).map(([type, url]) => (
               <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fff', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-soft)' }}>
-                <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--blue-light)', borderRadius: '6px' }}>
-                  {type === 'facebook' && <Icons.Facebook size={16} color="var(--blue)" />}
-                  {type === 'instagram' && <Icons.Instagram size={16} color="var(--blue)" />}
-                  {type === 'tiktok' && <Icons.TikTok size={16} color="var(--blue)" />}
-                  {type === 'x' && <Icons.TwitterX size={16} color="var(--blue)" />}
-                  {type === 'linkedin' && <Icons.LinkedIn size={16} color="var(--blue)" />}
-                  {type === 'youtube' && <Icons.Youtube size={16} color="var(--blue)" />}
-                  {type === 'twitch' && <Icons.Twitch size={16} color="var(--blue)" />}
-                  {type === 'pinterest' && <Icons.Pinterest size={16} color="var(--blue)" />}
-                  {type === 'snapchat' && <Icons.Snapchat size={16} color="var(--blue)" />}
-                  {type === 'whatsapp' && <Icons.WhatsApp size={16} color="var(--blue)" />}
-                  {type === 'reddit' && <Icons.Reddit size={16} color="var(--blue)" />}
-                  {type === 'discord' && <Icons.Discord size={16} color="var(--blue)" />}
-                  {type === 'behance' && <Icons.Behance size={16} color="var(--blue)" />}
-                  {type === 'dribbble' && <Icons.Dribbble size={16} color="var(--blue)" />}
-                  {type === 'telegram' && <Icons.Telegram size={16} color="var(--blue)" />}
-                  {type === 'threads' && <Icons.Threads size={16} color="var(--blue)" />}
+                <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-light)', borderRadius: '6px' }}>
+                  {type === 'facebook' && <Icons.Facebook size={16} color="var(--accent-primary)" />}
+                  {type === 'instagram' && <Icons.Instagram size={16} color="var(--accent-primary)" />}
+                  {type === 'tiktok' && <Icons.TikTok size={16} color="var(--accent-primary)" />}
+                  {type === 'x' && <Icons.TwitterX size={16} color="var(--accent-primary)" />}
+                  {type === 'linkedin' && <Icons.LinkedIn size={16} color="var(--accent-primary)" />}
+                  {type === 'youtube' && <Icons.Youtube size={16} color="var(--accent-primary)" />}
+                  {type === 'twitch' && <Icons.Twitch size={16} color="var(--accent-primary)" />}
+                  {type === 'pinterest' && <Icons.Pinterest size={16} color="var(--accent-primary)" />}
+                  {type === 'snapchat' && <Icons.Snapchat size={16} color="var(--accent-primary)" />}
+                  {type === 'whatsapp' && <Icons.WhatsApp size={16} color="var(--accent-primary)" />}
+                  {type === 'reddit' && <Icons.Reddit size={16} color="var(--accent-primary)" />}
+                  {type === 'discord' && <Icons.Discord size={16} color="var(--accent-primary)" />}
+                  {type === 'behance' && <Icons.Behance size={16} color="var(--accent-primary)" />}
+                  {type === 'dribbble' && <Icons.Dribbble size={16} color="var(--accent-primary)" />}
+                  {type === 'telegram' && <Icons.Telegram size={16} color="var(--accent-primary)" />}
+                  {type === 'threads' && <Icons.Threads size={16} color="var(--accent-primary)" />}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: '2px' }}>{type}</span>
+                  <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--accent-primary)', marginBottom: '2px' }}>{type}</span>
                   <input 
                     type="url" 
                     className="dashboard-input" 

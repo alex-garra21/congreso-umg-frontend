@@ -105,7 +105,7 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
 
         {speakerWorkshops.length > 0 && (
           <div className="speaker-workshops-section">
-            <h4 style={{ fontSize: '18px', marginBottom: '15px', fontFamily: 'Syne', fontWeight: 800, color: 'var(--blue)' }}>
+            <h4 style={{ fontSize: '18px', marginBottom: '15px', fontFamily: 'Syne', fontWeight: 800, color: 'var(--accent-primary)' }}>
               Talleres que impartirá
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

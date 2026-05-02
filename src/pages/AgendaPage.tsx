@@ -59,7 +59,7 @@ export default function AgendaPage() {
               key={periodo}
               className="btn-solid"
               style={{
-                background: periodoSeleccionado === periodo ? 'var(--blue)' : 'var(--bg-secondary)',
+                background: periodoSeleccionado === periodo ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                 color: periodoSeleccionado === periodo ? 'white' : 'var(--text-primary)',
                 border: periodoSeleccionado !== periodo ? '1px solid var(--border-soft)' : 'none',
                 minWidth: '150px'

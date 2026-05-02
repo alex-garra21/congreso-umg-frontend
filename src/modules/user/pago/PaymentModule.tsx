@@ -47,7 +47,7 @@ export default function PaymentModule() {
           <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2.5rem', fontSize: '16px', lineHeight: '1.6' }}>
             Tu inscripción ha sido validada exitosamente. Ya puedes disfrutar de todos los beneficios del congreso y elegir tus talleres.
           </p>
-          <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none' }} onClick={() => navigate('/dashboard')}>
+          <button className="btn-lg btn-lg-primary" style={{ background: 'var(--accent-primary)', border: 'none' }} onClick={() => navigate('/dashboard')}>
             Ir al Inicio
           </button>
         </section>
@@ -80,7 +80,7 @@ export default function PaymentModule() {
           <div className="payment-actions" style={{ marginTop: '2.5rem' }}>
             <button
               className="btn-lg btn-lg-primary"
-              style={{ background: 'var(--blue)', border: 'none' }}
+              style={{ background: 'var(--accent-primary)', border: 'none' }}
               onClick={handleSendPayment}
             >
               Validar código

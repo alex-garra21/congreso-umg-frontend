@@ -45,8 +45,8 @@ const AdminTabs: React.FC<AdminTabsProps> = ({
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             border: 'none',
             background: activeTab === tab.id ? 'var(--bg-primary)' : 'transparent',
-            color: activeTab === tab.id ? 'var(--blue)' : 'var(--text-secondary)',
-            boxShadow: activeTab === tab.id ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+            color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
+            boxShadow: activeTab === tab.id ? 'var(--shadow-sm)' : 'none',
             fontFamily: "'Space Grotesk', sans-serif"
           }}
         >

@@ -242,8 +242,8 @@ export default function WorkshopsModule() {
           <div className="confirm-section-new">
             {isConfirmed ? (
               modificationsCount >= 1 ? (
-                <div style={{ textAlign: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef', color: '#495057' }}>
-                  <p style={{ margin: 0, fontWeight: 500 }}>✔️ Ya has utilizado tu única oportunidad para modificar talleres. Tu selección es definitiva.</p>
+                <div style={{ textAlign: 'center', margin: '2rem auto', padding: '1.5rem', backgroundColor: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-soft)', color: 'var(--text-secondary)', maxWidth: '600px' }}>
+                  <p style={{ margin: 0, fontWeight: 600, fontSize: '15px' }}>✔️ Ya has utilizado tu única oportunidad para modificar talleres. Tu selección es definitiva.</p>
                 </div>
               ) : (
                 <button className="btn-edit" onClick={handleEdit}>Modificar selección (1 cambio disponible)</button>
@@ -291,19 +291,19 @@ export default function WorkshopsModule() {
 
       {/* Botón regresar al inicio */}
       <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
-        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
+        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--accent-primary)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
           Ir al Inicio
         </button>
       </div>
 
       <style>{`
         .calendar-container {
-          background: #fff;
+          background: var(--bg-card);
           border-radius: 24px;
           padding: 2rem;
           border: 1px solid var(--border-soft);
           overflow-x: auto;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+          box-shadow: var(--shadow-md);
           margin-bottom: 2rem;
         }
 
@@ -320,14 +320,14 @@ export default function WorkshopsModule() {
           font-family: 'Syne', sans-serif;
           font-weight: 800;
           font-size: 14px;
-          border-bottom: 2px solid rgba(0,0,0,0.05);
+          border-bottom: 2px solid var(--border-soft);
           position: sticky;
           top: 0;
           z-index: 20;
         }
 
         .column-grid-bg {
-          border-left: 1px solid rgba(0,0,0,0.05);
+          border-left: 1px solid var(--border-soft);
           grid-row: 2 / -1;
           pointer-events: none;
         }
@@ -348,7 +348,7 @@ export default function WorkshopsModule() {
 
         .hour-grid-line {
           grid-column: 2 / -1;
-          border-top: 1px solid #f1f3f5;
+          border-top: 1px solid var(--border-soft);
           pointer-events: none;
         }
 
@@ -372,10 +372,10 @@ export default function WorkshopsModule() {
         }
 
         .calendar-workshop.selected {
-          background: var(--blue) !important;
+          background: var(--accent-primary) !important;
           color: white !important;
-          border-color: var(--blue-dark);
-          box-shadow: 0 10px 25px rgba(34, 139, 230, 0.3);
+          border-color: var(--accent-dark);
+          box-shadow: 0 10px 25px rgba(24, 95, 165, 0.3);
           z-index: 5;
         }
 
@@ -395,7 +395,7 @@ export default function WorkshopsModule() {
           top: 8px;
           right: 8px;
           background: white;
-          color: var(--blue);
+          color: var(--accent-primary);
           width: 18px;
           height: 18px;
           border-radius: 50%;
@@ -405,9 +405,9 @@ export default function WorkshopsModule() {
         }
 
         .calendar-workshop.mandatory {
-          background: #e3f2fd !important;
-          color: #1976d2 !important;
-          border: 2px dashed #2196f3;
+          background: var(--accent-light) !important;
+          color: var(--accent-dark) !important;
+          border: 2px dashed var(--accent-primary);
           cursor: default;
           box-shadow: none;
         }
@@ -423,7 +423,7 @@ export default function WorkshopsModule() {
 
         .confirm-section-new { display: flex; justify-content: center; padding: 2rem 0; }
         .btn-confirm {
-          background: var(--blue);
+          background: var(--accent-primary);
           color: white;
           border: none;
           padding: 1.25rem 3rem;
@@ -433,15 +433,15 @@ export default function WorkshopsModule() {
           font-size: 18px;
           cursor: pointer;
           transition: all 0.3s;
-          box-shadow: 0 10px 30px rgba(34, 139, 230, 0.2);
+          box-shadow: 0 10px 30px rgba(24, 95, 165, 0.2);
         }
-        .btn-confirm:hover:not(.disabled) { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(34, 139, 230, 0.3); }
-        .btn-confirm.disabled { background: #adb5bd; cursor: not-allowed; box-shadow: none; }
+        .btn-confirm:hover:not(.disabled) { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(24, 95, 165, 0.3); }
+        .btn-confirm.disabled { background: var(--border-med); cursor: not-allowed; box-shadow: none; }
         
         .btn-edit {
           background: transparent;
-          color: var(--blue);
-          border: 2px solid var(--blue);
+          color: var(--accent-primary);
+          border: 2px solid var(--accent-primary);
           padding: 1rem 2.5rem;
           border-radius: 100px;
           font-family: 'Syne', sans-serif;

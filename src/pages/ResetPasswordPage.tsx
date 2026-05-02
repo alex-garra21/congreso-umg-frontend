@@ -5,6 +5,7 @@ import PasswordField from '../components/PasswordField';
 import { Icons } from '../components/Icons';
 import Alert from '../components/ui/Alert';
 import { supabase } from '../utils/supabase';
+import congresoHero from '../assets/congreso-hero.png';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -97,24 +98,52 @@ export default function ResetPasswordPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'radial-gradient(circle at top right, #1e3a8a 0%, #0f172a 100%)',
+      position: 'relative',
+      background: 'var(--bg-primary)',
+      overflow: 'hidden',
       padding: '2rem'
     }}>
+      {/* Fondo igual al Hero de la página principal */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: `url(${congresoHero})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        opacity: 0.25,
+        zIndex: 0
+      }}></div>
+
+      <div style={{
+        position: 'absolute',
+        top: '-80px',
+        right: '-80px',
+        width: '360px',
+        height: '360px',
+        background: 'radial-gradient(circle, rgba(24, 95, 165, .12) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        zIndex: 1
+      }}></div>
+
       <div style={{
         width: '100%',
         maxWidth: '440px',
-        background: 'rgba(255, 255, 255, 0.98)',
+        background: 'var(--bg-card)',
         backdropFilter: 'blur(10px)',
         borderRadius: '24px',
         padding: '2.5rem',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-        textAlign: 'center'
+        boxShadow: 'var(--shadow-lg)',
+        textAlign: 'center',
+        position: 'relative',
+        zIndex: 10,
+        border: '1px solid var(--border-soft)'
       }}>
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ 
             width: '60px', 
             height: '60px', 
-            background: 'var(--blue)', 
+            background: 'var(--accent-primary)', 
             borderRadius: '15px', 
             margin: '0 auto 1rem',
             display: 'flex',
@@ -124,7 +153,7 @@ export default function ResetPasswordPage() {
           }}>
             <Icons.Check size={32} />
           </div>
-          <h1 style={{ fontFamily: 'Syne', fontSize: '24px', color: 'var(--blue)', margin: 0 }}>
+          <h1 style={{ fontFamily: 'Syne', fontSize: '24px', color: 'var(--accent-primary)', margin: 0 }}>
             XIV Congreso de Ingeniería
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
@@ -154,7 +183,7 @@ export default function ResetPasswordPage() {
           <>
             {/* Tarjeta de Identidad */}
             <div style={{ 
-              background: 'rgba(241, 245, 249, 0.8)', 
+              background: 'var(--bg-app)', 
               padding: '1.25rem', 
               borderRadius: '16px', 
               marginBottom: '2rem',
@@ -162,13 +191,13 @@ export default function ResetPasswordPage() {
               alignItems: 'center',
               gap: '15px',
               textAlign: 'left',
-              border: '1px solid rgba(226, 232, 240, 0.8)'
+              border: '1px solid var(--border-soft)'
             }}>
               <div style={{ 
                 width: '50px', 
                 height: '50px', 
                 borderRadius: '50%', 
-                background: 'var(--blue)', 
+                background: 'var(--accent-primary)', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
@@ -185,7 +214,7 @@ export default function ResetPasswordPage() {
                 )}
               </div>
               <div style={{ overflow: 'hidden' }}>
-                <h4 style={{ margin: 0, fontSize: '15px', fontFamily: 'Syne', color: 'var(--blue)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <h4 style={{ margin: 0, fontSize: '15px', fontFamily: 'Syne', color: 'var(--accent-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {userProfile?.name || 'Verificando...'}
                 </h4>
                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

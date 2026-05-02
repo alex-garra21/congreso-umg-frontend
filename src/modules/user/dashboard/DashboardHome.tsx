@@ -63,11 +63,11 @@ export default function DashboardHome() {
         <ModuleTitle title="Inicio (Panel Administrativo)" />
 
         <div className="status-grid-container">
-          <StatusCard label="TOTAL PARTICIPANTES" value={loadingAdmin ? '...' : totalUsers} sub="Excluye administradores" accentColor="#228be6" icon={<Icons.Users />} />
-          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsers} sub="Inscripciones completadas" accentColor="#40c057" icon={<Icons.CheckCircle />} />
-          <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos universitarios" accentColor="#1c7ed6" icon={<Icons.Layout />} />
-          <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Profesionales y público" accentColor="#f59f00" icon={<Icons.Users />} />
-          <StatusCard label="ADMINISTRADORES" value={loadingAdmin ? '...' : adminsCount} sub="Personal del evento" accentColor="#862e9c" icon={<Icons.CheckCircle />} />
+          <StatusCard label="TOTAL PARTICIPANTES" value={loadingAdmin ? '...' : totalUsers} sub="Excluye administradores" accentColor="var(--accent-primary)" icon={<Icons.Users />} />
+          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsers} sub="Inscripciones completadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} />
+          <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos universitarios" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} />
+          <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Profesionales y público" accentColor="var(--status-pending)" icon={<Icons.Users />} />
+          <StatusCard label="ADMINISTRADORES" value={loadingAdmin ? '...' : adminsCount} sub="Personal del evento" accentColor="var(--accent-dark)" icon={<Icons.CheckCircle />} />
         </div>
 
         <section className="dashboard-section" style={{ marginTop: '2rem' }}>
@@ -113,27 +113,27 @@ export default function DashboardHome() {
 
       <div className="status-grid-container">
         <StatusCard 
-          label="ESTADO DE PAGO" accentColor={isPaid ? '#40c057' : isSent ? '#fab005' : '#fa5252'}
-          badge={isPaid ? <span className="step-badge success">Validado</span> : isSent ? <span className="step-badge warning">En revisión</span> : <span className="step-badge danger">Pendiente</span>}
+          label="ESTADO DE PAGO" accentColor={isPaid ? 'var(--status-success)' : isSent ? 'var(--status-pending)' : 'var(--status-error)'}
+          badge={isPaid ? <span className="step-badge-reusable success">Validado</span> : isSent ? <span className="step-badge-reusable warning">En revisión</span> : <span className="step-badge-reusable danger">Pendiente</span>}
           sub={isPaid ? 'Inscripción activa' : isSent ? 'Validando comprobante' : 'Pago requerido para participar'}
           footerLink="Ver detalles de pago →" onClick={() => navigate('/dashboard/pago')}
         />
 
         <StatusCard 
-          label="TALLERES" value={workshopsCount} accentColor={workshopsCount > 0 ? '#228be6' : '#adb5bd'}
+          label="TALLERES" value={workshopsCount} accentColor="var(--accent-primary)"
           sub={workshopsCount === 1 ? 'Taller seleccionado' : 'Talleres en tu agenda'}
           footerLink="Gestionar talleres →" onClick={() => navigate('/dashboard/talleres')}
         />
 
         <StatusCard 
-          label="DIPLOMA" accentColor={diplomaReady ? '#7950f2' : '#adb5bd'}
-          badge={diplomaReady ? <span className="step-badge success" style={{ backgroundColor: '#f3f0ff', color: '#7950f2', border: '1px solid #d0bfff' }}>Confirmado</span> : <span className="step-badge neutral">Pendiente</span>}
+          label="DIPLOMA" accentColor={diplomaReady ? 'var(--accent-primary)' : 'var(--text-muted)'}
+          badge={diplomaReady ? <span className="step-badge-reusable success" style={{ background: 'rgba(121, 80, 242, 0.15)', color: '#7950f2' }}>Confirmado</span> : <span className="step-badge-reusable neutral">Pendiente</span>}
           sub={diplomaReady ? 'Datos listos para impresión' : 'Confirma tus datos aquí'}
           footerLink="Revisar datos →" onClick={() => navigate('/dashboard/diploma')}
         />
 
         <StatusCard 
-          label="FECHA EVENTO" value="23 de Mayo" accentColor="#15aabf" sub="Hotel Alcazar doña Victoria"
+          label="FECHA EVENTO" value="23 de Mayo" accentColor="var(--status-success)" sub="Hotel Alcazar doña Victoria"
           icon={<Icons.Calendar />}
           footerLink="Añadir a Calendario →" onClick={() => window.open('https://www.google.com/calendar/render?action=TEMPLATE&text=CONGRESO+2026+UMG+SISTEMAS+COBÁN&dates=20260523T140000Z/20260523T230000Z&details=El+evento+académico+más+importante+del+año.&location=Hotel+Alcazar+doña+Victoria,+Cobán', '_blank')}
         />

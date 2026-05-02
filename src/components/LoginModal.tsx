@@ -101,10 +101,10 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
       <div style={{ marginTop: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <p className="switch-link" style={{ fontSize: '13px', margin: 0 }}>
-          ¿Olvidaste tu contraseña? <span onClick={() => setIsForgotOpen(true)} style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--blue)' }}>Recupérala aquí</span>
+          ¿Olvidaste tu contraseña? <span onClick={() => setIsForgotOpen(true)} style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--accent-primary)' }}>Recupérala aquí</span>
         </p>
         <p className="switch-link" style={{ fontSize: '13px', margin: 0 }}>
-          ¿Aún no tienes cuenta? <span onClick={handleSwitch} style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--blue)' }}>Regístrate aquí</span>
+          ¿Aún no tienes cuenta? <span onClick={handleSwitch} style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--accent-primary)' }}>Regístrate aquí</span>
         </p>
       </div>
 
