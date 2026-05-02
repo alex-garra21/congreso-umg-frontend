@@ -12,8 +12,11 @@ export async function registerUserMutation(user: UserData): Promise<{ success: b
   });
 
   if (authError) {
-    if (authError.message.includes('already registered') || authError.status === 422) {
+    if (authError.message.toLowerCase().includes('already registered')) {
       return { success: false, message: 'El correo electrónico ya está registrado.' };
+    }
+    if (authError.status === 422 && authError.message.toLowerCase().includes('password')) {
+      return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
     }
     return { success: false, message: `Error: ${authError.message}` };
   }

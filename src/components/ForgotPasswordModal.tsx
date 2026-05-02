@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { sendPasswordResetEmail, resetPasswordWithOTP } from '../utils/auth';
+import { sendPasswordResetEmail, resetPasswordWithOTP, validatePasswordStrength } from '../utils/auth';
 import PasswordField from './PasswordField';
 
 interface ForgotPasswordModalProps {
@@ -45,8 +45,10 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
       setError('Por favor, ingresa el código y tu nueva contraseña.');
       return;
     }
-    if (newPassword.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
+    
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message);
       return;
     }
     
@@ -69,6 +71,8 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
       setIsLoading(false);
     }
   };
+
+  const currentPasswordStrength = newPassword.length > 0 ? validatePasswordStrength(newPassword) : null;
 
   return (
     <div className="modal-bg open">
@@ -129,6 +133,20 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
               disabled={isLoading}
               autoComplete="new-password"
             />
+
+            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
+              La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
+              {currentPasswordStrength && !currentPasswordStrength.isValid && (
+                <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                  * {currentPasswordStrength.message}
+                </span>
+              )}
+              {currentPasswordStrength && currentPasswordStrength.isValid && (
+                <span style={{ color: '#16a34a', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                  ✓ Contraseña segura
+                </span>
+              )}
+            </div>
             
             <button type="submit" className="submit-btn" disabled={isLoading}>
               {isLoading ? 'Guardando...' : 'Cambiar Contraseña'}

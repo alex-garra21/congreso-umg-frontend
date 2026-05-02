@@ -24,6 +24,22 @@ export interface UserData {
   avatarUrl?: string;
 }
 
+export function validatePasswordStrength(password: string): { isValid: boolean; message: string } {
+  if (password.length < 6) {
+    return { isValid: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { isValid: false, message: 'La contraseña debe contener al menos una letra mayúscula.' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { isValid: false, message: 'La contraseña debe contener al menos una letra minúscula.' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { isValid: false, message: 'La contraseña debe contener al menos un número.' };
+  }
+  return { isValid: true, message: '' };
+}
+
 export interface TokenData {
   code: string;
   used: boolean;

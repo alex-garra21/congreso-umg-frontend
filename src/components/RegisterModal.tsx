@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRegisterUser } from '../api/hooks/useUsers';
+import { validatePasswordStrength } from '../utils/auth';
 import PasswordField from './PasswordField';
 import { Icons } from './Icons';
 import { showToast } from '../utils/swal';
@@ -106,6 +107,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     }
 
     // Validación de contraseñas
+    const passwordValidation = validatePasswordStrength(formData.contrasena);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message);
+      return;
+    }
+
     if (formData.contrasena !== formData.confirmarContrasena) {
       showToast('Las contraseñas no coinciden.', 'error');
       return;
@@ -135,6 +142,8 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
   const passwordsMatch = formData.contrasena.length > 0 && formData.contrasena === formData.confirmarContrasena;
   const showPasswordError = formData.confirmarContrasena.length > 0 && !passwordsMatch;
+  const currentPasswordStrength = formData.contrasena.length > 0 ? validatePasswordStrength(formData.contrasena) : null;
+
 
   return (
     <Modal
@@ -231,6 +240,20 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               success={passwordsMatch}
               autoComplete="new-password"
             />
+
+            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
+              La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
+              {currentPasswordStrength && !currentPasswordStrength.isValid && (
+                <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                  * {currentPasswordStrength.message}
+                </span>
+              )}
+              {currentPasswordStrength && currentPasswordStrength.isValid && (
+                <span style={{ color: '#16a34a', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                  ✓ Contraseña segura
+                </span>
+              )}
+            </div>
 
             <PasswordField
               label={<>Confirmar Contraseña <span style={{ color: '#ef4444' }}>*</span></>}

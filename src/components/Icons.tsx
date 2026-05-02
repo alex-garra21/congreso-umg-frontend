@@ -246,4 +246,81 @@ export const Icons = {
       <circle cx="12" cy="13" r="4" />
     </BaseIcon>
   ),
+  Youtube: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.14 1 12 1 12s0 3.86.46 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.86 23 12 23 12s0-3.86-.46-5.58z" />
+      <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
+    </BaseIcon>
+  ),
+  Twitch: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-2 13h-4l-3 3v-3H5V4h14v11z" />
+      <path d="M16 7h-2v4h2V7zm-4 0h-2v4h2V7z" />
+    </BaseIcon>
+  ),
+  Pinterest: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <line x1="8" y1="20" x2="12" y2="11" />
+      <path d="M12 12c2-1 3-2.5 3-4.5A4.5 4.5 0 0 0 10.5 3 4.5 4.5 0 0 0 6 7.5c0 1.5.5 2.5 1.5 3" />
+      <circle cx="12" cy="12" r="11" />
+    </BaseIcon>
+  ),
+  Snapchat: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M12 2c1 0 3 2.5 3 4s-1 2-1 3c0 1 2 2 3 2s3-1 3-1 1 2 1 3c0 2-5 3-5 3s-1 2-4 2-4-2-4-2-5-1-5-3c0-1 1-3 1-3s2 1 3 1 3-1 3-2c0-1-1-1.5-1-3s2-4 3-4z" />
+    </BaseIcon>
+  ),
+  WhatsApp: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-7.6 8.38 8.38 0 0 1 3.8.9L21 11.5z" />
+      <path d="M16 11l-1.5-1.5a.5.5 0 0 0-.7 0l-1.5 1.5a2.5 2.5 0 0 1-3.5-3.5l1.5-1.5a.5.5 0 0 0 0-.7L9 4" />
+    </BaseIcon>
+  ),
+  Reddit: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="15" cy="12" r="1" />
+      <path d="M17 16c-1 1-2.5 2-5 2s-4-1-5-2" />
+      <path d="M12 3l1 2" />
+      <circle cx="13.5" cy="4.5" r="1.5" />
+    </BaseIcon>
+  ),
+  Discord: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M18 6l-1-1-2 1H9L7 5l-1 1v7c0 2 2 4 4 4h4c2 0 4-2 4-4V6z" />
+      <circle cx="10" cy="11" r="1" />
+      <circle cx="14" cy="11" r="1" />
+      <path d="M10 15c1 1 3 1 4 0" />
+    </BaseIcon>
+  ),
+  Behance: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M9 13H5v3h4c1 0 2-1 2-1.5S10 13 9 13z" />
+      <path d="M9 6H5v4h4c1 0 2-1 2-2s-1-2-2-2z" />
+      <path d="M15 11a3 3 0 1 0 3 3v-1" />
+      <line x1="15" y1="8" x2="21" y2="8" />
+    </BaseIcon>
+  ),
+  Dribbble: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <circle cx="12" cy="12" r="11" />
+      <path d="M12 1c0 0 4 7 11 8" />
+      <path d="M3 5c0 0 7 2 9 18" />
+      <path d="M20 20c0 0-4-7-11-8" />
+    </BaseIcon>
+  ),
+  Telegram: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M22 2L11 13" />
+      <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+    </BaseIcon>
+  ),
+  Threads: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
+      <path d="M12 6c-3.314 0-6 2.686-6 6s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z" />
+      <path d="M12 9c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3z" />
+    </BaseIcon>
+  ),
 };

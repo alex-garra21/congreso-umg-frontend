@@ -26,6 +26,24 @@ export default function AgendaItemModal({
     onSave(editingItem);
   };
 
+  // Generar opciones de tiempo de 7:00 AM a 10:00 PM en intervalos de 15 min
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let hour = 7; hour <= 22; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        const h = hour > 12 ? hour - 12 : hour;
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const m = min === 0 ? '00' : min;
+        const timeStr = `${h}:${m} ${ampm}`;
+        options.push({ value: timeStr, label: timeStr });
+        if (hour === 22 && min === 0) break; // Terminar en 10:00 PM
+      }
+    }
+    return options;
+  };
+
+  const timeOptions = generateTimeOptions();
+
   return (
     <Modal
       isOpen={isOpen}
@@ -58,32 +76,17 @@ export default function AgendaItemModal({
 
         <div style={{ display: 'flex', gap: '1rem' }}>
           <FormField label="HORA INICIO" required style={{ flex: 1 }}>
-            <input 
-              type="text" 
-              className="dashboard-input" 
-              value={editingItem.time} 
-              onChange={e => setEditingItem({ ...editingItem, time: e.target.value })} 
-              required 
-              placeholder="Ej: 8:00 AM" 
+            <AdminSelect
+              value={editingItem.time}
+              onChange={(e: { target: { value: string } }) => setEditingItem({ ...editingItem, time: e.target.value })}
+              options={timeOptions}
             />
           </FormField>
           <FormField label="HORA FIN" required style={{ flex: 1 }}>
-            <input 
-              type="text" 
-              className="dashboard-input" 
-              value={editingItem.endTime} 
-              onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })} 
-              required 
-              placeholder="Ej: 9:00 AM" 
-            />
-          </FormField>
-          <FormField label="GRACIA (MIN)" required style={{ flex: 0.5 }}>
-            <input 
-              type="number" 
-              className="dashboard-input" 
-              value={editingItem.gracePeriod} 
-              onChange={e => setEditingItem({ ...editingItem, gracePeriod: parseInt(e.target.value) })} 
-              required 
+            <AdminSelect
+              value={editingItem.endTime}
+              onChange={(e: { target: { value: string } }) => setEditingItem({ ...editingItem, endTime: e.target.value })}
+              options={timeOptions}
             />
           </FormField>
         </div>

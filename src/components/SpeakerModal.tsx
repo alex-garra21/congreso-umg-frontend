@@ -53,35 +53,46 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
             <h3 style={{ fontSize: '24px', margin: 0, fontFamily: 'Syne', fontWeight: 800 }}>{speaker.name}</h3>
             <p className="speaker-role" style={{ margin: 0, fontSize: '15px', color: 'var(--text-secondary)' }}>{speaker.role}</p>
 
-            {speaker.socialLinks && Object.values(speaker.socialLinks).some(link => link) && (
-              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                {speaker.socialLinks.facebook && (
-                  <a href={speaker.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="Facebook">
-                    <Icons.Facebook size={18} color="var(--text-secondary)" />
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
+              {speaker.socialLinks && Object.entries(speaker.socialLinks).map(([type, url]) => {
+                if (!url) return null;
+                
+                const IconComponent = {
+                  facebook: Icons.Facebook,
+                  instagram: Icons.Instagram,
+                  tiktok: Icons.TikTok,
+                  x: Icons.TwitterX,
+                  linkedin: Icons.LinkedIn,
+                  youtube: Icons.Youtube,
+                  twitch: Icons.Twitch,
+                  pinterest: Icons.Pinterest,
+                  snapchat: Icons.Snapchat,
+                  whatsapp: Icons.WhatsApp,
+                  reddit: Icons.Reddit,
+                  discord: Icons.Discord,
+                  behance: Icons.Behance,
+                  dribbble: Icons.Dribbble,
+                  telegram: Icons.Telegram,
+                  threads: Icons.Threads
+                }[type];
+
+                if (!IconComponent) return null;
+
+                return (
+                  <a 
+                    key={type} 
+                    href={url as string} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="social-icon-link" 
+                    title={type.charAt(0).toUpperCase() + type.slice(1)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <IconComponent size={18} color="var(--text-secondary)" />
                   </a>
-                )}
-                {speaker.socialLinks.instagram && (
-                  <a href={speaker.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="Instagram">
-                    <Icons.Instagram size={18} color="var(--text-secondary)" />
-                  </a>
-                )}
-                {speaker.socialLinks.tiktok && (
-                  <a href={speaker.socialLinks.tiktok} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="TikTok">
-                    <Icons.TikTok size={18} color="var(--text-secondary)" />
-                  </a>
-                )}
-                {speaker.socialLinks.x && (
-                  <a href={speaker.socialLinks.x} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="X (Twitter)">
-                    <Icons.TwitterX size={18} color="var(--text-secondary)" />
-                  </a>
-                )}
-                {speaker.socialLinks.linkedin && (
-                  <a href={speaker.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="LinkedIn">
-                    <Icons.LinkedIn size={18} color="var(--text-secondary)" />
-                  </a>
-                )}
-              </div>
-            )}
+                );
+              })}
+            </div>
           </div>
         </div>
 

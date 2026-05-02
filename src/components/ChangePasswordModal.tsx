@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { verifyAndChangePassword } from '../utils/auth';
+import { verifyAndChangePassword, validatePasswordStrength } from '../utils/auth';
 import PasswordField from './PasswordField';
 import { Icons } from './Icons';
 import Modal from './ui/Modal';
@@ -41,13 +41,14 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
       return;
     }
 
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      setError('Las nuevas contraseñas no coinciden.');
+    const passwordValidation = validatePasswordStrength(passwords.newPassword);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message);
       return;
     }
 
-    if (passwords.newPassword.length < 6) {
-      setError('La nueva contraseña debe tener al menos 6 caracteres.');
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setError('Las nuevas contraseñas no coinciden.');
       return;
     }
 
@@ -62,6 +63,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
       setError(result.message);
     }
   };
+
+  const currentPasswordStrength = passwords.newPassword.length > 0 ? validatePasswordStrength(passwords.newPassword) : null;
 
   return (
     <Modal
@@ -105,6 +108,20 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
               placeholder="********"
               required
             />
+
+            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
+              La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
+              {currentPasswordStrength && !currentPasswordStrength.isValid && (
+                <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                  * {currentPasswordStrength.message}
+                </span>
+              )}
+              {currentPasswordStrength && currentPasswordStrength.isValid && (
+                <span style={{ color: '#16a34a', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                  ✓ Contraseña segura
+                </span>
+              )}
+            </div>
 
             <PasswordField
               label="Confirmar Nueva Contraseña"
