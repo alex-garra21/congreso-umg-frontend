@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { getAllUsersQuery } from '../../../api/supabase/users/userQueries';
+import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
 import type { UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import LocationLink from '../../../components/LocationLink';
@@ -10,19 +11,27 @@ import EnrollmentStep from '../../../components/ui/EnrollmentStep';
 import { Icons } from '../../../components/Icons';
 
 export default function DashboardHome() {
-  const { user } = useAuth();
+  const { user, refetchProfile } = useAuth();
   const [workshopsCount, setWorkshopsCount] = useState(0);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const [loadingAdmin, setLoadingAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // AUTOLIMPIEZA (Parche para RLS): Si el pago fue anulado pero aún tiene talleres en BD,
+    // usamos la sesión del propio usuario para borrarlos y liberar el cupo.
+    if (user && user.rol !== 'admin' && !user.pagoValidado && user.talleres && user.talleres.length > 0) {
+      syncUserEnrollmentsMutation(user.id!, []).then(() => {
+        refetchProfile();
+      });
+    }
+
     if (user?.rol !== 'admin' && user?.correo) {
       const saved = localStorage.getItem(`workshops_${user.correo}`);
       if (saved) {
         setWorkshopsCount(JSON.parse(saved).length);
       } else {
-        setWorkshopsCount(0);
+        setWorkshopsCount(user?.talleres?.length || 0);
       }
     }
 

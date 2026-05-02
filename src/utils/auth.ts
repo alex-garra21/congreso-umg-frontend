@@ -85,6 +85,25 @@ export async function changePassword(newPassword: string): Promise<{ success: bo
   return { success: true, message: 'Contraseña actualizada correctamente.' };
 }
 
+export async function verifyAndChangePassword(oldPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  // 1. Obtener el usuario actual para tener su correo
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !user.email) return { success: false, message: 'No hay una sesión activa.' };
+
+  // 2. Verificar contraseña actual intentando hacer login
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: oldPassword,
+  });
+  
+  if (reauthError) {
+    return { success: false, message: 'La contraseña anterior es incorrecta.' };
+  }
+
+  // 3. Si es correcta, actualizar a la nueva
+  return changePassword(newPassword);
+}
+
 export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; message: string }> {
   const { error } = await supabase.auth.resetPasswordForEmail(email);
   if (error) return { success: false, message: `Error: ${error.message}` };

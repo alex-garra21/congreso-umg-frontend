@@ -76,6 +76,7 @@ export default function DiplomaModule() {
 
   const isDiplomaNameTooLong = formData.nombreDiploma.length > 25;
   const isLocked = user?.diplomaEditado || false;
+  const isPaid = user?.pagoValidado || false;
 
   if (!user) return null;
 
@@ -90,10 +91,16 @@ export default function DiplomaModule() {
           </p>
         </div>
 
-        {!isLocked && (
-          <Alert variant="error" title="ATENCIÓN">
-            IMPORTANTE: Solo puedes modificar estos datos UNA VEZ. Una vez guardados, los campos se bloquearán permanentemente.
+        {!isPaid ? (
+          <Alert variant="warning" title="PAGO PENDIENTE">
+            Debes validar tu pago para poder confirmar los datos de tu diploma. Una vez validado, podrás ingresar tu nombre y correo para la emisión de tus certificados.
           </Alert>
+        ) : (
+          !isLocked && (
+            <Alert variant="error" title="ATENCIÓN">
+              IMPORTANTE: Solo puedes modificar estos datos UNA VEZ. Una vez guardados, los campos se bloquearán permanentemente.
+            </Alert>
+          )
         )}
 
         <Alert variant="info" title="¿Cuándo recibirás tu diploma?" icon={<Icons.Award size={20} />}>
@@ -105,7 +112,7 @@ export default function DiplomaModule() {
           </ul>
         </Alert>
 
-        <form onSubmit={handleSave} className="diploma-form" style={{ display: 'flex', gap: '3rem', alignItems: 'flex-start' }}>
+        <form onSubmit={handleSave} className="diploma-form" style={{ display: 'flex', gap: '3rem', alignItems: 'flex-start', opacity: !isPaid ? 0.6 : 1 }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             
             <FormField 
@@ -120,13 +127,13 @@ export default function DiplomaModule() {
                   onChange={handleNameChange}
                   placeholder="EJ: MARÍA GARCÍA"
                   required
-                  readOnly={isLocked}
+                  readOnly={isLocked || !isPaid}
                   className="dashboard-input"
                   style={{
                     borderColor: isDiplomaNameTooLong ? '#d32f2f' : undefined,
-                    backgroundColor: isLocked ? '#f8fafc' : undefined,
-                    color: isLocked ? '#64748b' : undefined,
-                    cursor: isLocked ? 'not-allowed' : 'text'
+                    backgroundColor: (isLocked || !isPaid) ? '#f8fafc' : undefined,
+                    color: (isLocked || !isPaid) ? '#64748b' : undefined,
+                    cursor: (isLocked || !isPaid) ? 'not-allowed' : 'text'
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
@@ -148,12 +155,12 @@ export default function DiplomaModule() {
                 onChange={handleEmailChange}
                 placeholder="ejemplo@correo.com"
                 required
-                readOnly={isLocked}
+                readOnly={isLocked || !isPaid}
                 className="dashboard-input"
                 style={{
-                  backgroundColor: isLocked ? '#f8fafc' : undefined,
-                  color: isLocked ? '#64748b' : undefined,
-                  cursor: isLocked ? 'not-allowed' : 'text'
+                  backgroundColor: (isLocked || !isPaid) ? '#f8fafc' : undefined,
+                  color: (isLocked || !isPaid) ? '#64748b' : undefined,
+                  cursor: (isLocked || !isPaid) ? 'not-allowed' : 'text'
                 }}
               />
             </FormField>
@@ -170,17 +177,26 @@ export default function DiplomaModule() {
                   style={{
                     width: 'auto',
                     padding: '12px 32px',
-                    opacity: isDiplomaNameTooLong ? 0.6 : 1,
-                    cursor: isDiplomaNameTooLong ? 'not-allowed' : 'pointer'
+                    opacity: (isDiplomaNameTooLong || !isPaid) ? 0.6 : 1,
+                    cursor: (isDiplomaNameTooLong || !isPaid) ? 'not-allowed' : 'pointer'
                   }}
-                  disabled={isDiplomaNameTooLong}
+                  disabled={isDiplomaNameTooLong || !isPaid}
                 >
                   Guardar datos
                 </button>
                 <button
                   type="button"
                   className="btn-ghost"
-                  style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid #e2e8f0', color: '#4a5568', borderRadius: '12px' }}
+                  disabled={!isPaid}
+                  style={{ 
+                    width: 'auto', 
+                    padding: '12px 24px', 
+                    border: '1.5px solid #e2e8f0', 
+                    color: '#4a5568', 
+                    borderRadius: '12px',
+                    opacity: !isPaid ? 0.6 : 1,
+                    cursor: !isPaid ? 'not-allowed' : 'pointer'
+                  }}
                   onClick={() => {
                     const fullName = `${user.nombres} ${user.apellidos}`.trim().toUpperCase();
                     let suggestedName = '';

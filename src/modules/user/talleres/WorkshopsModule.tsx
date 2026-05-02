@@ -36,6 +36,17 @@ export default function WorkshopsModule() {
 
   useEffect(() => {
     if (user?.correo) {
+      // Si el pago no está validado (por ejemplo, un admin lo anuló),
+      // debemos limpiar toda la memoria local residual para que vuelva al estado de cuenta nueva.
+      if (!user.pagoValidado) {
+        localStorage.removeItem(`workshops_confirmed_${user.correo}`);
+        localStorage.removeItem(`workshops_${user.correo}`);
+        localStorage.removeItem(`modifications_count_${user.correo}`);
+        setIsConfirmed(false);
+        setEnrolledIds([]);
+        return;
+      }
+
       const confirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`);
       if (confirmed === 'true') {
         setIsConfirmed(true);
@@ -51,7 +62,7 @@ export default function WorkshopsModule() {
         }
       }
     }
-  }, [user?.correo, user?.talleres]);
+  }, [user?.correo, user?.talleres, user?.pagoValidado]);
 
   useEffect(() => {
     if (user?.correo) {

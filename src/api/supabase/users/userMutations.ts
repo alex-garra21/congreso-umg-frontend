@@ -71,33 +71,35 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
 }
 
 export async function invalidatePaymentMutation(userId: string): Promise<{ success: boolean; message: string }> {
-  // 1. Obtener el token vinculado antes de desvincular
+  // 1. Obtener el token vinculado antes de cualquier acción
   const { data: tokenData } = await supabase
     .from('tokens_pago')
     .select('codigo')
     .eq('usado_por', userId)
     .maybeSingle();
 
-  // 2. Limpieza PROFUNDA de datos del usuario que dependen de pago
+  // 2. ELIMINACIÓN EN CASCADA (De lo más específico a lo más general)
+  
+  // A. Borrar asistencias (No tienen dependencias hijas)
+  await supabase.from('asistencias').delete().eq('id_usuario', userId);
+
+  // B. Borrar inscripciones a talleres
+  await supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId);
+
+  // C. Limpieza del perfil del usuario (Reset de campos de pago)
   const { error: userError } = await supabase
     .from('usuarios')
     .update({ 
       pago_validado: false, 
-      pago_enviado: false,
-      talleres: null,
       nombre_diploma: null,
       correo_diploma: null,
       diploma_editado: false
     })
     .eq('id', userId);
 
-  if (userError) return { success: false, message: 'Error al invalidar el pago del usuario.' };
+  if (userError) return { success: false, message: 'Error al invalidar el perfil del usuario.' };
 
-  // 3. Liberar cupos en talleres y borrar asistencias
-  await supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId);
-  await supabase.from('asistencias').delete().eq('id_usuario', userId);
-
-  // 4. Manejar el token (liberar o borrar)
+  // D. Manejar el token de pago (Liberar o eliminar token de auditoría)
   if (tokenData) {
     if (tokenData.codigo.startsWith('ADMIN-')) {
       await supabase.from('tokens_pago').delete().eq('codigo', tokenData.codigo);
@@ -160,8 +162,6 @@ export async function deleteTokenMutation(code: string): Promise<void> {
       .from('usuarios')
       .update({ 
         pago_validado: false, 
-        pago_enviado: false,
-        talleres: null,
         nombre_diploma: null,
         correo_diploma: null,
         diploma_editado: false
