@@ -363,6 +363,11 @@ h1 span {
   padding: 1.2rem 1rem;
   border-right: .5px solid var(--border-soft);
   text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stat:hover {
+  background: rgba(24, 95, 165, 0.05);
 }
 
 .stat:last-child {
