@@ -1324,6 +1324,17 @@ h1 span {
   gap: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-user:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-user:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.98);
 }
 
 .user-avatar {

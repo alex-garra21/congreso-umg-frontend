@@ -119,13 +119,20 @@ export default function ProfileModule() {
         <div className="profile-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           <AvatarUpload 
             userId={user.id!} 
-            currentAvatarUrl={user.avatarUrl} 
+            currentAvatarUrl={formData.avatarUrl} 
             initials={(user.nombres?.[0] || '') + (user.apellidos?.[0] || '')}
-            onAvatarChange={(newUrl) => {
+            onAvatarChange={async (newUrl) => {
               setFormData(prev => ({ ...prev, avatarUrl: newUrl }));
+              // Auto-guardar la foto en la base de datos de inmediato
+              try {
+                await updateUserDataMutation.mutateAsync({ ...user, avatarUrl: newUrl });
+              } catch (e) {
+                console.error("Error auto-guardando avatar:", e);
+              }
             }} 
           />
           <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '24px' }}>Información personal</h2>
+
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Estos datos se usarán para tu identificación en el evento y para la gestión de tu cuenta.</p>
           <br />
         </div>
