@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { updateUserDataMutation } from '../../../api/supabase/users/userMutations';
@@ -12,6 +13,7 @@ import FormField from '../../../components/ui/FormField';
 
 export default function DiplomaModule() {
   const { user, refetchProfile } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nombreDiploma: '',
     correoDiploma: ''
@@ -20,16 +22,31 @@ export default function DiplomaModule() {
 
   useEffect(() => {
     if (user) {
+      // Lógica de sugerencia inteligente:
+      // Si el nombre completo cabe (<= 25 caracteres), se sugiere completo.
+      // Si es más largo, se sugiere solo primer nombre y primer apellido.
+      const fullName = `${user.nombres} ${user.apellidos}`.trim().toUpperCase();
+      let suggestedName = '';
+
+      if (fullName.length <= 25) {
+        suggestedName = fullName;
+      } else {
+        const firstName = (user.nombres || '').trim().split(' ')[0] || '';
+        const firstSurname = (user.apellidos || '').trim().split(' ')[0] || '';
+        suggestedName = `${firstName} ${firstSurname}`.trim().toUpperCase().substring(0, 25);
+      }
+
       setFormData({
-        nombreDiploma: user.nombreDiploma || `${user.nombres} ${user.apellidos}`.toUpperCase(),
+        nombreDiploma: user.nombreDiploma || suggestedName,
         correoDiploma: user.correoDiploma || user.correo || ''
       });
     }
   }, [user]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ ]/g, '');
-    setFormData(prev => ({ ...prev, nombreDiploma: value }));
+    // Permitimos letras, tildes, la Ñ, espacios y guiones para nombres compuestos
+    const value = e.target.value.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ \-]/g, '');
+    setFormData(prev => ({ ...prev, nombreDiploma: value.substring(0, 25) }));
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +118,7 @@ export default function DiplomaModule() {
                   type="text"
                   value={formData.nombreDiploma}
                   onChange={handleNameChange}
-                  placeholder="EJ: MARÍA ELENA GARCÍA LÓPEZ"
+                  placeholder="EJ: MARÍA GARCÍA"
                   required
                   readOnly={isLocked}
                   className="dashboard-input"
@@ -164,10 +181,21 @@ export default function DiplomaModule() {
                   type="button"
                   className="btn-ghost"
                   style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid #e2e8f0', color: '#4a5568', borderRadius: '12px' }}
-                  onClick={() => setFormData({
-                    nombreDiploma: `${user.nombres} ${user.apellidos}`.toUpperCase(),
-                    correoDiploma: user.correo || ''
-                  })}
+                  onClick={() => {
+                    const fullName = `${user.nombres} ${user.apellidos}`.trim().toUpperCase();
+                    let suggestedName = '';
+                    if (fullName.length <= 25) {
+                      suggestedName = fullName;
+                    } else {
+                      const firstName = (user.nombres || '').trim().split(' ')[0] || '';
+                      const firstSurname = (user.apellidos || '').trim().split(' ')[0] || '';
+                      suggestedName = `${firstName} ${firstSurname}`.trim().toUpperCase().substring(0, 25);
+                    }
+                    setFormData({
+                      nombreDiploma: suggestedName,
+                      correoDiploma: user.correo || ''
+                    });
+                  }}
                 >
                   Limpiar
                 </button>
@@ -262,7 +290,7 @@ export default function DiplomaModule() {
 
       {/* Botón regresar al inicio */}
       <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
-        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => window.location.href = '/dashboard'}>
+        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
           Ir al Inicio
         </button>
       </div>

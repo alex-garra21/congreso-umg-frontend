@@ -11,6 +11,8 @@ import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import Alert from '../../../components/ui/Alert';
 
+import { CalendarGrid } from './components/CalendarGrid';
+
 export default function WorkshopsModule() {
   const navigate = useNavigate();
   const { user, refetchProfile } = useAuth();
@@ -79,23 +81,28 @@ export default function WorkshopsModule() {
   for (let i = minHour; i <= maxHour; i++) HOURS.push(i);
 
   const roomColors = [
-    { bg: 'rgba(33, 150, 243, 0.1)', hoverBg: 'rgba(33, 150, 243, 0.05)', border: 'rgba(33, 150, 243, 0.1)', text: '#1976d2' },
-    { bg: 'rgba(76, 175, 80, 0.1)', hoverBg: 'rgba(76, 175, 80, 0.05)', border: 'rgba(76, 175, 80, 0.1)', text: '#388e3c' },
-    { bg: 'rgba(156, 39, 176, 0.1)', hoverBg: 'rgba(156, 39, 176, 0.05)', border: 'rgba(156, 39, 176, 0.1)', text: '#7b1fa2' },
-    { bg: 'rgba(255, 87, 34, 0.1)', hoverBg: 'rgba(255, 87, 34, 0.05)', border: 'rgba(255, 87, 34, 0.1)', text: '#e64a19' },
-    { bg: 'rgba(255, 193, 7, 0.1)', hoverBg: 'rgba(255, 193, 7, 0.05)', border: 'rgba(255, 193, 7, 0.1)', text: '#ffa000' },
-    { bg: 'rgba(0, 188, 212, 0.1)', hoverBg: 'rgba(0, 188, 212, 0.05)', border: 'rgba(0, 188, 212, 0.1)', text: '#0097a6' },
-    { bg: 'rgba(233, 30, 99, 0.1)', hoverBg: 'rgba(233, 30, 99, 0.05)', border: 'rgba(233, 30, 99, 0.1)', text: '#c2185b' }
+    { bg: 'rgba(33, 150, 243, 0.03)', hoverBg: 'rgba(33, 150, 243, 0.05)', border: 'rgba(33, 150, 243, 0.1)', text: '#1976d2' },
+    { bg: 'rgba(76, 175, 80, 0.03)', hoverBg: 'rgba(76, 175, 80, 0.05)', border: 'rgba(76, 175, 80, 0.1)', text: '#388e3c' },
+    { bg: 'rgba(156, 39, 176, 0.03)', hoverBg: 'rgba(156, 39, 176, 0.05)', border: 'rgba(156, 39, 176, 0.1)', text: '#7b1fa2' },
+    { bg: 'rgba(255, 87, 34, 0.03)', hoverBg: 'rgba(255, 87, 34, 0.05)', border: 'rgba(255, 87, 34, 0.1)', text: '#e64a19' },
+    { bg: 'rgba(255, 193, 7, 0.03)', hoverBg: 'rgba(255, 193, 7, 0.05)', border: 'rgba(255, 193, 7, 0.1)', text: '#ffa000' },
+    { bg: 'rgba(0, 188, 212, 0.03)', hoverBg: 'rgba(0, 188, 212, 0.05)', border: 'rgba(0, 188, 212, 0.1)', text: '#0097a6' },
+    { bg: 'rgba(233, 30, 99, 0.03)', hoverBg: 'rgba(233, 30, 99, 0.05)', border: 'rgba(233, 30, 99, 0.1)', text: '#c2185b' },
+    { bg: 'rgba(103, 58, 183, 0.03)', hoverBg: 'rgba(103, 58, 183, 0.05)', border: 'rgba(103, 58, 183, 0.1)', text: '#673ab7' }, // Deep Purple
+    { bg: 'rgba(0, 150, 136, 0.03)', hoverBg: 'rgba(0, 150, 136, 0.05)', border: 'rgba(0, 150, 136, 0.1)', text: '#009688' }   // Teal
   ];
 
   const getWorkshopStyles = (w: AgendaItem, isSelected: boolean) => {
-    const startRow = (parseTime(w.time) - minHour) + 1; 
-    const endRow = (parseTime(w.endTime) - minHour) + 1;
+    // Usamos precisión de 30 minutos (2 filas por hora)
+    // Sumamos 2 porque la fila 1 es para los encabezados
+    const startRow = Math.floor((parseTime(w.time) - minHour) * 2) + 2; 
+    const endRow = Math.floor((parseTime(w.endTime) - minHour) * 2) + 2;
     const roomIndex = rooms.indexOf(w.room);
     const colIndex = roomIndex !== -1 ? roomIndex + 2 : 2; 
     
-    const colorTheme = roomColors[(colIndex - 2) % roomColors.length];
-    
+    const colorTheme = roomColors[colIndex - 2 % roomColors.length];
+    if (!colorTheme) return {}; // fallback
+
     return {
       gridRow: `${startRow} / ${endRow}`,
       gridColumn: colIndex,
@@ -108,12 +115,13 @@ export default function WorkshopsModule() {
   };
 
   const isTimeCollision = (workshop: AgendaItem) => {
+    if (workshop.room === 'GENERAL') return false; // GENERAL no choca
     const start = parseTime(workshop.time);
     const end = parseTime(workshop.endTime);
     
     return enrolledIds.some(id => {
       const other = agenda.find((a: AgendaItem) => a.id === id);
-      if (!other || other.id === workshop.id) return false;
+      if (!other || other.id === workshop.id || other.room === 'GENERAL') return false;
       const oStart = parseTime(other.time);
       const oEnd = parseTime(other.endTime);
       
@@ -122,7 +130,7 @@ export default function WorkshopsModule() {
   };
 
   const toggleEnroll = (workshop: AgendaItem) => {
-    if (!isPaid || isConfirmed) return;
+    if (!isPaid || isConfirmed || workshop.room === 'GENERAL') return;
     setSaveStatus('idle');
 
     if (enrolledIds.includes(workshop.id)) {
@@ -140,10 +148,14 @@ export default function WorkshopsModule() {
     setSaveStatus('saving');
     
     if (user && user.id) {
-      const { success } = await syncUserEnrollmentsMutation(user.id, enrolledIds);
+      // Al guardar, incluimos los de GENERAL para que aparezcan en su agenda confirmada
+      const generalIds = agenda.filter((a: AgendaItem) => a.room === 'GENERAL').map((a: AgendaItem) => a.id);
+      const allToSave = Array.from(new Set([...enrolledIds, ...generalIds]));
+
+      const { success } = await syncUserEnrollmentsMutation(user.id, allToSave);
       
       if (success) {
-        await updateUserDataMutation({ ...user, talleres: enrolledIds });
+        await updateUserDataMutation({ ...user, talleres: allToSave });
         localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
         
         setIsConfirmed(true);
@@ -200,66 +212,18 @@ export default function WorkshopsModule() {
         </Alert>
       )}
 
-      <div className={`calendar-container ${isConfirmed ? 'confirmed' : ''}`}>
-        <div className="calendar-grid" style={{ gridTemplateColumns: `80px repeat(${rooms.length}, 1fr)`, gridTemplateRows: `60px repeat(${HOURS.length}, 80px)` }}>
-          <div className="grid-header time-label">HORA</div>
-          {rooms.map((room: string, idx: number) => {
-            const colorTheme = roomColors[idx % roomColors.length];
-            return (
-              <div key={room} className="grid-header room-label" style={{ backgroundColor: colorTheme.bg, color: colorTheme.text }}>
-                {room}
-              </div>
-            );
-          })}
-
-          {HOURS.map(hour => (
-            <div key={hour} className="hour-row-label" style={{ gridRow: hour - minHour + 1 }}>
-              {hour > 12 ? `${hour - 12}:00` : `${hour}:00`}
-            </div>
-          ))}
-
-          {HOURS.map(hour => (
-            <div key={`line-${hour}`} className="hour-grid-line" style={{ gridRow: hour - minHour + 1 }}></div>
-          ))}
-
-          {agenda.filter((w: AgendaItem) => w.speaker).map((workshop: AgendaItem) => {
-            const isSelected = enrolledIds.includes(workshop.id);
-            const isBlocked = !isSelected && (isTimeCollision(workshop) || isConfirmed);
-            
-            return (
-              <div 
-                key={workshop.id} 
-                className={`calendar-workshop ${isSelected ? 'selected' : ''} ${isBlocked ? 'blocked' : ''}`}
-                style={getWorkshopStyles(workshop, isSelected)}
-                onClick={() => toggleEnroll(workshop)}
-              >
-                <div className="workshop-content">
-                  <span className="w-title">{workshop.title}</span>
-                  <span className="w-time">{workshop.time.replace(' AM', '').replace(' PM', '')} - {workshop.endTime.replace(' AM', '').replace(' PM', '')}</span>
-                  <span className="w-speaker">{workshop.speaker?.name || 'General'}</span>
-                </div>
-                {isSelected && (
-                  <div className="selected-check">
-                    <Icons.Check size={12} strokeWidth={4} />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="calendar-legend">
-        {rooms.map((room: string, idx: number) => {
-          const colorTheme = roomColors[idx % roomColors.length];
-          return (
-            <div key={room} className="legend-item">
-              <span className="legend-dot" style={{ backgroundColor: colorTheme.text }}></span>
-              {room}
-            </div>
-          );
-        })}
-      </div>
+      <CalendarGrid
+        rooms={rooms}
+        HOURS={HOURS}
+        minHour={minHour}
+        roomColors={roomColors}
+        agenda={agenda}
+        enrolledIds={enrolledIds}
+        isConfirmed={isConfirmed}
+        isTimeCollision={isTimeCollision}
+        toggleEnroll={toggleEnroll}
+        getWorkshopStyles={getWorkshopStyles}
+      />
 
       {isPaid && (() => {
         const modificationsCount = user ? parseInt(localStorage.getItem(`modifications_count_${user.correo}`) || '0') : 0;
@@ -316,7 +280,7 @@ export default function WorkshopsModule() {
 
       {/* Botón regresar al inicio */}
       <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
-        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => window.location.href = '/dashboard'}>
+        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
           Ir al Inicio
         </button>
       </div>
@@ -345,7 +309,16 @@ export default function WorkshopsModule() {
           font-family: 'Syne', sans-serif;
           font-weight: 800;
           font-size: 14px;
-          border-bottom: 2px solid var(--border-soft);
+          border-bottom: 2px solid rgba(0,0,0,0.05);
+          position: sticky;
+          top: 0;
+          z-index: 20;
+        }
+
+        .column-grid-bg {
+          border-left: 1px solid rgba(0,0,0,0.05);
+          grid-row: 2 / -1;
+          pointer-events: none;
         }
 
         .time-label { color: var(--text-secondary); }
@@ -420,16 +393,22 @@ export default function WorkshopsModule() {
           justify-content: center;
         }
 
-        .calendar-legend {
-          display: flex;
-          justify-content: center;
-          gap: 2rem;
-          margin-bottom: 3rem;
-          flex-wrap: wrap;
+        .calendar-workshop.mandatory {
+          background: #e3f2fd !important;
+          color: #1976d2 !important;
+          border: 2px dashed #2196f3;
+          cursor: default;
+          box-shadow: none;
         }
 
-        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
-        .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+        .calendar-workshop.mandatory .selected-check {
+          background: #2196f3;
+          color: white;
+        }
+
+        .column-grid-line {
+          display: none; /* Reemplazado por column-grid-bg */
+        }
 
         .confirm-section-new { display: flex; justify-content: center; padding: 2rem 0; }
         .btn-confirm {

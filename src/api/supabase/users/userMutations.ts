@@ -62,7 +62,8 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
       ciclo: updatedData.ciclo,
       telefono: updatedData.telefono,
       correo_diploma: updatedData.correoDiploma,
-      diploma_editado: updatedData.diplomaEditado
+      diploma_editado: updatedData.diplomaEditado,
+      avatar_url: updatedData.avatarUrl
     })
     .eq('id', updatedData.id);
 

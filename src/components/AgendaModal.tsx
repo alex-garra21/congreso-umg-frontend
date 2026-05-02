@@ -57,7 +57,11 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
               className="speaker-avatar"
               style={{ background: item.speaker.bgColor, color: item.speaker.textColor, width: '50px', height: '50px', fontSize: '18px', margin: 0, flexShrink: 0 }}
             >
-              {item.speaker.initials}
+              {item.speaker.avatar ? (
+                <img src={item.speaker.avatar} alt={item.speaker.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ) : (
+                item.speaker.initials
+              )}
             </div>
             <div>
               <h4 style={{ margin: 0, fontSize: '16px' }}>{item.speaker.name}</h4>

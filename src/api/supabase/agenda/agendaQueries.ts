@@ -43,7 +43,7 @@ export async function getPonentesQuery(): Promise<Speaker[]> {
     bgColor: d.bg_color || '#e3f2fd',
     textColor: d.text_color || '#1565c0',
     avatar: d.avatar_url || undefined,
-    socials: d.redes_sociales || []
+    socialLinks: d.redes_sociales || {}
   }));
 }
 
@@ -75,7 +75,7 @@ export async function getCharlasQuery(): Promise<AgendaItem[]> {
       bgColor: d.ponentes.bg_color || '#e3f2fd',
       textColor: d.ponentes.text_color || '#1565c0',
       avatar: d.ponentes.avatar_url || undefined,
-      socials: d.ponentes.redes_sociales || []
+      socialLinks: d.ponentes.redes_sociales || {}
     } : undefined,
     period: d.hora_inicio.includes('AM') ? 'Mañana' : 'Tarde',
     location: d.sala || 'SALA GENERAL',

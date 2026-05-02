@@ -4,10 +4,11 @@ interface PaginationProps {
   current: number;
   total: number;
   onPageChange: (p: number) => void;
+  itemsPerPage?: number;
 }
 
-const Pagination = ({ current, total, onPageChange }: PaginationProps) => {
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+const Pagination = ({ current, total, onPageChange, itemsPerPage = ITEMS_PER_PAGE }: PaginationProps) => {
+  const totalPages = Math.ceil(total / itemsPerPage);
   if (totalPages <= 1) return null;
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem', padding: '1rem' }}>

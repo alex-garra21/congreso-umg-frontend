@@ -30,7 +30,7 @@ export interface Speaker {
   bgColor: string;
   textColor: string;
   avatar?: string;
-  socials?: { red: string, url: string }[];
+  socialLinks?: Record<string, string>;
 }
 
 export const mockSpeakers: Speaker[] = [

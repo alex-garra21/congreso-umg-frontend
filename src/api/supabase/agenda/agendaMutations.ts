@@ -102,7 +102,7 @@ export async function savePonentesMutation(ponentes: Speaker[]): Promise<void> {
     bg_color: p.bgColor,
     text_color: p.textColor,
     tag: p.tag,
-    redes_sociales: (p as any).socials || [] // En caso de que añadas redes sociales más adelante
+    redes_sociales: p.socialLinks || {}
   }));
 
   const { error: upsertError } = await supabase.from('ponentes').upsert(mapped);

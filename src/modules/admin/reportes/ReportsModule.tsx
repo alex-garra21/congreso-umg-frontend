@@ -3,12 +3,13 @@ import { useGeneralReport } from '../../../api/hooks/useReports';
 import { useCharlas } from '../../../api/hooks/useAgenda';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast } from '../../../utils/swal';
-import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
+import { Pagination } from '../../../components/Pagination';
 import AdminButton from '../../../components/ui/AdminButton';
 import AdminBadge from '../../../components/ui/AdminBadge';
 import SearchBar from '../../../components/ui/SearchBar';
 import AdminSelect from '../../../components/ui/AdminSelect';
 import ModuleCard from '../../../components/ui/ModuleCard';
+import AdminTable from '../../../components/ui/AdminTable';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -45,7 +46,16 @@ export default function ReportsModule() {
     return matchesSearch && matchesWorkshop && matchesPayment && matchesType;
   });
 
-  const paginatedUsers = filteredUsers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const paginatedUsers = filteredUsers.slice((page - 1) * 10, page * 10);
+
+  const getDisplayName = (u: any) => {
+    if (u.nombreDiploma && u.nombreDiploma.trim() !== '') {
+      return u.nombreDiploma;
+    }
+    const firstName = u.nombres.trim().split(' ')[0] || '';
+    const firstSurname = u.apellidos.trim().split(' ')[0] || '';
+    return `${firstName} ${firstSurname}`.trim();
+  };
 
   const exportToExcel = async () => {
     if (filteredUsers.length === 0) {
@@ -78,7 +88,7 @@ export default function ReportsModule() {
         : (u.talleres?.map(tid => getWorkshopTitle(tid)).join(', ') || '-');
 
       worksheet.addRow({
-        name: u.nombreDiploma || `${u.nombres} ${u.apellidos}`,
+        name: getDisplayName(u),
         email: u.correoDiploma || u.correo,
         workshops: workshopsText,
         gender: u.sexo === 'M' ? 'Hombre' : 'Mujer',
@@ -92,15 +102,30 @@ export default function ReportsModule() {
 
     worksheet.getRow(1).font = { bold: true };
 
-    const workshopSuffix = selectedWorkshopFilter === 'all_records'
-      ? ' - Todos los registros'
+    // Generar sufijos descriptivos para el nombre del archivo
+    let filtersSuffix = '';
+    
+    // Filtro de taller
+    filtersSuffix += selectedWorkshopFilter === 'all_records'
+      ? '_Todos'
       : selectedWorkshopFilter === ''
-        ? ' - Todos los talleres'
+        ? '_ConTalleres'
         : selectedWorkshopFilter === 'none'
-          ? ' - Sin talleres asignados'
-          : ` - ${getWorkshopTitle(selectedWorkshopFilter)}`;
+          ? '_SinTalleres'
+          : `_${getWorkshopTitle(selectedWorkshopFilter).replace(/\s+/g, '_')}`;
+
+    // Filtro de pago
+    if (paymentFilter !== 'all') {
+      filtersSuffix += paymentFilter === 'paid' ? '_Pagados' : '_Pendientes';
+    }
+
+    // Filtro de tipo
+    if (participantTypeFilter !== 'all') {
+      filtersSuffix += participantTypeFilter === 'alumno' ? '_EstudiantesUMG' : '_Externos';
+    }
+
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Reporte_Congreso_2026${workshopSuffix}.xlsx`);
+    saveAs(new Blob([buffer]), `Reporte_Congreso_2026${filtersSuffix}.xlsx`);
   };
 
   const exportDiplomasToExcel = async () => {
@@ -128,7 +153,7 @@ export default function ReportsModule() {
         : (u.talleres?.map(tid => getWorkshopTitle(tid)).join(', ') || '-');
 
       worksheet.addRow({
-        name: u.nombreDiploma || `${u.nombres} ${u.apellidos}`,
+        name: getDisplayName(u),
         email: u.correoDiploma || u.correo,
         workshops: workshopsText
       });
@@ -136,15 +161,30 @@ export default function ReportsModule() {
 
     worksheet.getRow(1).font = { bold: true };
 
-    const workshopSuffix = selectedWorkshopFilter === 'all_records'
-      ? ' - Todos los registros'
+    // Generar sufijos descriptivos para el nombre del archivo
+    let filtersSuffix = '';
+    
+    // Filtro de taller
+    filtersSuffix += selectedWorkshopFilter === 'all_records'
+      ? '_Todos'
       : selectedWorkshopFilter === ''
-        ? ' - Todos los talleres'
+        ? '_ConTalleres'
         : selectedWorkshopFilter === 'none'
-          ? ' - Sin talleres asignados'
-          : ` - ${getWorkshopTitle(selectedWorkshopFilter)}`;
+          ? '_SinTalleres'
+          : `_${getWorkshopTitle(selectedWorkshopFilter).replace(/\s+/g, '_')}`;
+
+    // Filtro de pago
+    if (paymentFilter !== 'all') {
+      filtersSuffix += paymentFilter === 'paid' ? '_Pagados' : '_Pendientes';
+    }
+
+    // Filtro de tipo
+    if (participantTypeFilter !== 'all') {
+      filtersSuffix += participantTypeFilter === 'alumno' ? '_EstudiantesUMG' : '_Externos';
+    }
+
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Lista_Diplomas_2026${workshopSuffix}.xlsx`);
+    saveAs(new Blob([buffer]), `Lista_Diplomas_2026${filtersSuffix}.xlsx`);
   };
 
   return (
@@ -161,7 +201,17 @@ export default function ReportsModule() {
           </div>
         }
       >
-        <div className="filters-bar-admin" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', alignItems: 'flex-end', background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '12px' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          flexWrap: 'wrap', 
+          marginBottom: '2rem', 
+          alignItems: 'flex-end', 
+          background: 'var(--bg-secondary)', 
+          padding: '1.5rem', 
+          borderRadius: '12px',
+          border: '1px solid var(--border-soft)'
+        }}>
           <SearchBar 
             value={searchTerm} 
             onChange={(val) => { setSearchTerm(val); setPage(1); }} 
@@ -205,23 +255,17 @@ export default function ReportsModule() {
         </div>
 
         {isLoadingUsers ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Cargando datos del reporte...</div>
+          <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <div className="loader-spinner" style={{ margin: '0 auto 1rem' }}></div>
+            Cargando datos del reporte...
+          </div>
         ) : (
-          <div className="table-responsive">
-            <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Participante</th>
-                <th>Taller</th>
-                <th>Tipo</th>
-                <th>Pago</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <AdminTable headers={["Participante", "Taller", "Tipo", "Pago"]} emptyMessage="No se encontraron participantes con los filtros seleccionados.">
               {paginatedUsers.map(u => (
                 <tr key={u.correo}>
                   <td>
-                    <strong>{u.nombres} {u.apellidos}</strong>
+                    <strong>{getDisplayName(u)}</strong>
                     <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{u.correo}</div>
                   </td>
                   <td>
@@ -245,18 +289,15 @@ export default function ReportsModule() {
                   </td>
                 </tr>
               ))}
-              {paginatedUsers.length === 0 && (
-                <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 500 }}>No se encontraron participantes con los filtros seleccionados.</div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            </AdminTable>
+            <Pagination 
+              current={page} 
+              total={filteredUsers.length} 
+              onPageChange={setPage} 
+              itemsPerPage={10}
+            />
+          </>
         )}
-        <Pagination current={page} total={filteredUsers.length} onPageChange={setPage} />
       </ModuleCard>
     </section>
   );

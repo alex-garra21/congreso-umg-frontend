@@ -21,6 +21,7 @@ export interface UserData {
   desactivado?: boolean;
   asistencias?: { workshopId: string; timestamp: string }[];
   dpi?: string;
+  avatarUrl?: string;
 }
 
 export interface TokenData {

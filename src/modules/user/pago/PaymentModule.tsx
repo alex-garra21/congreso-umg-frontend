@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { validateTokenMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
@@ -7,6 +8,7 @@ import { Icons } from '../../../components/Icons';
 
 export default function PaymentModule() {
   const [codigo, setCodigo] = useState('');
+  const navigate = useNavigate();
   const { user, refetchProfile } = useAuth();
 
   const isPaid = user?.pagoValidado;
@@ -45,7 +47,7 @@ export default function PaymentModule() {
           <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2.5rem', fontSize: '16px', lineHeight: '1.6' }}>
             Tu inscripción ha sido validada exitosamente. Ya puedes disfrutar de todos los beneficios del congreso y elegir tus talleres.
           </p>
-          <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none' }} onClick={() => window.location.href = '/dashboard'}>
+          <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none' }} onClick={() => navigate('/dashboard')}>
             Ir al Inicio
           </button>
         </section>

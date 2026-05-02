@@ -78,8 +78,12 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
       </div>
 
       <div className="sidebar-user">
-        <div className="user-avatar">
-          {getInitials()}
+        <div className="user-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            getInitials()
+          )}
         </div>
         {isExpanded && (
           <div className="user-info" key={`${user?.correo}-${user?.nombres}-${user?.tipoParticipante}`}>

@@ -1,7 +1,7 @@
 import type { Speaker } from '../data/agendaData';
 import { agendaCompleta } from '../data/agendaData';
-import WorkshopBadge from './workshops/WorkshopBadge';
 import WorkshopCard from './workshops/WorkshopCard';
+import { Icons } from './Icons';
 
 interface SpeakerModalProps {
   speaker: Speaker | null;
@@ -42,13 +42,46 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
               borderRadius: '50%'
             }}
           >
-            {speaker.initials}
+            {speaker.avatar ? (
+              <img src={speaker.avatar} alt={speaker.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+            ) : (
+              speaker.initials
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
             <h3 style={{ fontSize: '24px', margin: 0, fontFamily: 'Syne', fontWeight: 800 }}>{speaker.name}</h3>
             <p className="speaker-role" style={{ margin: 0, fontSize: '15px', color: 'var(--text-secondary)' }}>{speaker.role}</p>
-            <WorkshopBadge tag={speaker.tag} />
+
+            {speaker.socialLinks && Object.values(speaker.socialLinks).some(link => link) && (
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                {speaker.socialLinks.facebook && (
+                  <a href={speaker.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="Facebook">
+                    <Icons.Facebook size={18} color="var(--text-secondary)" />
+                  </a>
+                )}
+                {speaker.socialLinks.instagram && (
+                  <a href={speaker.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="Instagram">
+                    <Icons.Instagram size={18} color="var(--text-secondary)" />
+                  </a>
+                )}
+                {speaker.socialLinks.tiktok && (
+                  <a href={speaker.socialLinks.tiktok} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="TikTok">
+                    <Icons.TikTok size={18} color="var(--text-secondary)" />
+                  </a>
+                )}
+                {speaker.socialLinks.x && (
+                  <a href={speaker.socialLinks.x} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="X (Twitter)">
+                    <Icons.TwitterX size={18} color="var(--text-secondary)" />
+                  </a>
+                )}
+                {speaker.socialLinks.linkedin && (
+                  <a href={speaker.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="social-icon-link" title="LinkedIn">
+                    <Icons.LinkedIn size={18} color="var(--text-secondary)" />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

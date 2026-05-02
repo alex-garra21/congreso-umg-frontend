@@ -30,7 +30,8 @@ export async function getAllUsersQuery(): Promise<UserData[]> {
     telefono: userData.telefono,
     correoDiploma: userData.correo_diploma,
     desactivado: userData.desactivado || false,
-    dpi: userData.dpi
+    dpi: userData.dpi,
+    avatarUrl: userData.avatar_url
   }));
 
   const finalUsers = await Promise.all(mappedUsers.map(async (u) => {
@@ -112,6 +113,7 @@ export async function getUserProfileQuery(userId: string): Promise<UserData | nu
     dpi: userData.dpi,
     talleres,
     asistencias,
-    diplomaEditado: userData.diploma_editado
+    diplomaEditado: userData.diploma_editado,
+    avatarUrl: userData.avatar_url
   };
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { useUpdateUserData } from '../../../api/hooks/useUsers';
 import { type UserData } from '../../../utils/auth';
@@ -8,20 +9,23 @@ import { showAlert } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
+import AvatarUpload from '../../../components/ui/AvatarUpload';
 
 export default function ProfileModule() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const updateUserDataMutation = useUpdateUserData();
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
     correo: '',
     dpi: '',
-    tipoParticipante: '' as 'alumno' | 'externo',
+    tipoParticipante: 'externo' as 'alumno' | 'externo',
     carnet: '',
     ciclo: '',
     telefono: '',
     sexo: '',
+    avatarUrl: '',
   });
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -39,6 +43,7 @@ export default function ProfileModule() {
         ciclo: user.ciclo || '',
         telefono: user.telefono || '',
         sexo: user.sexo || '',
+        avatarUrl: user.avatarUrl || '',
       });
     }
   }, [user]);
@@ -111,9 +116,17 @@ export default function ProfileModule() {
     <div className="profile-module">
       <ModuleTitle title="Mi perfil" />
       <section className="dashboard-section profile-container">
-        <div className="profile-header">
+        <div className="profile-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <AvatarUpload 
+            userId={user.id!} 
+            currentAvatarUrl={user.avatarUrl} 
+            initials={(user.nombres?.[0] || '') + (user.apellidos?.[0] || '')}
+            onAvatarChange={(newUrl) => {
+              setFormData(prev => ({ ...prev, avatarUrl: newUrl }));
+            }} 
+          />
           <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '24px' }}>Información personal</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Estos datos se usarán para tu identificación en el evento y para la generación de tus diplomas.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Estos datos se usarán para tu identificación en el evento y para la gestión de tu cuenta.</p>
           <br />
         </div>
 
@@ -128,7 +141,7 @@ export default function ProfileModule() {
                 placeholder="Nombres" 
                 readOnly 
                 className="dashboard-input"
-                style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} 
+                style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border-soft)', cursor: 'not-allowed' }} 
               />
             </FormField>
             <FormField label="Apellidos" style={{ flex: 1 }}>
@@ -140,7 +153,7 @@ export default function ProfileModule() {
                 placeholder="Apellidos" 
                 readOnly 
                 className="dashboard-input"
-                style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} 
+                style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border-soft)', cursor: 'not-allowed' }} 
               />
             </FormField>
           </div>
@@ -159,16 +172,14 @@ export default function ProfileModule() {
           </div>
 
           <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
-            <FormField label="Correo electrónico (diplomas)" style={{ flex: 2 }}>
+            <FormField label="Correo de acceso" style={{ flex: 2 }}>
               <input 
                 type="email" 
                 name="correo" 
                 value={formData.correo} 
-                onChange={handleChange} 
-                placeholder="correo@miumg.edu.gt" 
                 readOnly 
                 className="dashboard-input"
-                style={{ backgroundColor: '#fff5f5', border: '1px solid #feb2b2', cursor: 'not-allowed' }} 
+                style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border-soft)', cursor: 'not-allowed' }} 
               />
             </FormField>
             <FormField label="Tipo de participante" required style={{ flex: 1 }}>
@@ -182,7 +193,7 @@ export default function ProfileModule() {
           {formData.tipoParticipante === 'alumno' && (
             <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
               <FormField label="Número de carnet" required style={{ flex: 3 }}>
-                <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="20230001234" required className="dashboard-input" />
+                <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="Ej: 0902-20-698" required className="dashboard-input" />
               </FormField>
               <FormField label="Ciclo" required style={{ flex: 1 }}>
                 <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
@@ -202,9 +213,11 @@ export default function ProfileModule() {
             </div>
           )}
 
-          <FormField label="Teléfono (opcional)">
-            <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="0000 0000" className="dashboard-input" />
-          </FormField>
+          <div className="form-row">
+            <FormField label="Teléfono (opcional)" style={{ flex: 1 }}>
+              <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="0000 0000" className="dashboard-input" />
+            </FormField>
+          </div>
 
           <div className="profile-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
             <button type="submit" className="submit-btn" style={{ width: 'auto', padding: '12px 32px' }}>
@@ -221,6 +234,13 @@ export default function ProfileModule() {
           </div>
         </form>
       </section>
+      
+      {/* Botón regresar al inicio */}
+      <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
+        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
+          Ir al Inicio
+        </button>
+      </div>
 
       <Modal
         isOpen={isSuccessModalOpen}

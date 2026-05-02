@@ -82,11 +82,30 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     if (onSwitchToLogin) onSwitchToLogin();
   };
 
+  const ALLOWED_DOMAINS = [
+    'gmail.com', 'hotmail.com', 'hotmail.es', 'outlook.com', 'outlook.es',
+    'yahoo.com', 'yahoo.es', 'icloud.com', 'miumg.edu.gt', 'live.com', 'live.es',
+    'protonmail.com', 'me.com'
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Validación básica adicional
+    // Validación de dominio de correo
+    const emailParts = formData.correo.toLowerCase().split('@');
+    if (emailParts.length !== 2) {
+      setError('Por favor ingrese un correo electrónico válido.');
+      return;
+    }
+
+    const domain = emailParts[1];
+    if (!ALLOWED_DOMAINS.includes(domain)) {
+      setError(`Solo se permiten correos de proveedores comunes (@gmail.com, @hotmail.com, @miumg.edu.gt, etc.). Si cree que su dominio debe ser incluido, contacte a soporte.`);
+      return;
+    }
+
+    // Validación de contraseñas
     if (formData.contrasena !== formData.confirmarContrasena) {
       showToast('Las contraseñas no coinciden.', 'error');
       return;
@@ -181,7 +200,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 <FormField label="Ciclo" required style={{ flex: 1 }}>
                   <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
                     <option value="">Selección</option>
-                    {[ 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X' ].map(c => (
+                    {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'].map(c => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
