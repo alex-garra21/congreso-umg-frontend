@@ -58,9 +58,12 @@ export function useInvalidatePayment() {
   
   return useMutation({
     mutationFn: (userId: string) => invalidatePaymentMutation(userId),
-    onSuccess: () => {
+    onSuccess: (_, userId) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['tokens'] });
+      queryClient.invalidateQueries({ queryKey: ['enrollments', userId] });
+      queryClient.invalidateQueries({ queryKey: ['attendances', userId] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
     },
   });
 }
@@ -84,6 +87,10 @@ export function useDeleteToken() {
     mutationFn: (code: string) => deleteTokenMutation(code),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tokens'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['enrollments'] });
+      queryClient.invalidateQueries({ queryKey: ['attendances'] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
     },
   });
 }

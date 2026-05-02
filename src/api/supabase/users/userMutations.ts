@@ -77,21 +77,30 @@ export async function invalidatePaymentMutation(userId: string): Promise<{ succe
     .eq('usado_por', userId)
     .maybeSingle();
 
-  // 2. Desactivar validación de pago en el usuario
+  // 2. Limpieza PROFUNDA de datos del usuario que dependen de pago
   const { error: userError } = await supabase
     .from('usuarios')
-    .update({ pago_validado: false, pago_enviado: false }) // Reiniciamos ambos por seguridad
+    .update({ 
+      pago_validado: false, 
+      pago_enviado: false,
+      talleres: null,
+      nombre_diploma: null,
+      correo_diploma: null,
+      diploma_editado: false
+    })
     .eq('id', userId);
 
-  if (userError) return { success: false, message: 'Error al invalidar el pago.' };
+  if (userError) return { success: false, message: 'Error al invalidar el pago del usuario.' };
 
-  // 3. Manejar el token
+  // 3. Liberar cupos en talleres y borrar asistencias
+  await supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId);
+  await supabase.from('asistencias').delete().eq('id_usuario', userId);
+
+  // 4. Manejar el token (liberar o borrar)
   if (tokenData) {
     if (tokenData.codigo.startsWith('ADMIN-')) {
-      // Si es un token de admin, lo eliminamos por completo
       await supabase.from('tokens_pago').delete().eq('codigo', tokenData.codigo);
     } else {
-      // Si es un token normal, lo liberamos
       await supabase
         .from('tokens_pago')
         .update({
@@ -103,7 +112,7 @@ export async function invalidatePaymentMutation(userId: string): Promise<{ succe
     }
   }
 
-  return { success: true, message: 'Pago anulado y registro de token actualizado.' };
+  return { success: true, message: 'Pago anulado y datos de usuario reseteados completamente.' };
 }
 
 export async function adminValidateUserMutation(userId: string, adminId?: string): Promise<{ success: boolean; message: string }> {
@@ -134,6 +143,36 @@ export async function adminValidateUserMutation(userId: string, adminId?: string
 }
 
 export async function deleteTokenMutation(code: string): Promise<void> {
+  // 1. Obtener información del token antes de borrarlo
+  const { data: tokenData } = await supabase
+    .from('tokens_pago')
+    .select('usado, usado_por')
+    .eq('codigo', code)
+    .maybeSingle();
+
+  // 2. Si estaba siendo usado, realizar limpieza profunda del usuario
+  if (tokenData?.usado && tokenData.usado_por) {
+    const userId = tokenData.usado_por;
+
+    // Reset de tabla usuarios
+    await supabase
+      .from('usuarios')
+      .update({ 
+        pago_validado: false, 
+        pago_enviado: false,
+        talleres: null,
+        nombre_diploma: null,
+        correo_diploma: null,
+        diploma_editado: false
+      })
+      .eq('id', userId);
+
+    // Liberar cupos y borrar asistencias
+    await supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId);
+    await supabase.from('asistencias').delete().eq('id_usuario', userId);
+  }
+
+  // 3. Borrar el token definitivamente
   await supabase.from('tokens_pago').delete().eq('codigo', code);
 }
 
@@ -145,7 +184,17 @@ export async function generateTokenMutation(code: string, adminId?: string): Pro
   return { success: !error, error };
 }
 
-export async function validateTokenMutation(code: string, userId: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'error' }> {
+export async function validateTokenMutation(code: string, userId: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'already_paid' | 'error' }> {
+  // 1. Verificar si el usuario ya está validado para no quemar tokens innecesarios
+  const { data: userData } = await supabase
+    .from('usuarios')
+    .select('pago_validado')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (userData?.pago_validado) return { success: false, errorType: 'already_paid' };
+
+  // 2. Buscar el token
   const { data: tokenData, error: fetchError } = await supabase
     .from('tokens_pago')
     .select('*')
@@ -156,17 +205,21 @@ export async function validateTokenMutation(code: string, userId: string): Promi
   if (!tokenData) return { success: false, errorType: 'not_found' };
   if (tokenData.usado) return { success: false, errorType: 'already_used' };
 
-  const { error: updateError } = await supabase
+  // 3. Intentar usar el token con condición de carrera (Race Condition prevention)
+  const { error: updateError, count } = await supabase
     .from('tokens_pago')
     .update({
       usado: true,
       usado_por: userId,
       fecha_uso: new Date().toISOString()
     })
-    .eq('codigo', tokenData.codigo);
+    .eq('codigo', tokenData.codigo)
+    .eq('usado', false); // Solo si sigue sin usarse
 
-  if (updateError) return { success: false, errorType: 'error' };
+  // Si no se actualizó ninguna fila, es porque alguien más lo usó justo antes
+  if (updateError || count === 0) return { success: false, errorType: 'already_used' };
 
+  // 4. Activar al usuario
   await supabase.from('usuarios').update({ pago_validado: true }).eq('id', userId);
 
   return { success: true };
