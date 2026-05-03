@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { sendPasswordResetEmail } from '../utils/auth';
 import { Icons } from './Icons';
+import LoadingButton from './ui/LoadingButton';
 
 interface ForgotPasswordModalProps {
   onClose: () => void;
@@ -73,14 +74,16 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
               </p>
             </div>
 
-            <button 
-              className="submit-btn" 
+            <LoadingButton 
+              isLoading={isLoading} 
+              loadingText="Reenviando..." 
+              disabled={countdown > 0}
               onClick={() => handleSendCode()} 
-              disabled={isLoading || countdown > 0}
-              style={{ width: '100%', marginBottom: '1rem', opacity: countdown > 0 ? 0.6 : 1 }}
+              fullWidth
+              style={{ marginBottom: '1rem' }}
             >
-              {isLoading ? 'Reenviando...' : countdown > 0 ? `Reenviar en ${countdown}s` : 'Reenviar correo'}
-            </button>
+              {countdown > 0 ? `Reenviar en ${countdown}s` : 'Reenviar correo'}
+            </LoadingButton>
             
             <button 
               className="ghost-btn" 
@@ -121,9 +124,14 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
                 Asegúrate de escribir tu correo correctamente para recibir el enlace.
               </p>
               
-              <button type="submit" className="submit-btn" disabled={isLoading} style={{ width: '100%' }}>
-                {isLoading ? 'Enviando...' : 'Enviar enlace de recuperación'}
-              </button>
+              <LoadingButton 
+                type="submit" 
+                isLoading={isLoading} 
+                loadingText="Enviando..." 
+                fullWidth
+              >
+                Enviar enlace de recuperación
+              </LoadingButton>
             </form>
           </>
         )}

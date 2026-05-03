@@ -6,6 +6,7 @@ import PasswordField from './PasswordField';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
 import Alert from './ui/Alert';
+import LoadingButton from './ui/LoadingButton';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const [contrasena, setContrasena] = useState('');
   const [isForgotOpen, setIsForgotOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const clearFields = () => {
@@ -39,8 +41,10 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     const result = await loginUser(correo, contrasena);
+    setIsLoading(false);
 
     if (result.success) {
       clearFields();
@@ -96,7 +100,15 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
           style={{ marginBottom: '1.5rem' }}
         />
 
-        <button type="submit" className="submit-btn" style={{ marginBottom: '1rem' }}>Ingresar</button>
+        <LoadingButton 
+          type="submit" 
+          isLoading={isLoading} 
+          loadingText="Verificando..." 
+          fullWidth
+          style={{ marginBottom: '1rem' }}
+        >
+          Ingresar
+        </LoadingButton>
       </form>
 
       <div style={{ marginTop: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

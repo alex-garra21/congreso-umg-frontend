@@ -7,6 +7,7 @@ import { showToast } from '../utils/swal';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
 import Alert from './ui/Alert';
+import LoadingButton from './ui/LoadingButton';
 import { PARTICIPANT_TYPES, requiresAcademicInfo, CICLOS, getParticipantIdLabel, requiresCiclo, getParticipantIdMaxLength, showParticipantIdHelp } from '../data/userTypes';
 
 interface RegisterModalProps {
@@ -297,17 +298,20 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               </span>
             )}
 
-            <button
+            <LoadingButton
               type="submit"
-              className="submit-btn"
+              isLoading={registerUserMutation.isPending}
+              loadingText="Creando cuenta..."
+              fullWidth
               style={{
                 marginBottom: '1rem',
-                opacity: !passwordsMatch || !formData.correo ? 0.6 : 1,
-                cursor: !passwordsMatch || !formData.correo ? 'not-allowed' : 'pointer'
+                opacity: (!passwordsMatch || !formData.correo) && !registerUserMutation.isPending ? 0.6 : 1,
+                cursor: (!passwordsMatch || !formData.correo) ? 'not-allowed' : 'pointer'
               }}
+              disabled={!passwordsMatch || !formData.correo}
             >
               Crear Cuenta
-            </button>
+            </LoadingButton>
           </form>
 
           <p className="switch-link" style={{ marginTop: '1.5rem', textAlign: 'center' }}>

@@ -10,6 +10,7 @@ import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import Alert from '../../../components/ui/Alert';
 import FormField from '../../../components/ui/FormField';
+import LoadingButton from '../../../components/ui/LoadingButton';
 
 export default function DiplomaModule() {
   const { user, refetchProfile } = useAuth();
@@ -19,6 +20,7 @@ export default function DiplomaModule() {
     correoDiploma: ''
   });
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -57,6 +59,7 @@ export default function DiplomaModule() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || user.diplomaEditado) return;
+    setIsSaving(true);
 
     const updatedUser: UserData = {
       ...user,
@@ -72,6 +75,7 @@ export default function DiplomaModule() {
     } else {
       showAlert('Error', result.error?.message || 'Error al guardar los datos', 'error');
     }
+    setIsSaving(false);
   };
 
   const isDiplomaNameTooLong = formData.nombreDiploma.length > 25;
@@ -171,19 +175,20 @@ export default function DiplomaModule() {
 
             {!isLocked ? (
               <div className="diploma-actions" style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <button
+                <LoadingButton
                   type="submit"
-                  className="submit-btn"
+                  isLoading={isSaving}
+                  loadingText="Guardando..."
                   style={{
                     width: 'auto',
                     padding: '12px 32px',
-                    opacity: (isDiplomaNameTooLong || !isPaid) ? 0.6 : 1,
+                    opacity: (isDiplomaNameTooLong || !isPaid) && !isSaving ? 0.6 : 1,
                     cursor: (isDiplomaNameTooLong || !isPaid) ? 'not-allowed' : 'pointer'
                   }}
                   disabled={isDiplomaNameTooLong || !isPaid}
                 >
                   Guardar datos
-                </button>
+                </LoadingButton>
                 <button
                   type="button"
                   className="btn-ghost"

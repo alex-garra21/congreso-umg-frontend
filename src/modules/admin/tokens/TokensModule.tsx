@@ -26,7 +26,7 @@ export default function TokensModule() {
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [isMassModalOpen, setIsMassModalOpen] = useState(false);
   const [massQuantity, setMassQuantity] = useState(10);
-  
+
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -34,38 +34,76 @@ export default function TokensModule() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const handleGenerateToken = async () => {
+  // Función para generar un código único que no exista en la lista actual
+  const generateUniqueCode = (existingTokens: any[]) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let code = '';
-    for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-    
-    await generateTokenMutation.mutateAsync({ code });
+    const generateSegment = (len: number) => {
+      let segment = '';
+      for (let i = 0; i < len; i++) segment += chars.charAt(Math.floor(Math.random() * chars.length));
+      return segment;
+    };
+
+    let newCode = '';
+    let isDuplicate = true;
+    let attempts = 0;
+
+    const BLACKLIST = ['C2026-aBcD-1xYz-9QkL'];
+
+    while (isDuplicate && attempts < 20) {
+      const seg1 = generateSegment(4);
+      const seg2 = generateSegment(4);
+      const seg3 = generateSegment(4);
+
+      // Validación de segmentos internos: evitar que los segmentos sean iguales entre sí
+      if (seg1 === seg2 || seg1 === seg3 || seg2 === seg3) {
+        attempts++;
+        continue;
+      }
+
+      // Formato: C2026-XXXX-XXXX-XXXX (Prefijo + 3 segmentos para máxima seguridad)
+      newCode = `C2026-${seg1}-${seg2}-${seg3}`;
+
+      // Verificamos contra la base de datos Y contra la lista negra de placeholders
+      isDuplicate = existingTokens.some(t => t.code === newCode) || BLACKLIST.includes(newCode);
+      attempts++;
+    }
+
+    return newCode;
+  };
+
+  const handleGenerateToken = async () => {
+    const code = generateUniqueCode(tokens);
+    await generateTokenMutation.mutateAsync({ code, used: false } as any);
     setPage(1);
+    showToast('Token único generado con éxito', 'success');
   };
 
   const handleMassGenerate = async () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const promises = [];
+    const tempTokens = [...tokens]; // Para validar duplicados entre los nuevos generados
+
     for (let i = 0; i < massQuantity; i++) {
-      let code = '';
-      for (let j = 0; j < 8; j++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-      promises.push(generateTokenMutation.mutateAsync({ code }));
+      const code = generateUniqueCode(tempTokens);
+      tempTokens.push({ code, used: false } as any); // Añadimos con las propiedades mínimas para evitar error de tipos
+      promises.push(generateTokenMutation.mutateAsync({ code, used: false } as any));
     }
+
     await Promise.all(promises);
     setIsMassModalOpen(false);
     setPage(1);
+    showToast(`${massQuantity} tokens únicos generados con éxito`, 'success');
   };
 
   const filteredTokens = tokens.filter(t => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       (t.usedByName?.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (t.usedBy?.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (t.code.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesStatus = statusFilter === 'all' || 
+    const matchesStatus = statusFilter === 'all' ||
       (statusFilter === 'used' ? t.used : !t.used);
 
-    const matchesType = typeFilter === 'all' || 
+    const matchesType = typeFilter === 'all' ||
       t.usedByType === typeFilter;
 
     const matchesDate = !t.createdAt || isDateInRange(t.createdAt, startDate, endDate);
@@ -118,9 +156,24 @@ export default function TokensModule() {
 
   const exportTokensToExcel = async () => {
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      showToast('El rango de fechas no es válido.', 'error');
+      showToast('La fecha de inicio no puede ser posterior a la de fin.', 'error');
       return;
     }
+
+    if (filteredTokens.length === 0) {
+      showToast('No hay datos para exportar con los filtros actuales.', 'error');
+      return;
+    }
+
+    // Notificaciones inteligentes unificadas
+    if (startDate && endDate && startDate === endDate) {
+      showToast(`Exportando reporte completo del día ${new Date(startDate).toLocaleDateString()}`, 'info');
+    } else if ((startDate && !endDate) || (!startDate && endDate)) {
+      showToast(`Exportando reporte de este día`, 'info');
+    } else if (startDate && endDate) {
+      showToast(`Exportando reporte del rango seleccionado`, 'info');
+    }
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Tokens');
     worksheet.columns = [
@@ -147,7 +200,70 @@ export default function TokensModule() {
     });
     worksheet.getRow(1).font = { bold: true };
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Tokens_Acceso_Congreso_2026.xlsx`);
+
+    // Generar nombre de archivo inteligente
+    let filename = 'Tokens_General';
+    const sDate = startDate ? startDate.split('-').reverse().join('_') : '';
+    const eDate = endDate ? endDate.split('-').reverse().join('_') : '';
+
+    if (startDate && endDate) {
+      filename = startDate === endDate ? `Tokens_${sDate}` : `Tokens_${sDate}_al_${eDate}`;
+    } else if (startDate) {
+      filename = `Tokens_desde_${sDate}`;
+    } else if (endDate) {
+      filename = `Tokens_hasta_${eDate}`;
+    }
+
+    saveAs(new Blob([buffer]), `${filename}.xlsx`);
+  };
+
+  const exportTokensForUse = async () => {
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      showToast('La fecha de inicio no puede ser posterior a la de fin.', 'error');
+      return;
+    }
+
+    if (filteredTokens.length === 0) {
+      showToast('No hay tokens disponibles para exportar en este rango.', 'error');
+      return;
+    }
+
+    // Notificaciones inteligentes unificadas
+    if (startDate && endDate && startDate === endDate) {
+      showToast(`Exportando tokens del día ${new Date(startDate).toLocaleDateString()}`, 'info');
+    } else if ((startDate && !endDate) || (!startDate && endDate)) {
+      showToast(`Exportando reporte de este día`, 'info');
+    } else if (startDate && endDate) {
+      showToast(`Exportando reporte del rango seleccionado`, 'info');
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Tokens_para_Uso');
+    worksheet.columns = [
+      { header: 'CÓDIGO DE ACTIVACIÓN', key: 'code', width: 35 }
+    ];
+
+    filteredTokens.forEach(t => {
+      worksheet.addRow({ code: t.code });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Generar nombre de archivo inteligente para tokens de uso
+    let filename = 'Tokens_Disponibles';
+    const sDate = startDate ? startDate.split('-').reverse().join('_') : '';
+    const eDate = endDate ? endDate.split('-').reverse().join('_') : '';
+
+    if (startDate && endDate) {
+      filename = startDate === endDate ? `Tokens_Disponibles_${sDate}` : `Tokens_Disponibles_${sDate}_al_${eDate}`;
+    } else if (startDate) {
+      filename = `Tokens_Disponibles_desde_${sDate}`;
+    } else if (endDate) {
+      filename = `Tokens_Disponibles_hasta_${eDate}`;
+    }
+
+    saveAs(new Blob([buffer]), `${filename}.xlsx`);
   };
 
   return (
@@ -166,7 +282,20 @@ export default function TokensModule() {
             )}
             <AdminButton onClick={handleGenerateToken}>+ Generar Token</AdminButton>
             <AdminButton variant="outline" onClick={() => setIsMassModalOpen(true)}>Generación Masiva</AdminButton>
-            <AdminButton variant="success" onClick={exportTokensToExcel}>Exportar Excel</AdminButton>
+
+            {statusFilter === 'available' && (startDate || endDate) && (
+              <AdminButton
+                variant="primary"
+                onClick={exportTokensForUse}
+                style={{ background: '#6366f1' }}
+              >
+                Exportar para uso
+              </AdminButton>
+            )}
+
+            <AdminButton variant="success" onClick={exportTokensToExcel}>
+              Exportar Excel
+            </AdminButton>
           </div>
         }
       >
@@ -181,11 +310,11 @@ export default function TokensModule() {
             <AdminSelect label="TIPO" value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos' }, { value: 'alumno', label: 'Estudiantes' }, { value: 'externo', label: 'Externos' }]} />
           </div>
           <div style={{ flex: 2, minWidth: '350px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Rango de Fecha</span>
-             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <AdminDateInput label="INICIO" value={startDate} onChange={e => setStartDate(e.target.value)} containerStyle={{ flex: 1 }} />
-                <AdminDateInput label="FIN" value={endDate} onChange={e => setEndDate(e.target.value)} containerStyle={{ flex: 1 }} />
-             </div>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Rango de Fecha</span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <AdminDateInput label="INICIO" value={startDate} onChange={e => setStartDate(e.target.value)} containerStyle={{ flex: 1 }} />
+              <AdminDateInput label="FIN" value={endDate} onChange={e => setEndDate(e.target.value)} containerStyle={{ flex: 1 }} />
+            </div>
           </div>
         </div>
 
@@ -196,10 +325,10 @@ export default function TokensModule() {
         <AdminTable
           isLoading={isLoading}
           headers={[
-            <input 
-              type="checkbox" 
-              checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))} 
-              onChange={handleSelectAllTokens} 
+            <input
+              type="checkbox"
+              checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))}
+              onChange={handleSelectAllTokens}
             />,
             "Token", "Estado", "Nombre", "Correo", "Tipo", "Generado por", "Validado el", "Creado el", "Opciones"
           ]}
@@ -221,7 +350,7 @@ export default function TokensModule() {
             </tr>
           ))}
         </AdminTable>
-        
+
         <Pagination current={page} total={filteredTokens.length} onPageChange={setPage} />
       </ModuleCard>
 
@@ -232,12 +361,12 @@ export default function TokensModule() {
         maxWidth="400px"
       >
         <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Ingresa la cantidad de tokens que deseas generar automáticamente.</p>
-        
+
         <FormField label="Cantidad de tokens" required>
-          <input 
-            type="number" 
-            className="dashboard-input" 
-            value={massQuantity} 
+          <input
+            type="number"
+            className="dashboard-input"
+            value={massQuantity}
             onChange={e => setMassQuantity(parseInt(e.target.value))}
             min="1" max="100"
           />
