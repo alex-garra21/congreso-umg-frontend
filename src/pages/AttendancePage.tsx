@@ -101,7 +101,7 @@ export default function AttendancePage() {
       return;
     }
 
-    const isEnrolled = user.talleres?.includes(workshop.id);
+    const isEnrolled = user.talleres?.some(t => t.id === workshop.id);
     if (!isEnrolled) {
       setError('No apareces inscrito en este taller. Primero debes agregarlo a tu agenda en la sección "Mis Talleres" de tu perfil.');
       return;
