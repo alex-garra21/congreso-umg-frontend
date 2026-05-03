@@ -38,7 +38,16 @@ export default function PonentesPage() {
               padding: '4rem 2rem',
               color: 'var(--text-secondary)'
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎙️</div>
+              <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ 
+                  background: 'var(--accent-light)', 
+                  padding: '20px', 
+                  borderRadius: '24px',
+                  color: 'var(--accent-primary)'
+                }}>
+                  <Icons.Mic size={48} strokeWidth={1.5} />
+                </div>
+              </div>
               <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Ponentes próximamente</h3>
               <p style={{ fontSize: '0.95rem' }}>
                 Los ponentes confirmados serán publicados en cuanto estén disponibles.<br />

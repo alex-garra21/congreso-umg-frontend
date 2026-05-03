@@ -13,6 +13,20 @@
   overflow-x: hidden;
   border-right: 1px solid var(--border-soft);
   z-index: 50;
+  transition: all 0.4s ease;
+}
+
+/* Fondos por Rol */
+.sidebar.role-admin { 
+  background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); 
+  border-right-color: rgba(124, 58, 237, 0.2);
+}
+.sidebar.role-usuario { 
+  background: linear-gradient(180deg, #064e3b 0%, #0f172a 100%); 
+  border-right-color: rgba(22, 163, 74, 0.2);
+}
+.sidebar.role-participante { 
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); 
 }
 
 .sidebar.expanded { width: 260px; }
@@ -29,7 +43,7 @@
 
 .logo-main {
   display: block;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Source Sans 3', sans-serif;
   font-weight: 800;
   font-size: 18px;
   letter-spacing: -0.5px;
@@ -81,7 +95,13 @@
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
+  color: #fff;
+  transition: all 0.3s ease;
 }
+
+.user-avatar.admin { background: #7c3aed !important; box-shadow: 0 0 15px rgba(124, 58, 237, 0.3); }
+.user-avatar.usuario { background: #16a34a !important; box-shadow: 0 0 15px rgba(22, 163, 74, 0.3); }
+.user-avatar.participante { background: #2563eb !important; box-shadow: 0 0 15px rgba(37, 99, 235, 0.3); }
 
 .user-info { display: flex; flex-direction: column; min-width: 0; }
 .user-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -213,3 +233,4 @@
   color: var(--accent-primary);
   border-left-color: var(--accent-primary);
 }
+

@@ -73,7 +73,7 @@ export default function ScheduleGrid() {
   const totalRows = END_H - START_H;
 
   return (
-    <div style={{ fontFamily: "'Space Grotesk', sans-serif", padding: '10px' }}>
+    <div style={{ fontFamily: "'Source Sans 3', sans-serif", padding: '10px' }}>
       <p style={{ fontSize: '12px', color: '#6b6b68', marginBottom: '8px' }}>
         Agenda interactiva. Haz clic para simular tu selección. Los bloques con opacidad baja están en conflicto.
       </p>

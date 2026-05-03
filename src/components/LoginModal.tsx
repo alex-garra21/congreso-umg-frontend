@@ -80,12 +80,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
       <form onSubmit={handleSubmit}>
         <FormField label="Correo Electrónico" required>
-          <input 
-            type="email" 
-            value={correo} 
-            onChange={(e) => setCorreo(e.target.value)} 
-            placeholder="correo@ejemplo.com" 
-            required 
+          <input
+            type="email"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+            placeholder="correo@ejemplo.com"
+            required
             className="dashboard-input"
           />
         </FormField>
@@ -100,10 +100,10 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
           style={{ marginBottom: '1.5rem' }}
         />
 
-        <LoadingButton 
-          type="submit" 
-          isLoading={isLoading} 
-          loadingText="Verificando..." 
+        <LoadingButton
+          type="submit"
+          isLoading={isLoading}
+          loadingText="Verificando..."
           fullWidth
           style={{ marginBottom: '1rem' }}
         >
@@ -111,12 +111,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
         </LoadingButton>
       </form>
 
-      <div style={{ marginTop: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <p className="switch-link" style={{ fontSize: '13px', margin: 0 }}>
-          ¿Olvidaste tu contraseña? <span onClick={() => setIsForgotOpen(true)} style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--accent-primary)' }}>Recupérala aquí</span>
-        </p>
+      <div style={{ marginTop: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <p className="switch-link" style={{ fontSize: '13px', margin: 0 }}>
           ¿Aún no tienes cuenta? <span onClick={handleSwitch} style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--accent-primary)' }}>Regístrate aquí</span>
+        </p>
+        <p className="switch-link" style={{ fontSize: '13px', margin: 0 }}>
+          ¿Olvidaste tu contraseña? <span onClick={() => setIsForgotOpen(true)} style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--accent-primary)' }}>Recupérala aquí</span>
         </p>
       </div>
 

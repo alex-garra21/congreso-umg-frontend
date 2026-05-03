@@ -61,7 +61,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
   };
 
   return (
-    <aside className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
+    <aside className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'} role-${user?.rol || 'participante'}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
           {isExpanded ? (
@@ -70,19 +70,27 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
               <span className="logo-sub">SISTEMAS UMG - COBÁN</span>
             </div>
           ) : (
-            <img src={logoUMG} alt="UMG" style={{ width: '32px', height: '32px', borderRadius: '4px' }} />
+            <button 
+              onClick={() => setIsExpanded(true)}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              title="Expandir"
+            >
+              <img src={logoUMG} alt="UMG" style={{ width: '32px', height: '32px', borderRadius: '4px' }} />
+            </button>
           )}
         </div>
-        <button className="expand-toggle" onClick={() => setIsExpanded(!isExpanded)}>
-          {isExpanded ? '◀' : '▶'}
-        </button>
+        {isExpanded && (
+          <button className="expand-toggle" onClick={() => setIsExpanded(false)}>
+            ◀
+          </button>
+        )}
       </div>
 
       <div 
         className="sidebar-user" 
         onClick={() => navigate('/dashboard/perfil')}
       >
-        <div className="user-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className={`user-avatar ${user?.rol || 'participante'}`} style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {user?.avatarUrl ? (
             <img src={user.avatarUrl} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (

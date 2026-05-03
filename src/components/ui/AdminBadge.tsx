@@ -29,7 +29,7 @@ const AdminBadge: React.FC<AdminBadgeProps> = ({
       textTransform: 'uppercase',
       letterSpacing: '0.5px',
       whiteSpace: 'nowrap',
-      fontFamily: "'Space Grotesk', sans-serif",
+      fontFamily: "'Source Sans 3', sans-serif",
       ...customStyle
     }} className={`admin-badge admin-badge-${variant} ${className}`}>
       {dot && (
@@ -46,3 +46,4 @@ const AdminBadge: React.FC<AdminBadgeProps> = ({
 };
 
 export default AdminBadge;
+

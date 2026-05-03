@@ -198,7 +198,7 @@ export default function WorkshopsModule() {
           <div style={{ width: '80px', height: '80px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem' }}>
             <Icons.Check size={40} strokeWidth={3} />
           </div>
-          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '20px', marginBottom: '1rem' }}>¡Todo Listo!</h3>
+          <h3 style={{ fontFamily: 'Source Sans 3', fontWeight: 800, fontSize: '20px', marginBottom: '1rem' }}>¡Todo Listo!</h3>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem', lineHeight: 1.6 }}>Tus talleres han sido registrados correctamente en el sistema. Puedes consultar tu horario detallado en el dashboard principal.</p>
           <AdminButton onClick={() => setShowSuccessModal(false)} style={{ width: '100%' }}>Excelente</AdminButton>
         </div>
@@ -215,11 +215,11 @@ export default function WorkshopsModule() {
           margin-bottom: 2rem;
         }
         .calendar-grid { display: grid; min-width: 1000px; position: relative; }
-        .grid-header { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; border-bottom: 2px solid var(--border-soft); position: sticky; top: 0; z-index: 20; background: var(--bg-card); }
+        .grid-header { font-family: 'Source Sans 3', sans-serif; font-weight: 800; font-size: 13px; border-bottom: 2px solid var(--border-soft); position: sticky; top: 0; z-index: 20; background: var(--bg-card); }
         .calendar-workshop { margin: 6px; padding: 14px; border-radius: 16px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; justify-content: space-between; border: 1px solid transparent; }
         .calendar-workshop:hover:not(.blocked) { transform: translateY(-4px) scale(1.01); box-shadow: 0 12px 25px rgba(0,0,0,0.08); z-index: 10; }
         .calendar-workshop.selected { background: var(--accent-primary) !important; color: white !important; border-color: var(--accent-dark); box-shadow: 0 15px 35px rgba(24, 95, 165, 0.25); z-index: 5; }
-        .w-title { font-size: 13px; font-weight: 800; font-family: 'Syne', sans-serif; line-height: 1.25; margin-bottom: 4px; }
+        .w-title { font-size: 13px; font-weight: 800; font-family: 'Source Sans 3', sans-serif; line-height: 1.25; margin-bottom: 4px; }
         .w-time { font-size: 11px; font-weight: 700; opacity: 0.9; }
         .w-speaker { font-size: 10px; font-weight: 600; opacity: 0.7; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
         .selected-check { position: absolute; top: 10px; right: 10px; background: white; color: var(--accent-primary); width: 22px; height: 22px; border-radius: 50%; display: flex; alignItems: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -227,3 +227,4 @@ export default function WorkshopsModule() {
     </div>
   );
 }
+

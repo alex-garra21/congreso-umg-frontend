@@ -12,7 +12,8 @@ export async function getAllUsersQuery(): Promise<UserData[]> {
     .select('*')
     .order('apellidos', { ascending: true });
 
-  if (error || !data) return [];
+  if (error) throw new Error(`Error al obtener usuarios: ${error.message}`);
+  if (!data) return [];
 
   const mappedUsers: UserData[] = data.map(userData => ({
     id: userData.id,
@@ -56,7 +57,9 @@ export async function getTokensQuery(): Promise<TokenData[]> {
       usado_por_user:usuarios!usado_por(nombres, apellidos, correo, tipo_participante),
       creado_por_user:usuarios!creado_por(nombres, apellidos)
     `);
-  if (error || !data) return [];
+    
+  if (error) throw new Error(`Error al obtener tokens: ${error.message}`);
+  if (!data) return [];
 
   return data.map(d => {
     const u = Array.isArray(d.usado_por_user) ? d.usado_por_user[0] : d.usado_por_user;

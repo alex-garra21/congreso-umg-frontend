@@ -150,7 +150,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
                   )}
                 </div>
                 <div style={{ overflow: 'hidden' }}>
-                  <h4 style={{ margin: 0, fontSize: '14px', fontFamily: 'Syne', color: 'var(--accent-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <h4 style={{ margin: 0, fontSize: '14px', fontFamily: 'Source Sans 3', color: 'var(--accent-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {userProfile?.name || 'Usuario'}
                   </h4>
                   <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -222,3 +222,4 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
     </Modal>
   );
 }
+

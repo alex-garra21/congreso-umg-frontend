@@ -52,7 +52,7 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-            <h3 style={{ fontSize: '24px', margin: 0, fontFamily: 'Syne', fontWeight: 800 }}>{speaker.name}</h3>
+            <h3 style={{ fontSize: '24px', margin: 0, fontFamily: 'Source Sans 3', fontWeight: 800 }}>{speaker.name}</h3>
             <p className="speaker-role" style={{ margin: 0, fontSize: '15px', color: 'var(--text-secondary)' }}>{speaker.role}</p>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
@@ -82,14 +82,14 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
 
         <div style={{ height: '1px', background: 'var(--border-soft)', margin: '1.5rem 0' }}></div>
 
-        <h4 style={{ fontSize: '18px', marginBottom: '10px', fontFamily: 'Syne', fontWeight: 800 }}>Acerca de {speaker.name}</h4>
+        <h4 style={{ fontSize: '18px', marginBottom: '10px', fontFamily: 'Source Sans 3', fontWeight: 800 }}>Acerca de {speaker.name}</h4>
         <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '15px', whiteSpace: 'pre-line', marginBottom: '2rem' }}>
           {speaker.bio}
         </p>
 
         {speakerWorkshops.length > 0 && (
           <div className="speaker-workshops-section">
-            <h4 style={{ fontSize: '18px', marginBottom: '15px', fontFamily: 'Syne', fontWeight: 800, color: 'var(--accent-primary)' }}>
+            <h4 style={{ fontSize: '18px', marginBottom: '15px', fontFamily: 'Source Sans 3', fontWeight: 800, color: 'var(--accent-primary)' }}>
               Talleres que impartirá
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -107,3 +107,4 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
     </div>
   );
 }
+

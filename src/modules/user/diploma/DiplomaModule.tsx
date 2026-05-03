@@ -261,7 +261,7 @@ export default function DiplomaModule() {
                 width: '80%',
                 textAlign: 'center',
                 fontSize: 'clamp(8px, 1.8vw, 24px)',
-                fontFamily: 'Syne, sans-serif',
+                fontFamily: 'Source Sans 3, sans-serif',
                 fontWeight: 800,
                 color: '#1a365d',
                 textTransform: 'uppercase',
@@ -318,3 +318,4 @@ export default function DiplomaModule() {
     </div>
   );
 }
+

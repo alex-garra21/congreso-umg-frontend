@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import CalendarLink from '../components/CalendarLink';
 import LocationLink from '../components/LocationLink';
+import { Icons } from '../components/Icons';
 // 1. Aquí importas tu imagen. 
 // (Asegúrate de tener un archivo llamado así en la carpeta assets, o cambia el nombre)
 import logoUMG from '../assets/UMG-LOGO.svg';
@@ -50,35 +51,46 @@ export default function Hero() {
             </p>
 
             {/* Fila 4: Metadata (Chips de información) */}
-            <div className="hero-meta" style={{ margin: '0.5rem 0 1rem 0' }}>
+            <div className="hero-meta" style={{ margin: '0.5rem 0 1rem 0', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               <CalendarLink className="meta-chip">
-                📅 23 de mayo, 2026
+                <Icons.Calendar size={14} color="var(--accent-primary)" />
+                23 de mayo, 2026
               </CalendarLink>
               <LocationLink className="meta-chip" />
               <span
                 className="meta-chip"
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                 onClick={() => navigate('/ponentes')}
                 title="Ver ponentes"
               >
-                🎤 12 ponentes
+                <Icons.Mic size={14} color="var(--accent-primary)" />
+                12 ponentes
               </span>
               <span
                 className="meta-chip"
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                 onClick={() => navigate('/agenda')}
                 title="Ver la agenda de charlas"
               >
-                ⏱ 30+ charlas simultáneas
+                <Icons.Clock size={14} color="var(--accent-primary)" />
+                30+ charlas simultáneas
               </span>
             </div>
 
             {/* Fila 5: Botones de Acción */}
             <div className="hero-ctas">
-              <button className="btn-lg btn-lg-primary" onClick={() => navigate('/inscripcion')}>
+              <button 
+                className="btn-solid" 
+                onClick={() => navigate('/inscripcion')}
+                style={{ padding: '16px 32px', fontSize: '15px' }}
+              >
                 Inscribirme al congreso
               </button>
-              <button className="btn-lg btn-lg-outline" onClick={() => navigate('/agenda')}>
+              <button 
+                className="btn-outline" 
+                onClick={() => navigate('/agenda')}
+                style={{ padding: '16px 32px', fontSize: '15px' }}
+              >
                 Ver agenda
               </button>
             </div>

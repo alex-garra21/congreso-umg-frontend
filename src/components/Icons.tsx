@@ -175,6 +175,15 @@ export const Icons = {
       <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
     </BaseIcon>
   ),
+  ClipboardList: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+      <path d="M9 12h6" />
+      <path d="M9 16h6" />
+      <path d="M9 8h6" />
+    </BaseIcon>
+  ),
   Home: (props: IconProps) => (
     <BaseIcon {...props}>
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -205,6 +214,14 @@ export const Icons = {
       <line x1="3" y1="12" x2="21" y2="12" />
       <line x1="3" y1="6" x2="21" y2="6" />
       <line x1="3" y1="18" x2="21" y2="18" />
+    </BaseIcon>
+  ),
+  Mic: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="8" y1="22" x2="16" y2="22" />
     </BaseIcon>
   ),
   X: (props: IconProps) => (
@@ -250,6 +267,29 @@ export const Icons = {
       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
       <rect x="2" y="9" width="4" height="12" />
       <circle cx="4" cy="4" r="2" />
+    </BaseIcon>
+  ),
+  Bot: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <rect x="3" y="11" width="18" height="10" rx="2" />
+      <circle cx="12" cy="5" r="2" />
+      <path d="M12 7v4" />
+      <line x1="8" y1="16" x2="8" y2="16" />
+      <line x1="16" y1="16" x2="16" y2="16" />
+    </BaseIcon>
+  ),
+  Zap: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </BaseIcon>
+  ),
+  Trophy: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-2.34" />
+      <path d="M12 14.66C8.69 14.66 6 11.97 6 8.66V3h12v5.66c0 3.31-2.69 6-6 6z" />
     </BaseIcon>
   ),
   Camera: (props: IconProps) => (

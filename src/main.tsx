@@ -17,10 +17,14 @@ const queryClient = new QueryClient({
   },
 })
 
+import { TimeProvider } from './context/TimeContext.tsx'
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <TimeProvider>
+        <App />
+      </TimeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </StrictMode>,

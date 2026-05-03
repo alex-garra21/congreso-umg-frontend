@@ -7,8 +7,11 @@ import AdminButton from '../../../../components/ui/AdminButton';
 import AdminTable from '../../../../components/ui/AdminTable';
 import AdminBadge from '../../../../components/ui/AdminBadge';
 import SearchBar from '../../../../components/ui/SearchBar';
+import AdminSelect from '../../../../components/ui/AdminSelect';
 import { Pagination } from '../../../../components/Pagination';
 import AgendaItemModal from '../components/AgendaItemModal';
+import { timeToMinutes, generateTimeOptions, normalizeTime } from '../../../../utils/timeUtils';
+import { useTimeConfig } from '../../../../context/TimeContext';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -16,13 +19,20 @@ export default function ScheduleTab() {
   const { data: agenda = [], isLoading } = useCharlas();
   const { data: categories = [] } = useCategorias();
   const { data: rooms = [] } = useSalas();
+  const { timeInterval } = useTimeConfig();
   
   const saveAgendaMutation = useSaveAgenda();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [startTimeFilter, setStartTimeFilter] = useState('all');
+  const [endTimeFilter, setEndTimeFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+
   const [isAgendaModalOpen, setIsAgendaModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<AgendaItem | null>(null);
+
+  // Opciones de horas centralizadas
+  const timeOptions = generateTimeOptions(timeInterval, true);
 
   const handleSaveAgendaItem = async (updatedItem: AgendaItem) => {
     try {
@@ -54,18 +64,37 @@ export default function ScheduleTab() {
   };
 
   const { filteredAgenda, currentAgenda } = useMemo(() => {
-    const filtered = agenda.filter(item => 
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.room.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.speaker?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filtered = agenda.filter(item => {
+      const matchesSearch = 
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.room.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.speaker?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      let matchesTime = true;
+      const hasStart = startTimeFilter !== 'all';
+      const hasEnd = endTimeFilter !== 'all';
+
+      if (hasStart && hasEnd) {
+        const fStart = timeToMinutes(startTimeFilter);
+        const fEnd = timeToMinutes(endTimeFilter);
+        const aStart = timeToMinutes(item.time);
+        const aEnd = timeToMinutes(item.endTime);
+        matchesTime = (aStart < fEnd && aEnd > fStart) || (aStart === fStart) || (aEnd === fEnd);
+      } else if (hasStart) {
+        matchesTime = normalizeTime(item.time) === normalizeTime(startTimeFilter);
+      } else if (hasEnd) {
+        matchesTime = normalizeTime(item.endTime) === normalizeTime(endTimeFilter);
+      }
+
+      return matchesSearch && matchesTime;
+    });
     // Ordenar por hora
     const sorted = [...filtered].sort((a, b) => a.time.localeCompare(b.time));
     return { 
       filteredAgenda: sorted, 
       currentAgenda: sorted.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE) 
     };
-  }, [agenda, searchTerm, currentPage]);
+  }, [agenda, searchTerm, currentPage, startTimeFilter, endTimeFilter]);
 
   if (isLoading) return <div>Cargando cronograma...</div>;
 
@@ -94,8 +123,27 @@ export default function ScheduleTab() {
         <AdminButton onClick={handleNewActivity}>+ Nueva Actividad</AdminButton>
       }
     >
-      <div style={{ marginBottom: '1.5rem' }}>
-        <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar actividad..." />
+      <div style={{ 
+        display: 'flex', 
+        gap: '1rem', 
+        alignItems: 'flex-end',
+        justifyContent: 'center', 
+        marginBottom: '2.5rem', 
+        background: 'var(--bg-app)', 
+        padding: '1.25rem 1.5rem', 
+        borderRadius: '16px', 
+        border: '1px solid var(--border-soft)',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ flex: '1 1 300px' }}>
+          <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar actividad..." />
+        </div>
+        <div style={{ width: '150px' }}>
+          <AdminSelect label="HORA INICIO" value={startTimeFilter} onChange={e => { setStartTimeFilter(e.target.value); setCurrentPage(1); }} options={timeOptions} />
+        </div>
+        <div style={{ width: '150px' }}>
+          <AdminSelect label="HORA FIN" value={endTimeFilter} onChange={e => { setEndTimeFilter(e.target.value); setCurrentPage(1); }} options={timeOptions} />
+        </div>
       </div>
       
       <AdminTable headers={["Horario", "Actividad", "Ubicación", "Categoría", "Opciones"]} emptyMessage="No hay actividades.">

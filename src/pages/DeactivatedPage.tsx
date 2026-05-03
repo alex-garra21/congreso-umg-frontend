@@ -83,7 +83,7 @@ export default function DeactivatedPage() {
               </div>
             )}
           </div>
-          <h2 style={{ fontFamily: 'Syne', fontSize: '24px', margin: '0 0 8px' }}>{user?.nombres} {user?.apellidos}</h2>
+          <h2 style={{ fontFamily: 'Source Sans 3', fontSize: '24px', margin: '0 0 8px' }}>{user?.nombres} {user?.apellidos}</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>{user?.correo}</p>
         </div>
 
@@ -169,3 +169,4 @@ export default function DeactivatedPage() {
     </div>
   );
 }
+

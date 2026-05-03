@@ -44,7 +44,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           <div>
             {title && <h3 style={{ 
               margin: 0, 
-              fontFamily: "'Syne', sans-serif", 
+              fontFamily: "'Source Sans 3', sans-serif", 
               fontWeight: 800, 
               fontSize: '18px',
               color: 'var(--text-primary)'
@@ -67,3 +67,4 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
 };
 
 export default ModuleCard;
+

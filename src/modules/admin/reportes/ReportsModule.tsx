@@ -89,13 +89,30 @@ export default function ReportsModule() {
           </div>
         }
       >
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.2rem', marginBottom: '2.5rem', background: 'var(--bg-app)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-soft)' }}>
-          <div style={{ gridColumn: 'span 2' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          alignItems: 'flex-end', 
+          marginBottom: '2.5rem', 
+          background: 'var(--bg-app)', 
+          padding: '1.25rem 1.5rem', 
+          borderRadius: '16px', 
+          border: '1px solid var(--border-soft)',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <div style={{ flex: '1 1 250px' }}>
             <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo..." />
           </div>
-          <AdminSelect label="TALLER" value={selectedWorkshopFilter} onChange={(e) => setSelectedWorkshopFilter(e.target.value)} options={[{ value: 'all_records', label: 'Todos los registros' }, { value: 'none', label: 'Sin talleres' }, { value: '', label: 'Cualquier taller' }, ...agenda.filter(a => a.speaker).map(w => ({ value: w.id, label: w.title }))]} />
-          <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
-          <MultiSelectFilter label="TIPO PARTICIPANTE" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={participantTypeFilter} onChange={(ids) => setParticipantTypeFilter(ids)} />
+          <div style={{ width: '220px' }}>
+            <AdminSelect label="TALLER" value={selectedWorkshopFilter} onChange={(e) => setSelectedWorkshopFilter(e.target.value)} options={[{ value: 'all_records', label: 'Todos los registros' }, { value: 'none', label: 'Sin talleres' }, { value: '', label: 'Cualquier taller' }, ...agenda.filter(a => a.speaker).map(w => ({ value: w.id, label: w.title }))]} />
+          </div>
+          <div style={{ width: '150px' }}>
+            <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
+          </div>
+          <div style={{ width: '180px' }}>
+            <MultiSelectFilter label="TIPO PARTICIPANTE" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={participantTypeFilter} onChange={(ids) => setParticipantTypeFilter(ids)} />
+          </div>
         </div>
 
         <AdminTable isLoading={isLoadingUsers} headers={["Participante", "Talleres Inscritos", "Perfil", "Estado Pago"]}>

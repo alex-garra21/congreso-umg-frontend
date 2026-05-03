@@ -47,7 +47,7 @@ const AdminTabs: React.FC<AdminTabsProps> = ({
             background: activeTab === tab.id ? 'var(--bg-primary)' : 'transparent',
             color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
             boxShadow: activeTab === tab.id ? 'var(--shadow-sm)' : 'none',
-            fontFamily: "'Space Grotesk', sans-serif"
+            fontFamily: "'Source Sans 3', sans-serif"
           }}
         >
           {tab.icon && <span style={{ display: 'flex' }}>{tab.icon}</span>}
@@ -59,3 +59,4 @@ const AdminTabs: React.FC<AdminTabsProps> = ({
 };
 
 export default AdminTabs;
+

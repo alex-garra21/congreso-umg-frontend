@@ -72,7 +72,7 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
           />
         </FormField>
 
-        <h4 style={{ fontSize: '14px', fontWeight: 800, margin: '2rem 0 1rem', fontFamily: 'Syne', color: 'var(--accent-primary)' }}>Redes Sociales</h4>
+        <h4 style={{ fontSize: '14px', fontWeight: 800, margin: '2rem 0 1rem', fontFamily: 'Source Sans 3', color: 'var(--accent-primary)' }}>Redes Sociales</h4>
         
         <div style={{ background: '#f8f9fa', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border-soft)' }}>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
@@ -182,3 +182,4 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
     </Modal>
   );
 }
+

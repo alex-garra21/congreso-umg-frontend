@@ -1,4 +1,4 @@
-
+import { Icons } from '../components/Icons';
 
 export default function ParticipantesInfo() {
 
@@ -30,7 +30,9 @@ export default function ParticipantesInfo() {
           position: 'relative',
           overflow: 'hidden'
         }}>
-          <div style={{ position: 'absolute', top: '-20px', right: '-20px', fontSize: '150px', opacity: 0.05, pointerEvents: 'none', filter: 'hue-rotate(180deg)' }}>🤖</div>
+          <div style={{ position: 'absolute', top: '10px', right: '10px', opacity: 0.1, pointerEvents: 'none', color: '#64b5f6' }}>
+            <Icons.Bot size={180} strokeWidth={1} />
+          </div>
           
           <div style={{ position: 'relative', zIndex: 2 }}>
             <span style={{ 
@@ -45,24 +47,24 @@ export default function ParticipantesInfo() {
             }}>
               COMPETENCIA MAGNA
             </span>
-            <h2 style={{ fontSize: '42px', margin: '20px 0', color: '#fff', letterSpacing: '-1px' }}>
+            <h2 style={{ fontSize: '42px', margin: '20px 0', color: '#fff', letterSpacing: '-1px', fontFamily: 'Source Sans 3, sans-serif' }}>
               GUERRA DE <span style={{ color: '#64b5f6' }}>ROBOTS</span> 2026
             </h2>
-            <p style={{ fontSize: '1.15rem', lineHeight: '1.8', maxWidth: '700px', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: '1.15rem', lineHeight: '1.8', maxWidth: '700px', color: 'rgba(255,255,255,0.7)' }}>
               ¡La adrenalina llega al congreso! Sé testigo de la competencia más emocionante del año. Estudiantes de ingeniería pondrán a prueba sus creaciones en una batalla épica de ingenio, metal y programación.
             </p>
             <div style={{ display: 'flex', gap: '3rem', marginTop: '2.5rem', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: '200px' }}>
-                <h4 style={{ color: '#64b5f6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '20px' }}>⚡</span> Categorías
+                <h4 style={{ color: '#64b5f6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px' }}>
+                  <Icons.Zap size={20} /> Categorías
                 </h4>
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', opacity: 0.8 }}>Desde mini-sumo hasta combate destructivo.</p>
+                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Desde mini-sumo hasta combate destructivo.</p>
               </div>
               <div style={{ flex: 1, minWidth: '200px' }}>
-                <h4 style={{ color: '#64b5f6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '20px' }}>🏆</span> Premios
+                <h4 style={{ color: '#64b5f6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px' }}>
+                  <Icons.Trophy size={20} /> Premios
                 </h4>
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', opacity: 0.8 }}>Reconocimientos especiales y premios en efectivo.</p>
+                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Reconocimientos especiales y premios en efectivo.</p>
               </div>
             </div>
           </div>
@@ -86,7 +88,11 @@ export default function ParticipantesInfo() {
         <div style={{ textAlign: 'center' }}>
           <h3 style={{ marginBottom: '2rem' }}>¿Qué esperas para ser parte de esto?</h3>
           <div className="hero-ctas" style={{ justifyContent: 'center' }}>
-            <button className="btn-lg btn-lg-primary" onClick={() => window.dispatchEvent(new Event('openRegisterModal'))}>
+            <button 
+              className="btn-solid" 
+              onClick={() => window.dispatchEvent(new Event('openRegisterModal'))}
+              style={{ padding: '16px 40px', fontSize: '16px', borderRadius: '14px' }}
+            >
               Inscribirme ahora
             </button>
           </div>

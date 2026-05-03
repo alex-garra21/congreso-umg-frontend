@@ -36,7 +36,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           color: 'var(--text-primary)',
           outline: 'none',
           transition: 'all 0.2s ease',
-          fontFamily: "'Space Grotesk', sans-serif"
+          fontFamily: "'Source Sans 3', sans-serif"
         }}
         className="search-input-focus"
       />
@@ -45,3 +45,4 @@ const SearchBar: React.FC<SearchBarProps> = ({
 };
 
 export default SearchBar;
+

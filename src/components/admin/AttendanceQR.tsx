@@ -141,7 +141,7 @@ const AttendanceQR = forwardRef<AttendanceQRHandle, AttendanceQRProps>(({ worksh
 
         .qr-header-text h4 {
           margin: 0;
-          font-family: 'Syne', sans-serif;
+          font-family: 'Source Sans 3', sans-serif;
           font-weight: 800;
           font-size: 14px;
           color: #1a365d;
@@ -180,7 +180,7 @@ const AttendanceQR = forwardRef<AttendanceQRHandle, AttendanceQRProps>(({ worksh
         }
 
         .qr-workshop-title {
-          font-family: 'Syne', sans-serif;
+          font-family: 'Source Sans 3', sans-serif;
           font-weight: 800;
           font-size: 20px;
           margin: 0 0 16px 0;
@@ -249,3 +249,4 @@ const AttendanceQR = forwardRef<AttendanceQRHandle, AttendanceQRProps>(({ worksh
 });
 
 export default AttendanceQR;
+

@@ -112,7 +112,7 @@ const EnrollmentStep: React.FC<EnrollmentStepProps> = ({
           font-size: 15px;
           font-weight: 700;
           color: var(--text-primary);
-          font-family: 'Syne', sans-serif;
+          font-family: 'Source Sans 3', sans-serif;
         }
         .step-content p {
           margin: 0;
@@ -152,3 +152,4 @@ const EnrollmentStep: React.FC<EnrollmentStepProps> = ({
 };
 
 export default EnrollmentStep;
+

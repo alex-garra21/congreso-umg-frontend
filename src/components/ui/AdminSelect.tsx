@@ -87,7 +87,7 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
           justifyContent: 'space-between',
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           boxShadow: isOpen ? '0 0 0 4px rgba(24, 95, 165, 0.1)' : 'none',
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'Source Sans 3', sans-serif",
           fontWeight: 500,
           userSelect: 'none'
         }}
@@ -190,3 +190,4 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
 };
 
 export default AdminSelect;
+

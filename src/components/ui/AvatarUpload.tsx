@@ -122,7 +122,7 @@ export default function AvatarUpload({
             fontSize: '36px', 
             fontWeight: 800, 
             color: 'var(--accent-primary)', 
-            fontFamily: 'Syne' 
+            fontFamily: 'Source Sans 3' 
           }}>
             {initials}
           </span>
@@ -245,3 +245,4 @@ export default function AvatarUpload({
     </div>
   );
 }
+

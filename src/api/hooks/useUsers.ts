@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAllUsersQuery, getTokensQuery } from '../supabase/users/userQueries';
+import { useAuth } from './useAuth';
 import {
   registerUserMutation,
   updateUserDataMutation,
@@ -14,17 +15,24 @@ import type { UserData } from '../../utils/auth';
 // --- QUERIES ---
 
 export function useAllUsers(enabled: boolean = true) {
+  const { session } = useAuth();
+  const userId = session?.user?.id;
+
   return useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', userId],
     queryFn: getAllUsersQuery,
-    enabled
+    enabled: enabled && !!userId
   });
 }
 
 export function useTokens() {
+  const { session } = useAuth();
+  const userId = session?.user?.id;
+
   return useQuery({
-    queryKey: ['tokens'],
+    queryKey: ['tokens', userId],
     queryFn: getTokensQuery,
+    enabled: !!userId
   });
 }
 

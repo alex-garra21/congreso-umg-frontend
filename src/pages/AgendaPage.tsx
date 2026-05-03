@@ -5,6 +5,7 @@ import WorkshopBadge from '../components/workshops/WorkshopBadge';
 import AgendaModal from '../components/AgendaModal';
 import CalendarLink from '../components/CalendarLink';
 import LocationLink from '../components/LocationLink';
+import { Icons } from '../components/Icons';
 
 export default function AgendaPage() {
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<'Mañana' | 'Tarde'>('Mañana');
@@ -38,14 +39,26 @@ export default function AgendaPage() {
         <div className="speakers-header" style={{ flexDirection: 'column', textAlign: 'center', justifyContent: 'center', marginBottom: '3.5rem' }}>
           <span className="speakers-header-badge">Programa</span>
           <h2>Agenda del evento</h2>
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '10px', alignItems: 'center' }}>
             <CalendarLink>
-              <p style={{ color: 'var(--text-secondary)', cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
-                📅 Sábado 23 de Mayo —
-              </p>
+              <div 
+                style={{ 
+                  color: 'var(--text-secondary)', 
+                  cursor: 'pointer', 
+                  transition: 'opacity 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }} 
+                onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} 
+                onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+              >
+                <Icons.Calendar size={16} color="var(--accent-primary)" />
+                <p style={{ margin: 0 }}>Sábado 23 de Mayo —</p>
+              </div>
             </CalendarLink>
             <LocationLink>
-              <p style={{ color: 'var(--text-secondary)', cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
+              <p style={{ color: 'var(--text-secondary)', cursor: 'pointer', transition: 'opacity 0.2s', margin: 0 }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
                 Hotel Alcazar doña Victoria, Cobán
               </p>
             </LocationLink>
@@ -83,8 +96,17 @@ export default function AgendaPage() {
               padding: '4rem 2rem',
               color: 'var(--text-secondary)'
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
-              <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Programa próximamente</h3>
+              <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ 
+                  background: 'var(--accent-light)', 
+                  padding: '20px', 
+                  borderRadius: '24px',
+                  color: 'var(--accent-primary)'
+                }}>
+                  <Icons.ClipboardList size={48} strokeWidth={1.5} />
+                </div>
+              </div>
+              <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)', fontFamily: 'Source Sans 3, sans-serif' }}>Programa próximamente</h3>
               <p style={{ fontSize: '0.95rem' }}>
                 La jornada de la {periodoSeleccionado.toLowerCase()} aún no ha sido publicada.<br />
                 Vuelve pronto para ver las charlas y talleres confirmados.
@@ -102,9 +124,24 @@ export default function AgendaPage() {
                 </div>
 
                 <div className="agenda-content">
-                  <span style={{ fontSize: '13px', color: '#81c784', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                    📍 {charla.room}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <div style={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '11px', 
+                      fontWeight: 800, 
+                      color: '#16a34a', 
+                      background: '#f0fdf4',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <Icons.MapPin size={12} strokeWidth={2.5} />
+                      {charla.room}
+                    </div>
+                  </div>
                   <h3>{charla.title}</h3>
                   <p>
                     {charla.speaker

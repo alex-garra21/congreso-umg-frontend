@@ -44,7 +44,7 @@ const AdminButton: React.FC<AdminButtonProps> = ({
     cursor: props.disabled ? 'not-allowed' : 'pointer',
     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     opacity: props.disabled ? 0.6 : 1,
-    fontFamily: "'Space Grotesk', sans-serif",
+    fontFamily: "'Source Sans 3', sans-serif",
     border: (getVariantStyles() as any).border || 'none',
     textDecoration: 'none',
     ...customStyle
@@ -76,3 +76,4 @@ const AdminButton: React.FC<AdminButtonProps> = ({
 };
 
 export default AdminButton;
+

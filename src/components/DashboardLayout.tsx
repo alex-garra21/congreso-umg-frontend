@@ -17,15 +17,18 @@ export default function DashboardLayout() {
     }
   }, [session, isLoading, navigate]);
 
-  if (isLoading) {
+  // Si está cargando o si hay sesión pero el perfil aún no ha llegado, mostramos spinner
+  if (isLoading || (session && !user)) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', gap: '15px' }}>
         <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(99, 179, 237, 0.2)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500 }}>Iniciando sesión segura...</div>
         <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
+  // Si llegamos aquí y no hay usuario, algo falló (pero ya no devolvemos null a ciegas)
   if (!user) return null;
 
   const isPaid = user.pagoValidado;

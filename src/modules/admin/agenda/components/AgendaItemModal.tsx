@@ -5,8 +5,12 @@ import { showToast } from '../../../../utils/swal';
 import AdminButton from '../../../../components/ui/AdminButton';
 import Modal from '../../../../components/ui/Modal';
 import FormField from '../../../../components/ui/FormField';
+import AdminSelect from '../../../../components/ui/AdminSelect';
+import { generateTimeOptions } from '../../../../utils/timeUtils';
+import { useTimeConfig } from '../../../../context/TimeContext';
 
 interface AgendaItemModalProps {
+// ...
   isOpen: boolean;
   onClose: () => void;
   onSave: (item: AgendaItem) => void;
@@ -18,6 +22,7 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew }
   const { data: rooms = [] } = useSalas();
   const { data: categories = [] } = useCategorias();
   const { data: speakers = [] } = usePonentes();
+  const { timeInterval } = useTimeConfig();
 
   const [formData, setFormData] = useState<AgendaItem>({ ...item });
 
@@ -55,23 +60,17 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew }
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <FormField label="HORA INICIO *" required>
-            <input
-              type="text"
-              required
-              className="dashboard-input"
+            <AdminSelect
               value={formData.time}
               onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-              placeholder="08:00 AM"
+              options={generateTimeOptions(timeInterval)}
             />
           </FormField>
           <FormField label="HORA FIN *" required>
-            <input
-              type="text"
-              required
-              className="dashboard-input"
+            <AdminSelect
               value={formData.endTime}
               onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-              placeholder="09:00 AM"
+              options={generateTimeOptions(timeInterval)}
             />
           </FormField>
         </div>

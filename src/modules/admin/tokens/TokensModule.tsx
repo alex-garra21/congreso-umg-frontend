@@ -201,16 +201,33 @@ export default function TokensModule() {
           </div>
         }
       >
-        {/* Filtros Premium */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem', background: 'var(--bg-app)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-soft)' }}>
-          <div style={{ gridColumn: 'span 2' }}>
+        {/* Filtros Premium Compactos */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          alignItems: 'flex-end', 
+          marginBottom: '2.5rem', 
+          background: 'var(--bg-app)', 
+          padding: '1.25rem 1.5rem', 
+          borderRadius: '16px', 
+          border: '1px solid var(--border-soft)',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <div style={{ flex: '1 1 250px' }}>
             <SearchBar placeholder="Buscar por nombre, correo o código..." value={searchTerm} onChange={setSearchTerm} />
           </div>
-          <AdminSelect label="ESTADO" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={[{ value: 'all', label: 'Todos' }, { value: 'available', label: 'Disponibles' }, { value: 'used', label: 'Utilizados' }]} />
-          <AdminSelect label="TIPO" value={typeFilter} onChange={e => setTypeFilter(e.target.value)} options={[{ value: 'all', label: 'Todos' }, { value: 'alumno', label: 'Estudiantes' }, { value: 'externo', label: 'Externos' }]} />
-          <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem' }}>
-             <AdminDateInput label="DESDE" value={startDate} onChange={e => setStartDate(e.target.value)} containerStyle={{ flex: 1 }} />
-             <AdminDateInput label="HASTA" value={endDate} onChange={e => setEndDate(e.target.value)} containerStyle={{ flex: 1 }} />
+          <div style={{ width: '140px' }}>
+            <AdminSelect label="ESTADO" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={[{ value: 'all', label: 'Todos' }, { value: 'available', label: 'Disponibles' }, { value: 'used', label: 'Utilizados' }]} />
+          </div>
+          <div style={{ width: '140px' }}>
+            <AdminSelect label="TIPO" value={typeFilter} onChange={e => setTypeFilter(e.target.value)} options={[{ value: 'all', label: 'Todos' }, { value: 'alumno', label: 'Estudiantes' }, { value: 'externo', label: 'Externos' }]} />
+          </div>
+          <div style={{ width: '130px' }}>
+             <AdminDateInput label="DESDE" value={startDate} onChange={e => setStartDate(e.target.value)} />
+          </div>
+          <div style={{ width: '130px' }}>
+             <AdminDateInput label="HASTA" value={endDate} onChange={e => setEndDate(e.target.value)} />
           </div>
         </div>
 
@@ -224,7 +241,7 @@ export default function TokensModule() {
           {currentTokensOnPage.map(t => (
             <tr key={t.code}>
               <td><input type="checkbox" checked={selectedTokens.includes(t.code)} onChange={() => handleSelectToken(t.code)} /></td>
-              <td style={{ fontWeight: 800, color: 'var(--accent-primary)', fontFamily: 'Space Grotesk' }}>{t.code}</td>
+              <td style={{ fontWeight: 800, color: 'var(--accent-primary)', fontFamily: 'Source Sans 3' }}>{t.code}</td>
               <td><AdminBadge variant={t.used ? "danger" : "success"} dot>{t.used ? "Utilizado" : "Disponible"}</AdminBadge></td>
               <td>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -269,3 +286,4 @@ export default function TokensModule() {
     </section>
   );
 }
+

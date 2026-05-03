@@ -111,7 +111,7 @@ const StatusCard: React.FC<StatusCardProps> = ({
           margin: 8px 0;
         }
         .card-number {
-          font-family: 'Syne', sans-serif;
+          font-family: 'Source Sans 3', sans-serif;
           font-size: 32px;
           font-weight: 800;
           color: var(--text-primary);
@@ -142,3 +142,4 @@ const StatusCard: React.FC<StatusCardProps> = ({
 };
 
 export default StatusCard;
+

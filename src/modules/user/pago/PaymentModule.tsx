@@ -43,7 +43,7 @@ export default function PaymentModule() {
           <div style={{ fontSize: '4rem', marginBottom: '1.5rem', color: '#40c057', display: 'flex', justifyContent: 'center' }}>
             <Icons.CheckCircle size={80} strokeWidth={2} />
           </div>
-          <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '32px', marginBottom: '1rem' }}>¡Pago Completado!</h2>
+          <h2 style={{ fontFamily: 'Source Sans 3', fontWeight: 800, fontSize: '32px', marginBottom: '1rem' }}>¡Pago Completado!</h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2.5rem', fontSize: '16px', lineHeight: '1.6' }}>
             Tu inscripción ha sido validada exitosamente. Ya puedes disfrutar de todos los beneficios del congreso y elegir tus talleres.
           </p>
@@ -91,3 +91,4 @@ export default function PaymentModule() {
     </div>
   );
 }
+

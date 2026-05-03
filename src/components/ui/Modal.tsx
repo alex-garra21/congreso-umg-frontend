@@ -11,6 +11,8 @@ interface ModalProps {
   zIndex?: number;
   showCloseButton?: boolean;
   style?: React.CSSProperties;
+  overlayColor?: string;
+  blur?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -22,7 +24,9 @@ const Modal: React.FC<ModalProps> = ({
   padding = '2.5rem 2rem',
   zIndex = 10000,
   showCloseButton = true,
-  style = {}
+  style = {},
+  overlayColor,
+  blur = true
 }) => {
   // Cerrar con la tecla ESC
   useEffect(() => {
@@ -38,7 +42,11 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <div 
       className="modal-bg open" 
-      style={{ zIndex }} 
+      style={{ 
+        zIndex, 
+        backgroundColor: overlayColor, 
+        backdropFilter: blur ? undefined : 'none' 
+      }} 
       onClick={onClose}
     >
       <div 
@@ -56,7 +64,7 @@ const Modal: React.FC<ModalProps> = ({
           <h3 style={{ 
             fontSize: '24px', 
             marginBottom: '1rem', 
-            fontFamily: 'Syne, sans-serif', 
+            fontFamily: 'Source Sans 3, sans-serif', 
             fontWeight: 800 
           }}>
             {title}
@@ -72,3 +80,4 @@ const Modal: React.FC<ModalProps> = ({
 };
 
 export default Modal;
+

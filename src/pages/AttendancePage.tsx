@@ -174,7 +174,7 @@ export default function AttendancePage() {
     return (
     <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc' }}>
         <div style={{ textAlign: 'center', padding: '2rem', background: 'white', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-          <h2 style={{ color: '#1a365d', marginBottom: '1rem', fontFamily: 'Syne' }}>Taller no encontrado</h2>
+          <h2 style={{ color: '#1a365d', marginBottom: '1rem', fontFamily: 'Source Sans 3' }}>Taller no encontrado</h2>
           <p style={{ color: '#4a5568', marginBottom: '2rem' }}>El código del taller proporcionado no es válido o ya no existe.</p>
           <Link to="/" style={{ color: '#3182ce', textDecoration: 'none', fontWeight: 600 }}>Volver al inicio</Link>
         </div>
@@ -211,7 +211,7 @@ export default function AttendancePage() {
           }}>
             {isOutOfTime ? 'Taller fuera de horario' : 'Taller en curso'}
           </p>
-          <h1 style={{ fontSize: '28px', fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <h1 style={{ fontSize: '28px', fontFamily: 'Source Sans 3', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             {workshop.title}
           </h1>
 
@@ -261,7 +261,7 @@ export default function AttendancePage() {
                   }}>
                     {authUser.nombres[0]}{authUser.apellidos[0]}
                   </div>
-                  <h2 style={{ fontSize: '22px', fontFamily: 'Syne', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
+                  <h2 style={{ fontSize: '22px', fontFamily: 'Source Sans 3', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
                     ¡Hola, {authUser.nombres.split(' ')[0]}!
                   </h2>
                   <p style={{ fontSize: '14px', color: '#718096', marginBottom: '1.5rem', lineHeight: 1.5 }}>
@@ -314,7 +314,7 @@ export default function AttendancePage() {
                 </div>
               ) : (
                 <>
-                  <h2 style={{ fontSize: '22px', fontFamily: 'Syne', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
+                  <h2 style={{ fontSize: '22px', fontFamily: 'Source Sans 3', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
                     Identifícate para confirmar
                   </h2>
                   <p style={{ fontSize: '14px', color: '#718096', marginBottom: '1.5rem', lineHeight: 1.5 }}>
@@ -419,7 +419,7 @@ export default function AttendancePage() {
                   <Icons.Check size={32} color="#0ca678" strokeWidth={2.5} />
                 </div>
 
-                <h2 style={{ fontSize: '24px', fontFamily: 'Syne', fontWeight: 800, color: '#1a365d', marginBottom: '1rem', lineHeight: 1.2 }}>
+                <h2 style={{ fontSize: '24px', fontFamily: 'Source Sans 3', fontWeight: 800, color: '#1a365d', marginBottom: '1rem', lineHeight: 1.2 }}>
                   ¡Ya confirmaste tu<br />asistencia!
                 </h2>
                 <p style={{ color: '#4a5568', fontSize: '14px', marginBottom: '2rem', lineHeight: 1.5 }}>
@@ -466,3 +466,4 @@ export default function AttendancePage() {
     </div>
   );
 }
+

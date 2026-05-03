@@ -25,31 +25,36 @@ export default function LoadingButton({
         return {
           background: 'var(--accent-primary)',
           color: 'white',
-          border: 'none'
+          border: 'none',
+          boxShadow: '0 4px 15px rgba(24, 95, 165, 0.2)'
         };
       case 'secondary':
         return {
-          background: 'var(--bg-secondary)',
+          background: 'var(--bg-app)',
           color: 'var(--text-primary)',
-          border: '1px solid var(--border-soft)'
+          border: '1px solid var(--border-soft)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
         };
       case 'danger':
         return {
           background: '#ef4444',
           color: 'white',
-          border: 'none'
+          border: 'none',
+          boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)'
         };
       case 'success':
         return {
           background: '#10b981',
           color: 'white',
-          border: 'none'
+          border: 'none',
+          boxShadow: '0 4px 15px rgba(16, 185, 129, 0.2)'
         };
       case 'ghost':
         return {
           background: 'transparent',
           color: 'var(--text-secondary)',
-          border: '1px solid var(--border-soft)'
+          border: '1px solid var(--border-soft)',
+          boxShadow: 'none'
         };
       default:
         return {};
@@ -61,14 +66,15 @@ export default function LoadingButton({
     alignItems: 'center',
     justifyContent: 'center',
     gap: '10px',
-    padding: '12px 24px',
-    borderRadius: '12px',
-    fontWeight: 600,
+    padding: '14px 24px',
+    borderRadius: '14px',
+    fontWeight: 700,
     fontSize: '15px',
     cursor: (isLoading || disabled) ? 'not-allowed' : 'pointer',
     opacity: (isLoading || disabled) ? 0.7 : 1,
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     width: fullWidth ? '100%' : 'auto',
+    fontFamily: "'Source Sans 3', sans-serif",
     ...getVariantStyles(),
     ...style
   };
@@ -99,13 +105,15 @@ export default function LoadingButton({
         }
         .loading-button:hover:not(:disabled) {
           filter: brightness(1.1);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         .loading-button:active:not(:disabled) {
           transform: translateY(0);
+          filter: brightness(0.95);
         }
       `}</style>
     </button>
   );
 }
+

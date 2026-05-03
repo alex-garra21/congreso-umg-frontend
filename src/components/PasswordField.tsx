@@ -21,7 +21,7 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
   value,
   onChange,
   name,
-  placeholder = "********",
+  placeholder = "Tu contraseña",
   required = false,
   style = {},
   className = "",
@@ -37,11 +37,24 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
   };
 
   return (
-    <div className={`form-group ${className}`} style={{ marginBottom: '1.2rem', ...style }}>
-      <label>{label}</label>
+    <div className={`${className}`} style={{ marginBottom: '1.5rem', ...style }}>
+      {label && (
+        <label style={{ 
+          display: 'block', 
+          fontSize: '11px', 
+          fontWeight: 800, 
+          textTransform: 'uppercase', 
+          color: 'var(--text-secondary)', 
+          letterSpacing: '0.8px', 
+          marginBottom: '6px' 
+        }}>
+          {label}
+        </label>
+      )}
       <div style={{ position: 'relative' }}>
         <input
           type={showPassword ? "text" : "password"}
+          className="dashboard-input"
           name={name}
           value={value}
           onChange={onChange}
@@ -50,18 +63,18 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
           disabled={disabled}
           autoComplete={autoComplete}
           style={{
-            paddingRight: success ? '70px' : '40px',
-            borderColor: success ? '#2e7d32' : error ? '#d32f2f' : undefined,
-            transition: 'all 0.2s ease'
+            paddingRight: (success || showPassword || !showPassword) ? '45px' : '16px',
+            borderColor: success ? 'var(--accent-primary)' : error ? '#ef4444' : undefined,
           }}
         />
         
         <button
           type="button"
           onClick={toggleVisibility}
+          tabIndex={-1}
           style={{
             position: 'absolute',
-            right: success ? '40px' : '12px',
+            right: '12px',
             top: '50%',
             transform: 'translateY(-50%)',
             background: 'none',
@@ -70,27 +83,31 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: 0,
-            opacity: disabled ? 0.5 : 1
+            padding: '8px',
+            opacity: disabled ? 0.4 : 0.6,
+            transition: 'opacity 0.2s',
+            color: 'var(--text-primary)'
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
           title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
         >
           {showPassword ? (
-            <Icons.Eye size={18} color="#666" />
+            <Icons.Eye size={18} />
           ) : (
-            <Icons.EyeOff size={18} color="#666" />
+            <Icons.EyeOff size={18} />
           )}
         </button>
 
-        {success && (
+        {success && !showPassword && (
           <div style={{ 
             position: 'absolute', 
-            right: '12px', 
+            right: '45px', 
             top: '50%', 
             transform: 'translateY(-50%)', 
             display: 'flex' 
           }}>
-            <Icons.Check size={18} color="#2e7d32" strokeWidth={3} />
+            <Icons.Check size={18} color="var(--accent-primary)" strokeWidth={3} />
           </div>
         )}
       </div>

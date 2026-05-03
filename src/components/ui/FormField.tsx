@@ -20,15 +20,15 @@ const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className="form-group" style={{ marginBottom: '1.5rem', ...style }}>
       <label style={{ 
-        fontSize: '12px', 
-        fontWeight: 700, 
+        fontSize: '11px', 
+        fontWeight: 800, 
         color: 'var(--text-secondary)', 
-        marginBottom: '8px', 
+        marginBottom: '6px', 
         display: 'block',
         textTransform: 'uppercase',
-        letterSpacing: '0.05em'
+        letterSpacing: '0.8px'
       }}>
-        {label} {required && <span style={{ color: 'var(--status-error)' }}>*</span>}
+        {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
       </label>
       
       {children}

@@ -50,7 +50,7 @@ const AdminDateInput: React.FC<AdminDateInputProps> = ({
           borderRadius: '12px',
           color: 'var(--text-primary)',
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'Source Sans 3', sans-serif",
           fontWeight: 500,
           outline: 'none'
         }}
@@ -68,3 +68,4 @@ const AdminDateInput: React.FC<AdminDateInputProps> = ({
 };
 
 export default AdminDateInput;
+

@@ -176,15 +176,15 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           <p className="modal-sub" style={{ marginBottom: '2rem' }}>
             Tu cuenta ha sido creada correctamente. Ahora puedes acceder a la plataforma.
           </p>
-          <button
-            className="submit-btn"
+          <LoadingButton
             onClick={() => {
               if (onSwitchToLogin) handleSwitch();
               else handleClose();
             }}
+            fullWidth
           >
             Ir al inicio de sesión
-          </button>
+          </LoadingButton>
         </div>
       ) : (
         <>

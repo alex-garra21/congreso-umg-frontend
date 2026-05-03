@@ -171,7 +171,7 @@ export default function ResetPasswordPage() {
           }}>
             <Icons.Check size={32} />
           </div>
-          <h1 style={{ fontFamily: 'Syne', fontSize: '24px', color: 'var(--accent-primary)', margin: 0 }}>
+          <h1 style={{ fontFamily: 'Source Sans 3', fontSize: '24px', color: 'var(--accent-primary)', margin: 0 }}>
             XIV Congreso de Ingeniería
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
@@ -184,7 +184,7 @@ export default function ResetPasswordPage() {
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
               <Icons.CheckCircle size={80} color="#16a34a" />
             </div>
-            <h2 style={{ fontFamily: 'Syne', fontSize: '20px', color: '#16a34a', marginBottom: '1rem' }}>
+            <h2 style={{ fontFamily: 'Source Sans 3', fontSize: '20px', color: '#16a34a', marginBottom: '1rem' }}>
               ¡Contraseña Actualizada!
             </h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '15px', lineHeight: '1.6' }}>
@@ -232,7 +232,7 @@ export default function ResetPasswordPage() {
                 )}
               </div>
               <div style={{ overflow: 'hidden' }}>
-                <h4 style={{ margin: 0, fontSize: '15px', fontFamily: 'Syne', color: 'var(--accent-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <h4 style={{ margin: 0, fontSize: '15px', fontFamily: 'Source Sans 3', color: 'var(--accent-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {userProfile?.name || 'Verificando...'}
                 </h4>
                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -241,7 +241,7 @@ export default function ResetPasswordPage() {
               </div>
             </div>
 
-            <h3 style={{ fontSize: '18px', marginBottom: '1.5rem', fontFamily: 'Syne' }}>Restablecer Contraseña</h3>
+            <h3 style={{ fontSize: '18px', marginBottom: '1.5rem', fontFamily: 'Source Sans 3' }}>Restablecer Contraseña</h3>
 
             {error && (
               <Alert variant="error" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
@@ -315,3 +315,4 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
+

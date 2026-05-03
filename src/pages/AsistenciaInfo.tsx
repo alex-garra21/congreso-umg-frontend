@@ -1,4 +1,4 @@
-
+import { Icons } from '../components/Icons';
 
 export default function AsistenciaInfo() {
   return (
@@ -23,16 +23,17 @@ export default function AsistenciaInfo() {
               background: 'var(--accent-light)',
               width: '80px',
               height: '80px',
-              borderRadius: '20px',
+              borderRadius: '24px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '40px'
+              color: 'var(--accent-primary)',
+              boxShadow: '0 8px 16px rgba(24, 95, 165, 0.1)'
             }}>
-              📱
+              <Icons.Smartphone size={40} strokeWidth={1.5} />
             </div>
             <div style={{ flex: 1, minWidth: '300px' }}>
-              <h3 style={{ marginBottom: '10px', fontSize: '22px' }}>Tu entrada en el bolsillo</h3>
+              <h3 style={{ marginBottom: '10px', fontSize: '22px', fontFamily: 'Source Sans 3, sans-serif' }}>Tu entrada en el bolsillo</h3>
               <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                 Olvídate de las listas impresas. Al completar tu inscripción y pago, recibirás un código QR único vinculado a tu perfil. Podrás acceder a él en cualquier momento desde tu panel de usuario.
               </p>
@@ -41,19 +42,20 @@ export default function AsistenciaInfo() {
 
           <div className="speaker-card" style={{ padding: '2.5rem', display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{
-              background: 'rgba(129, 199, 132, 0.2)',
+              background: 'rgba(129, 199, 132, 0.15)',
               width: '80px',
               height: '80px',
-              borderRadius: '20px',
+              borderRadius: '24px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '40px'
+              color: '#2e7d32',
+              boxShadow: '0 8px 16px rgba(46, 125, 50, 0.1)'
             }}>
-              ⚡
+              <Icons.Zap size={40} strokeWidth={1.5} />
             </div>
             <div style={{ flex: 1, minWidth: '300px' }}>
-              <h3 style={{ marginBottom: '10px', fontSize: '22px' }}>Validación instantánea</h3>
+              <h3 style={{ marginBottom: '10px', fontSize: '22px', fontFamily: 'Source Sans 3, sans-serif' }}>Validación instantánea</h3>
               <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                 En la entrada de cada charla o taller, nuestro equipo escaneará tu código. El sistema verificará tu asistencia en tiempo real, asegurando tu lugar y registrando tu participación para el diploma final.
               </p>
@@ -62,19 +64,20 @@ export default function AsistenciaInfo() {
 
           <div className="speaker-card" style={{ padding: '2.5rem', display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{
-              background: 'rgba(255, 183, 77, 0.2)',
+              background: 'rgba(255, 183, 77, 0.15)',
               width: '80px',
               height: '80px',
-              borderRadius: '20px',
+              borderRadius: '24px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '40px'
+              color: '#ef6c00',
+              boxShadow: '0 8px 16px rgba(239, 108, 0, 0.1)'
             }}>
-              🔒
+              <Icons.Shield size={40} strokeWidth={1.5} />
             </div>
             <div style={{ flex: 1, minWidth: '300px' }}>
-              <h3 style={{ marginBottom: '10px', fontSize: '22px' }}>Seguridad y Orden</h3>
+              <h3 style={{ marginBottom: '10px', fontSize: '22px', fontFamily: 'Source Sans 3, sans-serif' }}>Seguridad y Orden</h3>
               <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                 El código QR es personal e intransferible. Esto nos permite mantener un control exacto del aforo y garantizar que todos los participantes tengan una experiencia cómoda y segura.
               </p>

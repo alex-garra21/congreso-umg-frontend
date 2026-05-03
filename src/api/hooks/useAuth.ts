@@ -27,6 +27,8 @@ export function useAuth() {
         localStorage.removeItem('congreso_current_user'); 
       } else if (_event === 'SIGNED_IN') {
         queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        queryClient.invalidateQueries({ queryKey: ['tokens'] });
       }
     });
 

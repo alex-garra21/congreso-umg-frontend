@@ -17,13 +17,22 @@ import Modal from '../../../components/ui/Modal';
 import AdminTable from '../../../components/ui/AdminTable';
 import FormField from '../../../components/ui/FormField';
 import Alert from '../../../components/ui/Alert';
+import { timeToMinutes, generateTimeOptions, normalizeTime } from '../../../utils/timeUtils';
+import { useTimeConfig } from '../../../context/TimeContext';
 
 export default function AttendanceModule() {
   const { data: users = [] } = useAllUsers();
   const { data: agenda = [] } = useCharlas();
   const saveAgendaMutation = useSaveAgenda();
+  const { timeInterval } = useTimeConfig();
+  
   const [searchAgenda, setSearchAgenda] = useState('');
+  const [startTimeFilter, setStartTimeFilter] = useState('all');
+  const [endTimeFilter, setEndTimeFilter] = useState('all');
   const [page, setPage] = useState(1);
+
+  // Opciones de horas centralizadas
+  const timeOptions = generateTimeOptions(timeInterval, true);
 
   // Modals
   const [isGraceModalOpen, setIsGraceModalOpen] = useState(false);
@@ -78,7 +87,27 @@ export default function AttendanceModule() {
     setIsQRModalOpen(true);
   };
 
-  const filteredAgenda = agenda.filter(item => item.title.toLowerCase().includes(searchAgenda.toLowerCase()));
+  const filteredAgenda = agenda.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchAgenda.toLowerCase());
+    
+    let matchesTime = true;
+    const hasStart = startTimeFilter !== 'all';
+    const hasEnd = endTimeFilter !== 'all';
+
+    if (hasStart && hasEnd) {
+      const fStart = timeToMinutes(startTimeFilter);
+      const fEnd = timeToMinutes(endTimeFilter);
+      const aStart = timeToMinutes(item.time);
+      const aEnd = timeToMinutes(item.endTime);
+      matchesTime = (aStart < fEnd && aEnd > fStart) || (aStart === fStart) || (aEnd === fEnd);
+    } else if (hasStart) {
+      matchesTime = normalizeTime(item.time) === normalizeTime(startTimeFilter);
+    } else if (hasEnd) {
+      matchesTime = normalizeTime(item.endTime) === normalizeTime(endTimeFilter);
+    }
+
+    return matchesSearch && matchesTime;
+  });
   const paginatedAgenda = filteredAgenda.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (
@@ -90,10 +119,29 @@ export default function AttendanceModule() {
       <ModuleCard
         title="Validación por Actividad"
         description="Genera códigos QR y gestiona los tiempos de tolerancia para la toma de asistencia."
-        headerActions={
-          <SearchBar value={searchAgenda} onChange={(val) => { setSearchAgenda(val); setPage(1); }} placeholder="Buscar taller por nombre..." style={{ maxWidth: '350px' }} />
-        }
       >
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem',
+          alignItems: 'flex-end',
+          justifyContent: 'center', 
+          marginBottom: '2.5rem', 
+          background: 'var(--bg-app)', 
+          padding: '1.25rem 1.5rem', 
+          borderRadius: '16px', 
+          border: '1px solid var(--border-soft)',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ flex: '1 1 300px' }}>
+            <SearchBar value={searchAgenda} onChange={(val) => { setSearchAgenda(val); setPage(1); }} placeholder="Buscar taller por nombre..." />
+          </div>
+          <div style={{ width: '150px' }}>
+            <AdminSelect label="HORA INICIO" value={startTimeFilter} onChange={e => { setStartTimeFilter(e.target.value); setPage(1); }} options={timeOptions} />
+          </div>
+          <div style={{ width: '150px' }}>
+            <AdminSelect label="HORA FIN" value={endTimeFilter} onChange={e => { setEndTimeFilter(e.target.value); setPage(1); }} options={timeOptions} />
+          </div>
+        </div>
         <AdminTable
           headers={["Actividad", "Horario", "Tolerancia", "Inscritos", "Asistencia", "Acciones"]}
           emptyMessage="No se encontraron talleres."
@@ -155,7 +203,7 @@ export default function AttendanceModule() {
 
         <div style={{ padding: '1.2rem', background: 'var(--bg-app)', borderRadius: '12px', border: '1px solid var(--border-soft)', textAlign: 'center' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' }}>Límite de Asistencia</div>
-          <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--accent-primary)', fontFamily: 'Syne' }}>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--accent-primary)', fontFamily: 'Source Sans 3' }}>
             {(() => {
               if (!graceWorkshop) return '--:--';
               const total = (tempGraceHours * 60) + tempGraceMinutes;
@@ -186,3 +234,4 @@ export default function AttendanceModule() {
     </section>
   );
 }
+

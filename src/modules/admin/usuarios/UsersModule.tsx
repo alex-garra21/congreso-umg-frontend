@@ -91,11 +91,30 @@ export default function UsersModule() {
       </div>
 
       <ModuleCard title="Participantes y Staff" description="Gestiona roles diferenciados, tipos de perfil y estados de cuenta.">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px 180px 220px', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-app)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-soft)' }}>
-          <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo electrónico..." />
-          <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos' }, { value: 'admin', label: 'Administradores' }, { value: 'usuario', label: 'Usuarios' }, { value: 'participante', label: 'Participantes' }]} />
-          <MultiSelectFilter label="TIPO DE PERFIL" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={typeFilter} onChange={(ids) => { setTypeFilter(ids); setPage(1); }} />
-          <AdminSelect label="ESTADO PAGO" value={paymentFilter} onChange={e => { setPage(1); setPaymentFilter(e.target.value); }} options={[{ value: 'all', label: 'Cualquier estado' }, { value: 'paid', label: 'Inscritos (Pagados)' }, { value: 'pending', label: 'Pendientes' }, { value: 'deactivated', label: 'Desactivados' }]} />
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          alignItems: 'flex-end', 
+          marginBottom: '2.5rem', 
+          background: 'var(--bg-app)', 
+          padding: '1.25rem 1.5rem', 
+          borderRadius: '16px', 
+          border: '1px solid var(--border-soft)',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <div style={{ flex: '1 1 300px' }}>
+            <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo electrónico..." />
+          </div>
+          <div style={{ width: '160px' }}>
+            <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos' }, { value: 'admin', label: 'Administradores' }, { value: 'usuario', label: 'Usuarios' }, { value: 'participante', label: 'Participantes' }]} />
+          </div>
+          <div style={{ width: '180px' }}>
+            <MultiSelectFilter label="TIPO DE PERFIL" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={typeFilter} onChange={(ids) => { setTypeFilter(ids); setPage(1); }} />
+          </div>
+          <div style={{ width: '180px' }}>
+            <AdminSelect label="ESTADO PAGO" value={paymentFilter} onChange={e => { setPage(1); setPaymentFilter(e.target.value); }} options={[{ value: 'all', label: 'Cualquier estado' }, { value: 'paid', label: 'Inscritos (Pagados)' }, { value: 'pending', label: 'Pendientes' }, { value: 'deactivated', label: 'Desactivados' }]} />
+          </div>
         </div>
 
         <AdminTable isLoading={isLoading} headers={["Nombre Completo", "Tipo", "Contacto", "Rol", "Pago", "Acciones"]} emptyMessage="No se encontraron registros con los filtros seleccionados.">
