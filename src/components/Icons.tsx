@@ -40,6 +40,12 @@ export const Icons = {
       <line x1="12" y1="17" x2="12.01" y2="17" />
     </BaseIcon>
   ),
+  ArrowLeft: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </BaseIcon>
+  ),
   CreditCard: (props: IconProps) => (
     <BaseIcon {...props}>
       <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
@@ -186,6 +192,12 @@ export const Icons = {
     <BaseIcon {...props}>
       <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
       <line x1="12" y1="18" x2="12.01" y2="18" />
+    </BaseIcon>
+  ),
+  Mail: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+      <polyline points="22,6 12,13 2,6" />
     </BaseIcon>
   ),
   Menu: (props: IconProps) => (

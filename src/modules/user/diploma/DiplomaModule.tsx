@@ -44,8 +44,8 @@ export default function DiplomaModule() {
   }, [user]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Permitimos letras, tildes, la Ñ, espacios y guiones para nombres compuestos
-    const value = e.target.value.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ \-]/g, '');
+    // Permitimos letras, tildes, la Ñ, espacios, guiones y puntos
+    const value = e.target.value.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑÜ \-\.]/g, '');
     setFormData(prev => ({ ...prev, nombreDiploma: value.substring(0, 25) }));
   };
 
@@ -83,7 +83,7 @@ export default function DiplomaModule() {
   return (
     <div className="diploma-module">
       <ModuleTitle title="Datos para diploma" />
-      
+
       <section className="dashboard-section diploma-container">
         <div className="diploma-header">
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '2rem' }}>
@@ -114,10 +114,10 @@ export default function DiplomaModule() {
 
         <form onSubmit={handleSave} className="diploma-form" style={{ display: 'flex', gap: '3rem', alignItems: 'flex-start', opacity: !isPaid ? 0.6 : 1 }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            
-            <FormField 
-              label="Nombre para el diploma" 
-              required 
+
+            <FormField
+              label="Nombre para el diploma"
+              required
               error={isDiplomaNameTooLong ? "El nombre es demasiado largo (máximo 25 caracteres)." : undefined}
             >
               <div style={{ position: 'relative' }}>
@@ -144,8 +144,8 @@ export default function DiplomaModule() {
               </div>
             </FormField>
 
-            <FormField 
-              label="Correo para recibir el diploma" 
+            <FormField
+              label="Correo para recibir el diploma"
               required
               description="Se enviará un diploma por cada taller donde se confirme tu asistencia."
             >
@@ -188,11 +188,11 @@ export default function DiplomaModule() {
                   type="button"
                   className="btn-ghost"
                   disabled={!isPaid}
-                  style={{ 
-                    width: 'auto', 
-                    padding: '12px 24px', 
-                    border: '1.5px solid #e2e8f0', 
-                    color: '#4a5568', 
+                  style={{
+                    width: 'auto',
+                    padding: '12px 24px',
+                    border: '1.5px solid #e2e8f0',
+                    color: '#4a5568',
                     borderRadius: '12px',
                     opacity: !isPaid ? 0.6 : 1,
                     cursor: !isPaid ? 'not-allowed' : 'pointer'
@@ -287,8 +287,8 @@ export default function DiplomaModule() {
         </form>
       </section>
 
-      <Modal 
-        isOpen={isSuccessModalOpen} 
+      <Modal
+        isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
         title="¡Datos bloqueados!"
         maxWidth="400px"

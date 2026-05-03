@@ -92,6 +92,14 @@ export default function ProfileModule() {
         : value.replace(/\D/g, '').substring(0, getParticipantIdMaxLength(formData.tipoParticipante));
         
       setFormData((prev: any) => ({ ...prev, [name]: formattedValue }));
+    } else if (name === 'tipoParticipante') {
+      // Al cambiar el tipo, limpiamos carnet y ciclo para evitar conflictos de formato
+      setFormData((prev: any) => ({ 
+        ...prev, 
+        [name]: value,
+        carnet: '',
+        ciclo: ''
+      }));
     } else {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }

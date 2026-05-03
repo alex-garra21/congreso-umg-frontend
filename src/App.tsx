@@ -24,7 +24,9 @@ const WorkshopsModule = lazy(() => import('./modules/user/talleres/WorkshopsModu
 const DiplomaModule = lazy(() => import('./modules/user/diploma/DiplomaModule'));
 const AdminModule = lazy(() => import('./pages/AdminModule'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const DeactivatedPage = lazy(() => import('./pages/DeactivatedPage'));
 import { DashboardTitleProvider } from './utils/DashboardTitleContext';
+import { useAuth } from './api/hooks/useAuth';
 
 // Componente de carga premium
 const PageLoader = () => (
@@ -55,6 +57,7 @@ const PageLoader = () => (
 
 function AuthHandler() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -69,22 +72,27 @@ function AuthHandler() {
       }
     });
 
-    if (
-      window.location.hash.includes('type=recovery') || 
-      window.location.hash.includes('access_token=') ||
-      window.location.search.includes('type=recovery')
-    ) {
+    if (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token=') || window.location.search.includes('type=recovery')) {
       localStorage.setItem('is_recovering_pw', 'true');
-      // Esperar un momento a que el Router esté listo antes de navegar
-      setTimeout(() => {
-        if (window.location.pathname !== '/reset-password') {
-          navigate('/reset-password');
-        }
-      }, 100);
+      if (window.location.pathname !== '/reset-password') {
+        setTimeout(() => navigate('/reset-password'), 100);
+      }
     }
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Bloqueo de seguridad para usuarios desactivados
+  useEffect(() => {
+    if (user?.desactivado) {
+      if (window.location.pathname !== '/cuenta-desactivada') {
+        navigate('/cuenta-desactivada');
+      }
+    } else if (window.location.pathname === '/cuenta-desactivada') {
+      // Si ya no está desactivado pero sigue en la página de error, mandarlo al inicio
+      navigate('/');
+    }
+  }, [user?.desactivado, navigate]);
 
   return null;
 }
@@ -110,6 +118,9 @@ function App() {
 
           {/* Ruta Protegida de Restablecimiento de Contraseña (Fuera del layout normal) */}
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+          {/* Ruta de Cuenta Desactivada */}
+          <Route path="/cuenta-desactivada" element={<DeactivatedPage />} />
 
           {/* Rutas Privadas (Dashboard) envolviendo con el proveedor de títulos */}
           <Route path="/dashboard" element={

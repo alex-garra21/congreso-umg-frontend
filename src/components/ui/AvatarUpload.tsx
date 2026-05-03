@@ -209,6 +209,15 @@ export default function AvatarUpload({
         )}
       </div>
 
+      <p style={{ 
+        fontSize: '11px', 
+        color: 'var(--text-secondary)', 
+        marginTop: '-4px',
+        opacity: 0.8
+      }}>
+        Tamaño máximo: <strong>2MB</strong> (JPG o PNG)
+      </p>
+
       <input 
         type="file" 
         ref={fileInputRef} 
