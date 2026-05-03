@@ -20,12 +20,20 @@ export default function ResetPasswordPage() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   useEffect(() => {
-    // Verificar si venimos de un flujo de recuperación real
-    const isRecovery = sessionStorage.getItem('is_recovering_pw') === 'true';
+    // Verificar si venimos de un flujo de recuperación real (URL o Storage)
+    const isRecovery = localStorage.getItem('is_recovering_pw') === 'true' || 
+                       window.location.hash.includes('type=recovery') ||
+                       window.location.hash.includes('access_token=');
     
     if (!isRecovery) {
+      console.warn("Acceso denegado: No se detectó flujo de recuperación.");
       navigate('/');
       return;
+    }
+
+    // Asegurar que la bandera esté en storage si vino por URL
+    if (window.location.hash.includes('type=recovery')) {
+      localStorage.setItem('is_recovering_pw', 'true');
     }
 
     fetchUserProfile();
@@ -173,7 +181,7 @@ export default function ResetPasswordPage() {
               Tu cuenta ha sido protegida con la nueva contraseña. Ya puedes cerrar esta ventana e iniciar sesión normalmente.
             </p>
             <button className="submit-btn" style={{ width: '100%' }} onClick={() => {
-              sessionStorage.removeItem('is_recovering_pw');
+              localStorage.removeItem('is_recovering_pw');
               navigate('/');
             }}>
               Ir al inicio de sesión
@@ -268,14 +276,28 @@ export default function ResetPasswordPage() {
                 style={{ marginBottom: '2.5rem' }}
               />
 
-              <button 
-                type="submit" 
-                className="submit-btn" 
-                disabled={isSubmitting || isLoadingProfile}
-                style={{ width: '100%', height: '50px', fontSize: '16px', opacity: (isSubmitting || isLoadingProfile) ? 0.7 : 1 }}
-              >
-                {isSubmitting ? 'Guardando...' : 'Actualizar Contraseña'}
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+                <button 
+                  type="button" 
+                  className="secondary-btn"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    localStorage.removeItem('is_recovering_pw');
+                    navigate('/');
+                  }}
+                  style={{ flex: 1, height: '50px', background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: '12px', cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="submit-btn" 
+                  disabled={isSubmitting || isLoadingProfile}
+                  style={{ flex: 2, height: '50px', fontSize: '16px', opacity: (isSubmitting || isLoadingProfile) ? 0.7 : 1 }}
+                >
+                  {isSubmitting ? 'Guardando...' : 'Actualizar Contraseña'}
+                </button>
+              </div>
             </form>
           </>
         )}

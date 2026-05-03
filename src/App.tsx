@@ -58,17 +58,33 @@ function App() {
   useEffect(() => {
     // Escuchar cambios en la autenticación de Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      // Si el evento es recuperación de contraseña
       if (event === 'PASSWORD_RECOVERY') {
-        // Establecer bandera de seguridad
-        sessionStorage.setItem('is_recovering_pw', 'true');
-        
-        // Redirigir a la página dedicada de restablecimiento
+        localStorage.setItem('is_recovering_pw', 'true');
         if (window.location.pathname !== '/reset-password') {
           window.location.href = '/reset-password';
         }
       }
+
+      // Bloqueo de seguridad: Si está recuperando, no puede ir al dashboard
+      if (localStorage.getItem('is_recovering_pw') === 'true' && 
+          window.location.pathname.startsWith('/dashboard')) {
+        window.location.href = '/reset-password';
+      }
     });
+
+    // Verificación inmediata por URL
+    if (window.location.hash.includes('type=recovery')) {
+      localStorage.setItem('is_recovering_pw', 'true');
+      if (window.location.pathname !== '/reset-password') {
+        window.location.href = '/reset-password';
+      }
+    }
+    
+    // Verificación de persistencia: si intenta entrar al dashboard con la bandera activa
+    if (localStorage.getItem('is_recovering_pw') === 'true' && 
+        window.location.pathname.startsWith('/dashboard')) {
+      window.location.href = '/reset-password';
+    }
 
     return () => {
       subscription.unsubscribe();
