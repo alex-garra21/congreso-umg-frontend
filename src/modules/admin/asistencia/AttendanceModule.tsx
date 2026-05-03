@@ -3,6 +3,7 @@ import { useAllUsers } from '../../../api/hooks/useUsers';
 import { generateSlug, type AgendaItem } from '../../../utils/agendaStore';
 import { useCharlas, useSaveAgenda } from '../../../api/hooks/useAgenda';
 import ModuleTitle from '../../../components/ModuleTitle';
+import { showToast } from '../../../utils/swal';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
 import AdminButton from '../../../components/ui/AdminButton';
 import AdminBadge from '../../../components/ui/AdminBadge';
@@ -15,6 +16,7 @@ import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import AdminTable from '../../../components/ui/AdminTable';
 import FormField from '../../../components/ui/FormField';
+import Alert from '../../../components/ui/Alert';
 
 export default function AttendanceModule() {
   const { data: users = [] } = useAllUsers();
@@ -28,7 +30,6 @@ export default function AttendanceModule() {
   const [graceWorkshop, setGraceWorkshop] = useState<AgendaItem | null>(null);
   const [tempGraceHours, setTempGraceHours] = useState<number>(0);
   const [tempGraceMinutes, setTempGraceMinutes] = useState<number>(10);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [qrWorkshop, setQRWorkshop] = useState<AgendaItem | null>(null);
   const [qrLink, setQRLink] = useState('');
@@ -39,18 +40,12 @@ export default function AttendanceModule() {
       const node = qrRef.current.getCardRef();
       if (node) {
         try {
-          const dataUrl = await toPng(node, { 
-            quality: 1,
-            pixelRatio: 2,
-            backgroundColor: '#ffffff'
-          });
+          const dataUrl = await toPng(node, { quality: 1, pixelRatio: 2, backgroundColor: '#ffffff' });
           const link = document.createElement('a');
           link.download = `QR-Asistencia-${qrWorkshop.title.replace(/\s+/g, '-')}.png`;
           link.href = dataUrl;
           link.click();
-        } catch (error) {
-          console.error('Error al generar la imagen del QR:', error);
-        }
+        } catch (error) { console.error('Error QR:', error); }
       }
     }
   };
@@ -59,11 +54,9 @@ export default function AttendanceModule() {
     const workshop = agenda.find(a => a.id === workshopId);
     if (!workshop) return;
     setGraceWorkshop(workshop);
-    
     const totalMinutes = workshop.gracePeriod ?? 10;
     setTempGraceHours(Math.floor(totalMinutes / 60));
     setTempGraceMinutes(totalMinutes % 60);
-    
     setIsGraceModalOpen(true);
   };
 
@@ -73,18 +66,15 @@ export default function AttendanceModule() {
     const newAgenda = agenda.map(a => a.id === graceWorkshop.id ? { ...a, gracePeriod: totalMinutes } : a);
     saveAgendaMutation.mutateAsync(newAgenda).then(() => {
       setIsGraceModalOpen(false);
-      setIsSuccessModalOpen(true);
+      showToast('Tiempo de gracia actualizado', 'success');
     });
   };
 
   const handleShowQR = (workshopId: string) => {
     const workshop = agenda.find(w => w.id === workshopId);
     if (!workshop) return;
-    const slug = generateSlug(workshop.title);
-    const link = `${window.location.origin}/asistencia/${slug}`;
-    
     setQRWorkshop(workshop);
-    setQRLink(link);
+    setQRLink(`${window.location.origin}/asistencia/${generateSlug(workshop.title)}`);
     setIsQRModalOpen(true);
   };
 
@@ -92,71 +82,56 @@ export default function AttendanceModule() {
   const paginatedAgenda = filteredAgenda.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (
-    <section className="dashboard-section">
-      <ModuleTitle title="Control de Asistencia" />
+    <section className="dashboard-section" style={{ padding: '0' }}>
+      <div style={{ padding: '2rem 2.5rem 0' }}>
+        <ModuleTitle title="Control de Asistencia" />
+      </div>
 
       <ModuleCard
-        title="Asistencia por Taller"
-        description="Gestiona los tiempos de gracia y genera los códigos de asistencia para cada actividad."
+        title="Validación por Actividad"
+        description="Genera códigos QR y gestiona los tiempos de tolerancia para la toma de asistencia."
         headerActions={
-          <SearchBar
-            value={searchAgenda}
-            onChange={(val) => { setSearchAgenda(val); setPage(1); }}
-            placeholder="Buscar taller por nombre..."
-            style={{ maxWidth: '350px' }}
-          />
+          <SearchBar value={searchAgenda} onChange={(val) => { setSearchAgenda(val); setPage(1); }} placeholder="Buscar taller por nombre..." style={{ maxWidth: '350px' }} />
         }
       >
         <AdminTable
-          headers={["Taller", "Horario", "Gracia", "Inscritos", "Asistencia", "Opciones"]}
-          emptyMessage="No se encontraron talleres con los criterios de búsqueda."
+          headers={["Actividad", "Horario", "Tolerancia", "Inscritos", "Asistencia", "Acciones"]}
+          emptyMessage="No se encontraron talleres."
         >
           {paginatedAgenda.map(item => (
             <tr key={item.id}>
               <td>
-                <strong>{item.title}</strong>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{item.room}</div>
+                <div style={{ fontWeight: 800 }}>{item.title}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>📍 {item.room}</div>
               </td>
-              <td>{item.time} - {item.endTime}</td>
+              <td style={{ fontSize: '13px', fontWeight: 600 }}>{item.time} - {item.endTime}</td>
               <td>
                 <AdminBadge variant="info">
                   {(() => {
                     const total = item.gracePeriod ?? 10;
-                    if (total >= 60) {
-                      const h = Math.floor(total / 60);
-                      const m = total % 60;
-                      return `+${h}h ${m}min`;
-                    }
+                    if (total >= 60) return `+${Math.floor(total / 60)}h ${total % 60}m`;
                     return `+${total} min`;
                   })()}
                 </AdminBadge>
               </td>
               <td>
-                <AdminBadge variant="neutral">
-                  {users.filter(u => u.talleres?.includes(item.id)).length} inscritos
-                </AdminBadge>
+                <AdminBadge variant="neutral">{users.filter(u => u.talleres?.includes(item.id)).length} pers.</AdminBadge>
               </td>
               <td>
-                <AdminBadge variant="success" dot>
-                  {users.filter(u => u.asistencias?.some(a => a.workshopId === item.id)).length} asistieron
-                </AdminBadge>
+                <AdminBadge variant="success" dot>{users.filter(u => u.asistencias?.some(a => a.workshopId === item.id)).length} marcadas</AdminBadge>
               </td>
-              <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                <AdminButton size="sm" variant="secondary" onClick={() => handleUpdateGracePeriod(item.id)} style={{ marginRight: '8px' }}>
-                  Gracia
-                </AdminButton>
-                <AdminButton 
-                  size="sm" 
-                  variant="info" 
-                  href={`${window.location.origin}/asistencia/${generateSlug(item.title)}`}
-                  target="_blank"
-                  style={{ marginRight: '8px' }}
-                >
-                  Enlace
-                </AdminButton>
-                <AdminButton size="sm" variant="success" onClick={() => handleShowQR(item.id)}>
-                  QR
-                </AdminButton>
+              <td style={{ textAlign: 'right' }}>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => handleUpdateGracePeriod(item.id)} className="action-btn" title="Configurar Gracia" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+                    <Icons.Clock size={18} />
+                  </button>
+                  <a href={`${window.location.origin}/asistencia/${generateSlug(item.title)}`} target="_blank" rel="noreferrer" className="action-btn" title="Abrir Enlace" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <Icons.Layout size={18} />
+                  </a>
+                  <button onClick={() => handleShowQR(item.id)} className="action-btn" title="Ver QR" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+                    <Icons.Camera size={18} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -164,118 +139,48 @@ export default function AttendanceModule() {
         <Pagination current={page} total={filteredAgenda.length} onPageChange={setPage} />
       </ModuleCard>
 
-      <Modal
-        isOpen={isGraceModalOpen}
-        onClose={() => setIsGraceModalOpen(false)}
-        title="Configurar Tiempo de Gracia"
-        maxWidth="400px"
-      >
-        <p style={{ marginBottom: '1.5rem', color: '#666' }}>Taller: <strong>{graceWorkshop?.title}</strong></p>
+      <Modal isOpen={isGraceModalOpen} onClose={() => setIsGraceModalOpen(false)} title="Configurar Tolerancia" maxWidth="420px">
+        <Alert variant="info" style={{ marginBottom: '1.5rem' }}>
+          Actividad: <strong>{graceWorkshop?.title}</strong>
+        </Alert>
         
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <FormField label="Horas" style={{ flex: 1 }}>
-            <AdminSelect 
-              value={tempGraceHours.toString()}
-              onChange={e => setTempGraceHours(parseInt(e.target.value))}
-              options={[0,1,2,3,4,5].map(h => ({ value: h.toString(), label: `${h} h` }))}
-            />
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+          <FormField label="HORAS" style={{ flex: 1 }}>
+            <AdminSelect value={tempGraceHours.toString()} onChange={e => setTempGraceHours(parseInt(e.target.value))} options={[0,1,2,3].map(h => ({ value: h.toString(), label: `${h} h` }))} />
           </FormField>
-          <FormField label="Minutos" style={{ flex: 1 }}>
-            <AdminSelect 
-              value={tempGraceMinutes.toString()}
-              onChange={e => setTempGraceMinutes(parseInt(e.target.value))}
-              options={[0,5,10,15,20,25,30,35,40,45,50,55].map(m => ({ value: m.toString(), label: `${m} min` }))}
-            />
+          <FormField label="MINUTOS" style={{ flex: 1 }}>
+            <AdminSelect value={tempGraceMinutes.toString()} onChange={e => setTempGraceMinutes(parseInt(e.target.value))} options={[0,5,10,15,20,25,30,45].map(m => ({ value: m.toString(), label: `${m} min` }))} />
           </FormField>
         </div>
 
-        <div style={{ 
-          marginTop: '0.5rem', 
-          padding: '1rem', 
-          background: '#f8fafc', 
-          borderRadius: '10px', 
-          border: '1px solid #e2e8f0',
-          fontSize: '13px',
-          color: '#475569',
-          lineHeight: 1.5
-        }}>
-          La asistencia se cerrará a las: <strong style={{ color: 'var(--accent-primary)' }}>
+        <div style={{ padding: '1.2rem', background: 'var(--bg-app)', borderRadius: '12px', border: '1px solid var(--border-soft)', textAlign: 'center' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' }}>Límite de Asistencia</div>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--accent-primary)', fontFamily: 'Syne' }}>
             {(() => {
-              if (!graceWorkshop) return '';
+              if (!graceWorkshop) return '--:--';
               const total = (tempGraceHours * 60) + tempGraceMinutes;
               const [time, modifier] = graceWorkshop.endTime.split(' ');
-              let [hours, minutes] = time.split(':').map(Number);
-              
-              if (hours === 12) hours = modifier === 'PM' ? 12 : 0;
-              else if (modifier === 'PM') hours += 12;
-              
-              const date = new Date();
-              date.setHours(hours, minutes + total, 0);
-              
-              return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+              let [h, m] = time.split(':').map(Number);
+              if (h === 12) h = modifier === 'PM' ? 12 : 0; else if (modifier === 'PM') h += 12;
+              const d = new Date(); d.setHours(h, m + total, 0);
+              return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             })()}
-          </strong>
-          <div style={{ marginTop: '4px', fontSize: '11px', opacity: 0.8 }}>
-            ({tempGraceHours > 0 ? `${tempGraceHours}h ` : ''}{tempGraceMinutes}min extra después del fin)
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-          <AdminButton onClick={saveGracePeriod} style={{ flex: 1 }}>Guardar</AdminButton>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+          <AdminButton onClick={saveGracePeriod} style={{ flex: 2 }}>Guardar Ajustes</AdminButton>
           <AdminButton variant="secondary" onClick={() => setIsGraceModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
         </div>
       </Modal>
 
-      <Modal
-        isOpen={isQRModalOpen}
-        onClose={() => setIsQRModalOpen(false)}
-        showCloseButton={false}
-        padding="0"
-        maxWidth="400px"
-        zIndex={10002}
-        style={{ background: 'transparent', boxShadow: 'none' }}
-      >
-        <AttendanceQR ref={qrRef} workshop={qrWorkshop!} link={qrLink} />
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem', paddingBottom: '1.5rem' }}>
-          <button 
-            className="btn-solid" 
-            onClick={() => setIsQRModalOpen(false)}
-            style={{ background: 'white', color: '#1a365d', fontWeight: 800, padding: '12px 30px', borderRadius: '100px', border: '1px solid #e2e8f0' }}
-          >
-            Cerrar
-          </button>
-          <button 
-            className="btn-solid" 
-            onClick={handleDownloadQR}
-            style={{ 
-              background: '#1a365d', 
-              color: 'white', 
-              fontWeight: 800, 
-              padding: '12px 30px', 
-              borderRadius: '100px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}
-          >
-            <Icons.Download size={18} strokeWidth={2.5} />
-            Descargar
-          </button>
+      <Modal isOpen={isQRModalOpen} onClose={() => setIsQRModalOpen(false)} showCloseButton={true} maxWidth="420px">
+        <div style={{ marginTop: '1rem' }}>
+          <AttendanceQR ref={qrRef} workshop={qrWorkshop!} link={qrLink} />
         </div>
-      </Modal>
-
-      <Modal
-        isOpen={isSuccessModalOpen}
-        onClose={() => setIsSuccessModalOpen(false)}
-        title="¡Configuración Guardada!"
-        maxWidth="400px"
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
-            <Icons.CheckCircle size={64} color="#40c057" />
-          </div>
-          <p>El tiempo de gracia ha sido actualizado con éxito.</p>
-          <AdminButton onClick={() => setIsSuccessModalOpen(false)} style={{ marginTop: '1.5rem', width: '100%' }}>Aceptar</AdminButton>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+          <AdminButton onClick={handleDownloadQR} style={{ flex: 1 }} icon={<Icons.Download size={18} />}>Descargar PNG</AdminButton>
+          <AdminButton variant="secondary" onClick={() => setIsQRModalOpen(false)} style={{ flex: 1 }}>Cerrar</AdminButton>
         </div>
       </Modal>
     </section>

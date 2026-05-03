@@ -5,11 +5,12 @@ import { type UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
-import AdminButton from '../../../components/ui/AdminButton';
 import SearchBar from '../../../components/ui/SearchBar';
 import AdminBadge from '../../../components/ui/AdminBadge';
 import ModuleCard from '../../../components/ui/ModuleCard';
 import AdminSelect from '../../../components/ui/AdminSelect';
+import AdminTable from '../../../components/ui/AdminTable';
+import { Icons } from '../../../components/Icons';
 
 export default function UsersModule() {
   const { data: users = [], isLoading } = useAllUsers();
@@ -17,6 +18,7 @@ export default function UsersModule() {
   const invalidatePaymentMutation = useInvalidatePayment();
   const adminValidateMutation = useAdminValidateUser();
   const { user: currentAdmin } = useAuth();
+  
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -24,207 +26,117 @@ export default function UsersModule() {
   const handleValidateUser = async (user: UserData) => {
     if (!user.id) return;
     try {
-      await adminValidateMutation.mutateAsync({ 
-        userId: user.id, 
-        adminId: currentAdmin?.id 
-      });
-      showToast(`Pago validado para ${user.nombres} ${user.apellidos} (Token ADMIN generado)`, 'success');
-    } catch (error: any) {
-      showToast(`Error al validar: ${error.message}`, 'error');
-    }
+      await adminValidateMutation.mutateAsync({ userId: user.id, adminId: currentAdmin?.id });
+      showToast(`Pago validado para ${user.nombres}`, 'success');
+    } catch (error: any) { showToast(`Error al validar: ${error.message}`, 'error'); }
   };
 
   const handleInvalidatePayment = async (user: UserData) => {
     if (!user.id) return;
-    const confirmed = await showConfirm(
-      'Anular Pago',
-      `¿Estás seguro de que deseas anular el pago de ${user.nombres}? El token utilizado será liberado y el usuario volverá a tener el pago pendiente.`,
-      'Sí, anular pago',
-      true
-    );
+    const confirmed = await showConfirm('Anular Pago', `¿Anular pago de ${user.nombres}? El token se liberará.`, 'Sí, anular', true);
     if (confirmed) {
       const result = await invalidatePaymentMutation.mutateAsync(user.id!);
-      if (result.success) {
-        showToast(result.message, 'success');
-      } else {
-        showToast(result.message, 'error');
-      }
+      showToast(result.message, result.success ? 'success' : 'error');
     }
   };
 
-  const handleDeactivateUser = async (user: UserData) => {
-    const confirmed = await showConfirm('Desactivar Usuario', `¿Estás seguro de desactivar a ${user.nombres} ${user.apellidos}? No aparecerá en los informes y reportes.`, 'Desactivar', true);
+  const handleToggleActivation = async (user: UserData, activate: boolean) => {
+    const title = activate ? 'Activar' : 'Desactivar';
+    const confirmed = await showConfirm(`${title} Usuario`, `¿Estás seguro de ${title.toLowerCase()} a ${user.nombres}?`, title, !activate);
     if (confirmed) {
-      const updated = { ...user, desactivado: true };
-      await updateUserDataMutation.mutateAsync(updated);
-      showToast('Usuario desactivado', 'success');
+      await updateUserDataMutation.mutateAsync({ ...user, desactivado: !activate });
+      showToast(`Usuario ${activate ? 'activado' : 'desactivado'}`, 'success');
     }
   };
 
-  const handleActivateUser = async (user: UserData) => {
-    const confirmed = await showConfirm('Activar Usuario', `¿Estás seguro de activar nuevamente a ${user.nombres} ${user.apellidos}?`, 'Activar', false);
+  const handleRoleChange = async (user: UserData, toAdmin: boolean) => {
+    const title = toAdmin ? 'Promover a Admin' : 'Degradar a Usuario';
+    const confirmed = await showConfirm(title, `¿Confirmar cambio de rol para ${user.nombres}?`, toAdmin ? 'Promover' : 'Degradar', !toAdmin);
     if (confirmed) {
-      const updated = { ...user, desactivado: false };
-      await updateUserDataMutation.mutateAsync(updated);
-      showToast('Usuario activado', 'success');
-    }
-  };
-
-  const handlePromoteToAdmin = async (user: UserData) => {
-    const confirmed = await showConfirm('Promover a Administrador', `¿Estás seguro de promover a ${user.nombres} ${user.apellidos} a Administrador?`, 'Promover', false);
-    if (confirmed) {
-      const updated = { ...user, rol: 'admin' as const };
-      await updateUserDataMutation.mutateAsync(updated);
-      showToast('Usuario ahora es Administrador', 'success');
-    }
-  };
-
-  const handleDemoteToUser = async (user: UserData) => {
-    const confirmed = await showConfirm('Degradar a Usuario', `¿Estás seguro de degradar a ${user.nombres} ${user.apellidos} a Usuario participante?`, 'Degradar', true);
-    if (confirmed) {
-      const updated = { ...user, rol: 'usuario' as const };
-      await updateUserDataMutation.mutateAsync(updated);
-      showToast('Permisos de administrador revocados', 'success');
-      
-      // Si el admin se degradó a sí mismo, redirigir para evitar errores de acceso
-      if (user.id === currentAdmin?.id) {
-        setTimeout(() => {
-          window.location.href = '/dashboard/inicio';
-        }, 2000);
+      await updateUserDataMutation.mutateAsync({ ...user, rol: toAdmin ? 'admin' : 'usuario' });
+      showToast('Rol actualizado', 'success');
+      if (!toAdmin && user.id === currentAdmin?.id) {
+        setTimeout(() => window.location.href = '/dashboard/inicio', 2000);
       }
     }
   };
 
   const filteredUsers = users.filter((u: UserData) => {
-    const matchesSearch = u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesPayment = paymentFilter === 'all' ||
-      (paymentFilter === 'paid' && u.pagoValidado && !u.desactivado) ||
-      (paymentFilter === 'pending' && !u.pagoValidado && !u.desactivado) ||
-      (paymentFilter === 'deactivated' && u.desactivado);
-
+    const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado && !u.desactivado) || (paymentFilter === 'pending' && !u.pagoValidado && !u.desactivado) || (paymentFilter === 'deactivated' && u.desactivado);
     return matchesSearch && matchesPayment;
   });
 
   const paginatedUsers = filteredUsers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (
-    <section className="dashboard-section">
-      <ModuleTitle title="Gestión de Usuarios" />
-      
+    <section className="dashboard-section" style={{ padding: '0' }}>
+      <div style={{ padding: '2rem 2.5rem 0' }}>
+        <ModuleTitle title="Directorio de Usuarios" />
+      </div>
+
       <ModuleCard 
-        title="Participantes Registrados"
-        description="Administra los usuarios del sistema, valida sus pagos y gestiona sus roles."
-        headerActions={
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', width: '100%', maxWidth: '600px' }}>
-            <div style={{ flex: 2 }}>
-              <SearchBar 
-                value={searchTerm} 
-                onChange={(val) => { setSearchTerm(val); setPage(1); }} 
-                placeholder="Buscar por nombre o correo..." 
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: '160px' }}>
-              <AdminSelect 
-                value={paymentFilter}
-                onChange={e => { setPaymentFilter(e.target.value); setPage(1); }}
-                options={[
-                  { value: 'all', label: 'Todos los estados' },
-                  { value: 'paid', label: 'Pagados' },
-                  { value: 'pending', label: 'Pendientes' },
-                  { value: 'deactivated', label: 'Desactivados' }
-                ]}
-              />
-            </div>
-          </div>
-        }
+        title="Participantes y Staff"
+        description="Gestiona roles, validaciones de pago y estados de cuenta."
       >
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Cargando usuarios...</div>
-        ) : (
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Usuario</th>
-                  <th>Correo</th>
-                  <th>Rol</th>
-                  <th>Estado de Pago</th>
-                  <th style={{ textAlign: 'right' }}>Opciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedUsers.map(u => (
-                  <tr key={u.correo}>
-                    <td><strong>{u.nombres} {u.apellidos}</strong></td>
-                    <td>{u.correo}</td>
-                    <td>
-                      {u.rol === 'admin' ? (
-                        <AdminBadge variant="purple">Administrador</AdminBadge>
-                      ) : (
-                        <AdminBadge variant="neutral">Participante</AdminBadge>
-                      )}
-                    </td>
-                    <td>
-                      {u.desactivado ? (
-                        <AdminBadge variant="danger">Desactivado</AdminBadge>
-                      ) : (
-                        u.pagoValidado ? (
-                          <AdminBadge variant="success">Pagado</AdminBadge>
-                        ) : (
-                          <AdminBadge variant="danger">Pendiente</AdminBadge>
-                        )
-                      )}
-                    </td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      {!u.desactivado && !u.pagoValidado && u.rol !== 'admin' && (
-                        <AdminButton size="sm" variant="success" onClick={() => handleValidateUser(u)} style={{ marginRight: '8px' }}>
-                          Validar Pago
-                        </AdminButton>
-                      )}
-                      {!u.desactivado && u.pagoValidado && u.rol !== 'admin' && (
-                        <AdminButton size="sm" variant="danger" onClick={() => handleInvalidatePayment(u)} style={{ marginRight: '8px' }}>
-                          Anular Pago
-                        </AdminButton>
-                      )}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', marginBottom: '2.5rem', background: 'var(--bg-app)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-soft)' }}>
+          <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo electrónico..." />
+          <AdminSelect value={paymentFilter} onChange={e => { setPaymentFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos los estados' }, { value: 'paid', label: 'Inscritos (Pagados)' }, { value: 'pending', label: 'Pendientes' }, { value: 'deactivated', label: 'Desactivados' }]} />
+        </div>
 
-                      {u.rol === 'admin' ? (
-                        <AdminButton size="sm" variant="danger" onClick={() => handleDemoteToUser(u)} style={{ marginRight: '8px' }}>
-                          Degradar a Usuario
-                        </AdminButton>
-                      ) : (
-                        !u.desactivado && (
-                          <AdminButton size="sm" variant="warning" onClick={() => handlePromoteToAdmin(u)} style={{ marginRight: '8px' }}>
-                            Promover a Admin
-                          </AdminButton>
-                        )
-                      )}
+        <AdminTable 
+          isLoading={isLoading} 
+          headers={["Nombre Completo", "Contacto", "Rol", "Estado Pago", "Acciones"]}
+          emptyMessage="No se encontraron participantes con estos filtros."
+        >
+          {paginatedUsers.map(u => (
+            <tr key={u.correo}>
+              <td>
+                <div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{u.nombres} {u.apellidos}</div>
+              </td>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                  <Icons.Mail size={14} /> {u.correo}
+                </div>
+              </td>
+              <td>
+                <AdminBadge variant={u.rol === 'admin' ? "purple" : "neutral"} dot={u.rol === 'admin'}>
+                  {u.rol === 'admin' ? 'Administrador' : 'Participante'}
+                </AdminBadge>
+              </td>
+              <td>
+                {u.desactivado ? <AdminBadge variant="danger">Desactivado</AdminBadge> : u.pagoValidado ? <AdminBadge variant="success" dot>Pagado</AdminBadge> : <AdminBadge variant="danger" dot>Pendiente</AdminBadge>}
+              </td>
+              <td style={{ textAlign: 'right' }}>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  {/* Acciones de Pago */}
+                  {!u.desactivado && u.rol !== 'admin' && (
+                    u.pagoValidado ? (
+                      <button onClick={() => handleInvalidatePayment(u)} className="action-btn" title="Anular Pago" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+                        <Icons.AlertTriangle size={18} />
+                      </button>
+                    ) : (
+                      <button onClick={() => handleValidateUser(u)} className="action-btn" title="Validar Pago" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+                        <Icons.CheckCircle size={18} />
+                      </button>
+                    )
+                  )}
 
-                      {u.desactivado ? (
-                        <AdminButton size="sm" variant="secondary" onClick={() => handleActivateUser(u)}>
-                          Activar
-                        </AdminButton>
-                      ) : (
-                        <AdminButton size="sm" variant="danger" onClick={() => handleDeactivateUser(u)}>
-                          Desactivar
-                        </AdminButton>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {paginatedUsers.length === 0 && (
-                  <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 500 }}>No se encontraron usuarios con los criterios de búsqueda.</div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  {/* Acciones de Rol */}
+                  <button onClick={() => handleRoleChange(u, u.rol !== 'admin')} className="action-btn" title={u.rol === 'admin' ? "Quitar Admin" : "Hacer Admin"} style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+                    <Icons.Shield size={18} />
+                  </button>
+
+                  {/* Acciones de Activación */}
+                  <button onClick={() => handleToggleActivation(u, !!u.desactivado)} className="action-btn" title={u.desactivado ? "Activar" : "Desactivar"} style={{ background: u.desactivado ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)', color: u.desactivado ? '#16a34a' : '#6b7280', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+                    {u.desactivado ? <Icons.Plus size={18} /> : <Icons.EyeOff size={18} />}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </AdminTable>
+        
         <Pagination current={page} total={filteredUsers.length} onPageChange={setPage} />
       </ModuleCard>
     </section>
