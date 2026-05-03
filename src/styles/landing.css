@@ -493,8 +493,18 @@ h1 span {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .ag-item {
+  .ag-item,
+  .agenda-list-item {
     grid-template-columns: 72px 1fr;
+    gap: 10px;
+    padding: 1rem;
+  }
+
+  .ag-item > div:last-child,
+  .agenda-list-item > div:last-child {
+    grid-column: 2;
+    justify-content: flex-start;
+    margin-top: 8px;
   }
 
   .track {

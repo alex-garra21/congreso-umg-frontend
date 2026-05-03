@@ -17,137 +17,107 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
       isOpen={isOpen}
       onClose={onClose}
       maxWidth="600px"
-      title="" // El título lo manejamos personalizado abajo para el badge
+      title=""
     >
-      <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
-        <WorkshopBadge tag={item.tag || 'General'} style={{ marginBottom: '8px' }} />
-        <h3 style={{
-          fontSize: '28px',
-          marginBottom: '4px',
-          lineHeight: '1.2',
-          fontFamily: 'Source Sans 3, sans-serif',
-          fontWeight: 800
-        }}>
-          {item.title}
-        </h3>
-
-        <div style={{
-          display: 'flex',
-          gap: '10px',
-          color: 'var(--text-secondary)',
-          fontSize: '13px',
-          alignItems: 'center',
-          marginTop: '10px',
-          flexWrap: 'wrap'
-        }}>
-          {/* Badge Jornada */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'var(--bg-app)',
-            padding: '4px 12px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-soft)',
-            fontWeight: 600
-          }}>
-            <Icons.Calendar size={14} />
-            Jornada: {item.period}
-          </div>
-
-          {/* Badge Hora */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: '#185FA5',
-            background: '#E6F1FB',
-            padding: '4px 12px',
-            borderRadius: '8px',
-            fontWeight: 700
-          }}>
-            <Icons.Clock size={14} />
-            {item.time}
-          </div>
-
-          {/* Badge Salón */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: '#16a34a',
-            background: '#E1F5EE',
-            padding: '4px 12px',
-            borderRadius: '8px',
-            fontWeight: 700
-          }}>
-            <Icons.MapPin size={14} />
-            {item.room}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div>
+          <WorkshopBadge tag={item.tag || 'General'} style={{ marginBottom: '12px' }} />
+          <h2 style={{ fontSize: '28px', margin: '0 0 1rem 0', fontFamily: 'Source Sans 3', fontWeight: 800, lineHeight: 1.2 }}>
+            {item.title}
+          </h2>
+          
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              color: 'var(--text-secondary)',
+              background: 'var(--bg-app)',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontWeight: 700,
+              fontSize: '13px'
+            }}>
+              <Icons.Clock size={14} color="var(--accent-primary)" />
+              {item.time} - {item.endTime}
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              color: 'var(--text-secondary)',
+              background: 'var(--bg-app)',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontWeight: 700,
+              fontSize: '13px'
+            }}>
+              <Icons.MapPin size={14} color="var(--accent-primary)" />
+              {item.room}
+            </div>
           </div>
         </div>
-      </div>
 
-      {item.speaker && (
-        <div style={{
-          display: 'flex',
-          gap: '15px',
-          alignItems: 'center',
-          background: 'var(--bg-app)',
-          padding: '1.2rem',
-          borderRadius: '16px',
-          border: '1px solid var(--border-soft)',
-          marginBottom: '2rem'
-        }}>
-          <div
-            className="speaker-avatar"
-            style={{
-              background: item.speaker.bgColor,
-              color: item.speaker.textColor,
-              width: '56px',
-              height: '56px',
-              fontSize: '20px',
-              margin: 0,
-              flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}
-          >
-            {item.speaker.avatar ? (
-              <img src={item.speaker.avatar} alt={item.speaker.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-            ) : (
-              item.speaker.initials
-            )}
-          </div>
-          <div>
-            <h4 style={{ margin: 0, fontSize: '17px', fontWeight: 700 }}>{item.speaker.name}</h4>
-            <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>{item.speaker.role}</p>
-          </div>
+        <div>
+          <h4 style={{ 
+            fontSize: '11px', 
+            fontWeight: 800, 
+            textTransform: 'uppercase', 
+            letterSpacing: '1px', 
+            color: 'var(--accent-primary)',
+            marginBottom: '10px' 
+          }}>
+            Descripción
+          </h4>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '15px', whiteSpace: 'pre-line', margin: 0 }}>
+            {item.description}
+          </p>
         </div>
-      )}
 
-      <div style={{ marginBottom: '2.5rem' }}>
-        <h4 style={{
-          fontSize: '11px',
-          fontWeight: 800,
-          textTransform: 'uppercase',
-          letterSpacing: '0.8px',
-          color: 'var(--text-secondary)',
-          marginBottom: '12px'
-        }}>
-          Sobre esta charla
-        </h4>
-        <p style={{
-          color: 'var(--text-primary)',
-          lineHeight: '1.7',
-          fontSize: '15px',
-          whiteSpace: 'pre-line',
-          background: 'var(--bg-card)',
-          padding: '0',
-          margin: 0
-        }}>
-          {item.description}
-        </p>
+        {item.speaker && (
+          <div style={{ 
+            marginTop: '0.5rem', 
+            paddingTop: '1.5rem', 
+            borderTop: '1px solid var(--border-soft)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px'
+          }}>
+            <div
+              className="speaker-avatar"
+              style={{
+                background: item.speaker.bgColor,
+                color: item.speaker.textColor,
+                width: '60px',
+                height: '60px',
+                fontSize: '20px',
+                margin: '0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 800,
+                borderRadius: '50%',
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                border: '3px solid white'
+              }}
+            >
+              {item.speaker.avatar ? (
+                <img src={item.speaker.avatar} alt={item.speaker.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ) : (
+                item.speaker.initials
+              )}
+            </div>
+            <div>
+              <h4 style={{ fontSize: '11px', margin: '0 0 4px 0', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Ponente
+              </h4>
+              <h3 style={{ fontSize: '18px', margin: '0 0 2px 0', fontWeight: 800, color: 'var(--text-primary)' }}>{item.speaker.name}</h3>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>{item.speaker.role}</p>
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   );
 }
-

@@ -134,3 +134,49 @@
 .banner-text h3 { font-size: 16px; font-weight: 700; margin: 0 0 4px 0; }
 .banner-text p { font-size: 13px; opacity: 0.6; margin: 0; }
 
+/* ── DIPLOMA MODULE LAYOUT ── */
+.diploma-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: 
+    "fields preview"
+    "actions preview";
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+.diploma-fields {
+  grid-area: fields;
+  display: flex;
+  flex-direction: column;
+}
+
+.diploma-actions-grid {
+  grid-area: actions;
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.diploma-preview-container {
+  grid-area: preview;
+  position: sticky;
+  top: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .diploma-form {
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "fields"
+      "preview"
+      "actions";
+    gap: 2rem;
+  }
+
+  .diploma-preview-container {
+    position: static;
+    margin-bottom: 1rem;
+  }
+}
+

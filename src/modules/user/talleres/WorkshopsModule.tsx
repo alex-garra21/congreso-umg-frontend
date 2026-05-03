@@ -146,7 +146,6 @@ export default function WorkshopsModule() {
     setSaveStatus('saving');
     if (user?.id) {
       // Importante: No borrar las actividades GENERALES que ya tiene el usuario.
-      // Las actividades generales se asignan al validar el pago.
       const generalActivities = (user.talleres || []).filter(t => t.category === 'GENERAL');
       const generalIds = generalActivities.map(t => t.id);
       
@@ -154,6 +153,12 @@ export default function WorkshopsModule() {
       const { success } = await syncUserEnrollmentsMutation(user.id, allToSave);
       
       if (success) {
+        // Detectamos si esto fue una modificación (si ya estaba confirmado antes de esta sesión de edición)
+        const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`) === 'true';
+        if (wasAlreadyConfirmed) {
+          localStorage.setItem(`modifications_count_${user.correo}`, '1');
+        }
+
         // Obtenemos los objetos completos para actualizar el estado local de user
         const newTalleresObjects = [
           ...enrolledIds.map(id => ({ id, category: agenda.find(a => a.id === id)?.tag || '' })),
@@ -176,14 +181,30 @@ export default function WorkshopsModule() {
   const handleEdit = async () => {
     const count = parseInt(localStorage.getItem(`modifications_count_${user?.correo}`) || '0');
     if (count >= 1) { showToast('Ya no tienes más cambios disponibles.', 'error'); return; }
-    const confirmed = await showConfirm('¿Modificar selección?', 'Atención: Solo tienes derecho a UN cambio. ¿Deseas proceder?', 'Sí, modificar', true);
+    
+    const confirmed = await showConfirm(
+      '¿Modificar selección?', 
+      'Atención: Solo tienes derecho a UN cambio una vez guardes. ¿Deseas proceder?', 
+      'Sí, modificar', 
+      true
+    );
+    
     if (confirmed) {
-      localStorage.setItem(`modifications_count_${user?.correo}`, '1');
       setIsConfirmed(false);
       setSaveStatus('idle');
-      localStorage.setItem(`workshops_confirmed_${user?.correo}`, 'false');
-      refetchProfile();
     }
+  };
+
+  const handleCancelEdit = () => {
+    // Restaurar los IDs desde el perfil del usuario
+    if (user?.talleres) {
+      const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
+      setEnrolledIds(onlyWorkshops);
+    } else {
+      setEnrolledIds([]);
+    }
+    setIsConfirmed(true);
+    setSaveStatus('idle');
   };
 
 
@@ -295,6 +316,8 @@ export default function WorkshopsModule() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '3rem 0' }}>
           {isPaid && (() => {
             const modCount = parseInt(localStorage.getItem(`modifications_count_${user?.correo}`) || '0');
+            const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`) === 'true';
+
             if (isConfirmed) {
               return modCount >= 1 
                 ? <div style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '14px', background: 'var(--bg-app)', padding: '1rem 2rem', borderRadius: '12px', border: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -316,23 +339,54 @@ export default function WorkshopsModule() {
                     Modificar Selección (1 oportunidad)
                   </AdminButton>;
             }
-            return <AdminButton 
-              size="lg" 
-              onClick={handleConfirm} 
-              disabled={enrolledIds.length === 0 || saveStatus === 'saving'}
-              icon={saveStatus === 'saving' ? <Icons.Clock size={20} /> : <Icons.Check size={20} />}
-              className="admin-btn-hover"
-              style={{ 
-                padding: '1.2rem 4.5rem', 
-                borderRadius: '100px', 
-                background: enrolledIds.length === 0 ? '#e2e8f0' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                borderColor: 'transparent',
-                boxShadow: enrolledIds.length === 0 ? 'none' : '0 15px 30px -10px rgba(16, 185, 129, 0.4)',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              {saveStatus === 'saving' ? 'Guardando...' : `Inscribir ${enrolledIds.length} Talleres`}
-            </AdminButton>;
+            return (
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.5rem', width: '100%' }}>
+                <AdminButton 
+                  size="lg" 
+                  onClick={handleConfirm} 
+                  disabled={enrolledIds.length === 0 || saveStatus === 'saving'}
+                  icon={saveStatus === 'saving' ? <Icons.Clock size={20} /> : <Icons.Check size={20} />}
+                  className="admin-btn-hover"
+                  style={{ 
+                    padding: '1.2rem 4.5rem', 
+                    borderRadius: '100px', 
+                    background: enrolledIds.length === 0 ? '#e2e8f0' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    borderColor: 'transparent',
+                    boxShadow: enrolledIds.length === 0 ? 'none' : '0 15px 30px -10px rgba(16, 185, 129, 0.4)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {saveStatus === 'saving' ? 'Guardando...' : wasAlreadyConfirmed ? 'Confirmar Cambio' : `Inscribir ${enrolledIds.length} Talleres`}
+                </AdminButton>
+
+                {wasAlreadyConfirmed && (
+                  <button 
+                    onClick={handleCancelEdit}
+                    className="btn-ghost"
+                    style={{
+                      padding: '1.2rem 3rem',
+                      borderRadius: '100px',
+                      border: '2px solid #cbd5e1',
+                      background: 'transparent',
+                      color: '#475569',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f1f5f9';
+                      e.currentTarget.style.borderColor = '#94a3b8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            );
           })()}
 
           <BackButton />
@@ -378,7 +432,7 @@ export default function WorkshopsModule() {
                   alignItems: 'center',
                   gap: '6px'
                 }}>
-                  <Icons.MapPin size={14} /> {selectedWorkshop.room}
+                  <Icons.MapPin size={14} color="var(--accent-primary)" /> {selectedWorkshop.room}
                 </span>
                 <span style={{ 
                   background: 'rgba(0, 0, 0, 0.05)', 
@@ -724,6 +778,80 @@ export default function WorkshopsModule() {
         .selection-item-remove:hover {
           background: #fff5f5;
           transform: rotate(90deg);
+        }
+
+        /* RESPONSIVE ADJUSTMENTS */
+        @media (max-width: 768px) {
+          .workshops-module > div {
+            padding: 1.5rem 1rem !important;
+          }
+          
+          .calendar-container {
+            padding: 1rem;
+            border-radius: 16px;
+            margin: 0 -0.5rem 2rem;
+          }
+
+          .calendar-grid {
+            min-width: 800px; /* Un poco más compacto */
+          }
+
+          .selection-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+          }
+
+          .selection-item-info {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+            width: 100%;
+          }
+
+          .selection-item-room {
+            min-width: unset;
+            width: fit-content;
+          }
+
+          .selection-item-remove {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+          }
+
+          .selection-item-title {
+            font-size: 14px;
+          }
+
+          .w-title {
+            font-size: 11px;
+            -webkit-line-clamp: 2;
+          }
+
+          .w-time {
+            font-size: 9px;
+            padding: 2px 6px;
+          }
+          
+          .w-speaker {
+            font-size: 9px;
+          }
+        }
+
+        /* Estilo de la barra de desplazamiento horizontal */
+        .calendar-container::-webkit-scrollbar {
+          height: 6px;
+        }
+        .calendar-container::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        .calendar-container::-webkit-scrollbar-thumb {
+          background: var(--accent-primary);
+          border-radius: 10px;
+          opacity: 0.5;
         }
       `}</style>
     </div>

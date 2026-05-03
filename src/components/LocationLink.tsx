@@ -1,4 +1,4 @@
-import React from 'react';
+import { Icons } from './Icons';
 
 interface LocationLinkProps {
   variant?: 'banner' | 'simple';
@@ -23,7 +23,9 @@ const LocationLink: React.FC<LocationLinkProps> = ({ variant = 'simple', classNa
         style={{ cursor: 'pointer' }}
         onClick={handleClick}
       >
-        <span className="banner-icon">📍</span>
+        <div className="banner-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icons.MapPin size={24} color="var(--accent-primary)" />
+        </div>
         <div className="banner-text">
           <h3>{LOCATION_NAME.split(',')[0]} — {EVENT_DATE}</h3>
           <p>{LOCATION_NAME} · Clic para ver ubicación</p>
@@ -42,7 +44,7 @@ const LocationLink: React.FC<LocationLinkProps> = ({ variant = 'simple', classNa
     >
       {children ? children : (
         <>
-          {!disableEmoji && <span role="img" aria-label="pin">📍</span>} {LOCATION_NAME}
+          {!disableEmoji && <Icons.MapPin size={14} color="inherit" style={{ opacity: 0.9 }} />} {LOCATION_NAME}
         </>
       )}
     </a>

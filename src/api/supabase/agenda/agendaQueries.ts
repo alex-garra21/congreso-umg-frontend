@@ -43,10 +43,10 @@ export async function getPonentesQuery(): Promise<Speaker[]> {
     role: d.cargo,
     tag: d.tag,
     bio: d.bio,
-    bgColor: '#e6f1fb',
-    textColor: '#0C447C',
+    bgColor: d.bg_color || '#e6f1fb',
+    textColor: d.text_color || '#0C447C',
     avatar: d.avatar_url,
-    socialLinks: {}
+    socialLinks: d.redes_sociales || {}
   }));
 }
 
@@ -72,6 +72,7 @@ export async function getCharlasQuery(): Promise<AgendaItem[]> {
     period: d.periodo as 'Mañana' | 'Tarde',
     locationId: d.sala_id,
     tagId: d.categoria_id,
+    speaker: d.id_ponente ? { id: d.id_ponente } : undefined,
     room: '', // Se llenará en el hook con el nombre real
     tag: ''   // Se llenará en el hook con el nombre real
   } as AgendaItem));

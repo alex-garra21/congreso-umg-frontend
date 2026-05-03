@@ -138,16 +138,13 @@ export default function AgendaPage() {
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
                     }}>
-                      <Icons.MapPin size={12} strokeWidth={2.5} />
+                      <Icons.MapPin size={12} strokeWidth={2.5} color="var(--accent-primary)" />
                       {charla.room}
                     </div>
                   </div>
                   <h3>{charla.title}</h3>
-                  <p>
-                    {charla.speaker
-                      ? `${charla.speaker.name} — ${charla.speaker.role.substring(0, 40)}...`
-                      : (charla.id.startsWith('reg') ? 'Comité Organizador UMG' : (charla.id === 'almuerzo' ? 'Hotel Alcázar doña Victoria' : 'Clausura General'))
-                    }
+                  <p style={{ minHeight: '1.2em' }}>
+                    {charla.speaker ? charla.speaker.name : ''}
                   </p>
                 </div>
 

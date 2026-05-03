@@ -93,9 +93,9 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
           title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
         >
           {showPassword ? (
-            <Icons.Eye size={18} />
+            <Icons.Eye key="eye-open" size={18} />
           ) : (
-            <Icons.EyeOff size={18} />
+            <Icons.EyeOff key="eye-closed" size={18} />
           )}
         </button>
 

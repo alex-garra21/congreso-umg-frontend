@@ -87,3 +87,9 @@ html, body {
   0%, 100% { opacity: 1 }
   50% { opacity: .3 }
 }
+
+/* Ocultar iconos nativos de navegadores en campos de contraseña */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}

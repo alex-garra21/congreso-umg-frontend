@@ -57,20 +57,45 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
               {speaker.socialLinks && Object.entries(speaker.socialLinks).map(([type, url]) => {
-                if (!url) return null;
+                if (!url || typeof url !== 'string' || url.trim() === '') return null;
                 
-                // Mapeo seguro de iconos
-                const IconComponent = (Icons as any)[type.charAt(0).toUpperCase() + type.slice(1)] || Icons.ExternalLink;
+                // Mapeo robusto de iconos
+                const getIcon = (type: string) => {
+                  const t = type.toLowerCase();
+                  if (t === 'x' || t === 'twitter') return Icons.TwitterX;
+                  if (t === 'linkedin') return Icons.LinkedIn;
+                  if (t === 'facebook') return Icons.Facebook;
+                  if (t === 'instagram') return Icons.Instagram;
+                  if (t === 'tiktok') return Icons.TikTok;
+                  if (t === 'youtube') return Icons.Youtube;
+                  if (t === 'whatsapp') return Icons.WhatsApp;
+                  if (t === 'threads') return Icons.Threads;
+                  if (t === 'website' || t === 'web' || t === 'globe') return Icons.Globe;
+                  
+                  // Intento genérico
+                  return (Icons as any)[type.charAt(0).toUpperCase() + type.slice(1)] || Icons.ExternalLink;
+                };
+
+                const IconComponent = getIcon(type);
 
                 return (
                   <a 
                     key={type} 
-                    href={url as string} 
+                    href={url} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="social-icon-link" 
                     title={type.charAt(0).toUpperCase() + type.slice(1)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: 'rgba(0,0,0,0.05)',
+                      transition: 'all 0.2s'
+                    }}
                   >
                     <IconComponent size={18} color="var(--text-secondary)" />
                   </a>

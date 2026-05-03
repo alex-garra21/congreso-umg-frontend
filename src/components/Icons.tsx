@@ -136,8 +136,8 @@ export const Icons = {
   ),
   MapPin: (props: IconProps) => (
     <BaseIcon {...props}>
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-      <circle cx="12" cy="10" r="3" />
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+      <circle cx="12" cy="9" r="2.5" />
     </BaseIcon>
   ),
   Download: (props: IconProps) => (

@@ -109,9 +109,8 @@ export default function DiplomaModule() {
           </ul>
         </Alert>
 
-        <form onSubmit={handleSave} className="diploma-form" style={{ display: 'flex', gap: '3rem', alignItems: 'flex-start', opacity: !isPaid ? 0.6 : 1 }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-
+        <form onSubmit={handleSave} className="diploma-form" style={{ opacity: !isPaid ? 0.6 : 1 }}>
+          <div className="diploma-fields">
             <FormField
               label="Nombre para el diploma"
               required
@@ -165,72 +164,9 @@ export default function DiplomaModule() {
             <Alert variant="warning" title="Verifica bien tus datos">
               Una vez emitido el diploma, el nombre <strong>no podrá modificarse</strong>. Asegúrate de que esté escrito correctamente y con las tildes correspondientes.
             </Alert>
-
-            {!isLocked ? (
-              <div className="diploma-actions" style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <LoadingButton
-                  type="submit"
-                  isLoading={isSaving}
-                  loadingText="Guardando..."
-                  style={{
-                    width: 'auto',
-                    padding: '12px 32px',
-                    opacity: (isDiplomaNameTooLong || !isPaid) && !isSaving ? 0.6 : 1,
-                    cursor: (isDiplomaNameTooLong || !isPaid) ? 'not-allowed' : 'pointer'
-                  }}
-                  disabled={isDiplomaNameTooLong || !isPaid}
-                >
-                  Guardar datos
-                </LoadingButton>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  disabled={!isPaid}
-                  style={{
-                    width: 'auto',
-                    padding: '12px 24px',
-                    border: '1.5px solid #e2e8f0',
-                    color: '#4a5568',
-                    borderRadius: '12px',
-                    opacity: !isPaid ? 0.6 : 1,
-                    cursor: !isPaid ? 'not-allowed' : 'pointer'
-                  }}
-                  onClick={() => {
-                    const fullName = `${user.nombres} ${user.apellidos}`.trim().toUpperCase();
-                    let suggestedName = '';
-                    if (fullName.length <= 25) {
-                      suggestedName = fullName;
-                    } else {
-                      const firstName = (user.nombres || '').trim().split(' ')[0] || '';
-                      const firstSurname = (user.apellidos || '').trim().split(' ')[0] || '';
-                      suggestedName = `${firstName} ${firstSurname}`.trim().toUpperCase().substring(0, 25);
-                    }
-                    setFormData({
-                      nombreDiploma: suggestedName,
-                      correoDiploma: user.correo || ''
-                    });
-                  }}
-                >
-                  Limpiar
-                </button>
-              </div>
-            ) : (
-              <div style={{
-                padding: '1.25rem',
-                backgroundColor: '#f0fff4',
-                border: '1px solid #c6f6d5',
-                borderRadius: '12px',
-                color: '#2f855a',
-                textAlign: 'center',
-                fontWeight: 600,
-                fontSize: '14px'
-              }}>
-                Los datos han sido guardados y bloqueados. No se permiten más modificaciones.
-              </div>
-            )}
           </div>
 
-          <div style={{ flex: 1, position: 'sticky', top: '2rem' }}>
+          <div className="diploma-preview-container">
             <label style={{ fontSize: '12px', fontWeight: 700, color: '#4a5568', marginBottom: '8px', display: 'block' }}>
               ASÍ APARECERÁ EN TU DIPLOMA
             </label>
@@ -282,6 +218,72 @@ export default function DiplomaModule() {
               * Esta imagen es puramente ilustrativa y no representa el diseño final del diploma oficial.
             </p>
           </div>
+
+          {!isLocked ? (
+            <div className="diploma-actions-grid">
+              <LoadingButton
+                type="submit"
+                isLoading={isSaving}
+                loadingText="Guardando..."
+                style={{
+                  width: 'auto',
+                  padding: '12px 32px',
+                  opacity: (isDiplomaNameTooLong || !isPaid) && !isSaving ? 0.6 : 1,
+                  cursor: (isDiplomaNameTooLong || !isPaid) ? 'not-allowed' : 'pointer'
+                }}
+                disabled={isDiplomaNameTooLong || !isPaid}
+              >
+                Guardar datos
+              </LoadingButton>
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={!isPaid}
+                style={{
+                  width: 'auto',
+                  padding: '12px 24px',
+                  border: '1.5px solid #e2e8f0',
+                  color: '#4a5568',
+                  borderRadius: '12px',
+                  opacity: !isPaid ? 0.6 : 1,
+                  cursor: !isPaid ? 'not-allowed' : 'pointer'
+                }}
+                onClick={() => {
+                  const fullName = `${user.nombres} ${user.apellidos}`.trim().toUpperCase();
+                  let suggestedName = '';
+                  if (fullName.length <= 25) {
+                    suggestedName = fullName;
+                  } else {
+                    const firstName = (user.nombres || '').trim().split(' ')[0] || '';
+                    const firstSurname = (user.apellidos || '').trim().split(' ')[0] || '';
+                    suggestedName = `${firstName} ${firstSurname}`.trim().toUpperCase().substring(0, 25);
+                  }
+                  setFormData({
+                    nombreDiploma: suggestedName,
+                    correoDiploma: user.correo || ''
+                  });
+                }}
+              >
+                Limpiar
+              </button>
+            </div>
+          ) : (
+            <div className="diploma-actions-grid">
+              <div style={{
+                padding: '1.25rem',
+                backgroundColor: '#f0fff4',
+                border: '1px solid #c6f6d5',
+                borderRadius: '12px',
+                color: '#2f855a',
+                textAlign: 'center',
+                fontWeight: 600,
+                fontSize: '14px',
+                width: '100%'
+              }}>
+                Los datos han sido guardados y bloqueados. No se permiten más modificaciones.
+              </div>
+            </div>
+          )}
         </form>
       </section>
 

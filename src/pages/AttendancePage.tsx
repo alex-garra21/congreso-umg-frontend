@@ -227,7 +227,7 @@ export default function AttendancePage() {
           </div>
 
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '100px', fontSize: '13px', fontWeight: 600 }}>
-            <Icons.MapPin size={14} color="#fc8181" /> {workshop.room}
+            <Icons.MapPin size={14} color="var(--accent-primary)" /> {workshop.room}
           </div>
         </div>
       </div>
