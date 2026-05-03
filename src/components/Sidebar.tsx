@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../api/hooks/useAuth';
 import logoUMG from '../assets/UMG-LOGO.svg';
 import { Icons } from './Icons';
+import { getParticipantLabel } from '../data/userTypes';
 
 interface SidebarProps {
   onModuleChange?: (moduleId: string) => void;
@@ -94,7 +95,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
               {user?.nombres || 'Usuario'} {user?.apellidos || ''}
             </span>
             <span className="user-role">
-              {user?.tipoParticipante === 'alumno' ? 'Alumno UMG' : 'Participante Externo'}
+              {getParticipantLabel(user?.tipoParticipante)}
             </span>
           </div>
         )}

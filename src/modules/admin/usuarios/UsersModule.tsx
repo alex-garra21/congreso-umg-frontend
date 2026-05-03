@@ -85,6 +85,13 @@ export default function UsersModule() {
       const updated = { ...user, rol: 'usuario' as const };
       await updateUserDataMutation.mutateAsync(updated);
       showToast('Permisos de administrador revocados', 'success');
+      
+      // Si el admin se degradó a sí mismo, redirigir para evitar errores de acceso
+      if (user.id === currentAdmin?.id) {
+        setTimeout(() => {
+          window.location.href = '/dashboard/inicio';
+        }, 2000);
+      }
     }
   };
 

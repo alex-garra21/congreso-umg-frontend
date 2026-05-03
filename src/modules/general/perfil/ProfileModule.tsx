@@ -10,6 +10,7 @@ import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
 import AvatarUpload from '../../../components/ui/AvatarUpload';
+import { PARTICIPANT_TYPES, requiresAcademicInfo, CICLOS, getParticipantIdLabel, requiresCiclo, getParticipantIdMaxLength, showParticipantIdHelp } from '../../../data/userTypes';
 
 export default function ProfileModule() {
   const { user } = useAuth();
@@ -20,7 +21,7 @@ export default function ProfileModule() {
     apellidos: '',
     correo: '',
     dpi: '',
-    tipoParticipante: 'externo' as 'alumno' | 'externo',
+    tipoParticipante: PARTICIPANT_TYPES[0].id as any,
     carnet: '',
     ciclo: '',
     telefono: '',
@@ -38,7 +39,7 @@ export default function ProfileModule() {
         apellidos: user.apellidos || '',
         correo: user.correo || '',
         dpi: user.dpi || '',
-        tipoParticipante: user.tipoParticipante || 'externo',
+        tipoParticipante: user.tipoParticipante || ((PARTICIPANT_TYPES && PARTICIPANT_TYPES.length > 0) ? PARTICIPANT_TYPES[0].id : 'externo'),
         carnet: user.carnet || '',
         ciclo: user.ciclo || '',
         telefono: user.telefono || '',
@@ -51,7 +52,7 @@ export default function ProfileModule() {
   // Auto-detección en tiempo real en el perfil
   useEffect(() => {
     if (formData.correo.toLowerCase().endsWith('@miumg.edu.gt')) {
-      if (formData.tipoParticipante !== 'alumno') {
+      if (formData.tipoParticipante !== 'alumno' && PARTICIPANT_TYPES.some(t => t.id === 'alumno')) {
         setFormData((prev: any) => ({ ...prev, tipoParticipante: 'alumno' }));
       }
     }
@@ -85,7 +86,12 @@ export default function ProfileModule() {
     }
 
     if (name === 'carnet') {
-      setFormData((prev: any) => ({ ...prev, [name]: formatCarnet(value) }));
+      // Aplicar formato de guiones solo si es alumno
+      const formattedValue = formData.tipoParticipante === 'alumno' 
+        ? formatCarnet(value) 
+        : value.replace(/\D/g, '').substring(0, getParticipantIdMaxLength(formData.tipoParticipante));
+        
+      setFormData((prev: any) => ({ ...prev, [name]: formattedValue }));
     } else {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
@@ -98,8 +104,8 @@ export default function ProfileModule() {
     const updatedUser: UserData = {
       ...user,
       ...formData,
-      carnet: formData.tipoParticipante === 'alumno' ? formData.carnet : '',
-      ciclo: formData.tipoParticipante === 'alumno' ? formData.ciclo : ''
+      carnet: requiresAcademicInfo(formData.tipoParticipante) ? formData.carnet : '',
+      ciclo: requiresAcademicInfo(formData.tipoParticipante) ? formData.ciclo : ''
     };
 
     try {
@@ -188,32 +194,34 @@ export default function ProfileModule() {
             </FormField>
             <FormField label="Tipo de participante" required style={{ flex: 1 }}>
               <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required className="dashboard-input">
-                <option value="externo">Participante externo</option>
-                <option value="alumno">Alumno UMG</option>
+                {PARTICIPANT_TYPES.map(type => (
+                  <option key={type.id} value={type.id}>{type.label}</option>
+                ))}
               </select>
             </FormField>
           </div>
 
-          {formData.tipoParticipante === 'alumno' && (
+          {requiresAcademicInfo(formData.tipoParticipante) && (
             <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
-              <FormField label="Número de carnet" required style={{ flex: 3 }}>
-                <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="Ej: 0902-20-698" required className="dashboard-input" />
+              <FormField label={getParticipantIdLabel(formData.tipoParticipante)} required style={{ flex: 3 }}>
+                <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder={`Ej: ${formData.tipoParticipante === 'docente' ? '123456' : '090220698'}`} required className="dashboard-input" />
+                {showParticipantIdHelp(formData.tipoParticipante) && (
+                  <span style={{ fontSize: '12px', color: '#4b5563', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                    Ingresa solo números, el formato se aplicará automáticamente.
+                  </span>
+                )}
               </FormField>
-              <FormField label="Ciclo" required style={{ flex: 1 }}>
-                <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
-                  <option value="">Selección</option>
-                  <option value="I">I</option>
-                  <option value="II">II</option>
-                  <option value="III">III</option>
-                  <option value="IV">IV</option>
-                  <option value="V">V</option>
-                  <option value="VI">VI</option>
-                  <option value="VII">VII</option>
-                  <option value="VIII">VIII</option>
-                  <option value="IX">IX</option>
-                  <option value="X">X</option>
-                </select>
-              </FormField>
+              
+              {requiresCiclo(formData.tipoParticipante) && (
+                <FormField label="Ciclo" required style={{ flex: 1 }}>
+                  <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
+                    <option value="">Selección</option>
+                    {CICLOS.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </FormField>
+              )}
             </div>
           )}
 

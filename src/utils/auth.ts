@@ -11,7 +11,7 @@ export interface UserData {
   telefono?: string;
   pagoValidado?: boolean;
   pagoEnviado?: boolean;
-  tipoParticipante?: 'alumno' | 'externo';
+  tipoParticipante?: string;
   carnet?: string;
   ciclo?: string;
   rol?: 'usuario' | 'admin';
@@ -79,9 +79,9 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     .eq('id', authData.user?.id)
     .single();
 
-  return { 
-    success: true, 
-    message: 'Inicio de sesión exitoso.', 
+  return {
+    success: true,
+    message: 'Inicio de sesión exitoso.',
     user: profile ? {
       id: profile.id,
       nombres: profile.nombres,
@@ -111,7 +111,7 @@ export async function verifyAndChangePassword(oldPassword: string, newPassword: 
     email: user.email,
     password: oldPassword,
   });
-  
+
   if (reauthError) {
     return { success: false, message: 'La contraseña anterior es incorrecta.' };
   }

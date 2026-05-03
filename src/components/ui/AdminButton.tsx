@@ -4,6 +4,8 @@ interface AdminButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'outline' | 'ghost' | 'info' | 'accent' | 'warning';
   size?: 'sm' | 'md' | 'lg';
   icon?: React.ReactNode;
+  href?: string;
+  target?: string;
 }
 
 const AdminButton: React.FC<AdminButtonProps> = ({ 
@@ -13,6 +15,8 @@ const AdminButton: React.FC<AdminButtonProps> = ({
   icon, 
   className = '', 
   style: customStyle,
+  href,
+  target,
   ...props 
 }) => {
   const getVariantStyles = () => {
@@ -42,13 +46,27 @@ const AdminButton: React.FC<AdminButtonProps> = ({
     opacity: props.disabled ? 0.6 : 1,
     fontFamily: "'Space Grotesk', sans-serif",
     border: (getVariantStyles() as any).border || 'none',
+    textDecoration: 'none',
     ...customStyle
   };
 
+  const commonProps = {
+    className: `admin-btn admin-btn-${variant} ${className}`,
+    style: { ...internalStyle, ...customStyle }
+  };
+
+  if (href) {
+    return (
+      <a href={href} target={target} rel={target === '_blank' ? 'noopener noreferrer' : undefined} {...(commonProps as any)}>
+        {icon && <span className="btn-icon">{icon}</span>}
+        {children}
+      </a>
+    );
+  }
+
   return (
     <button 
-      className={`admin-btn admin-btn-${variant} ${className}`}
-      style={{ ...internalStyle, ...customStyle }}
+      {...commonProps}
       {...props}
     >
       {icon && <span className="btn-icon">{icon}</span>}

@@ -7,6 +7,7 @@ import { showToast } from '../utils/swal';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
 import Alert from './ui/Alert';
+import { PARTICIPANT_TYPES, requiresAcademicInfo, CICLOS, getParticipantIdLabel, requiresCiclo, getParticipantIdMaxLength, showParticipantIdHelp } from '../data/userTypes';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     correo: '',
     contrasena: '',
     confirmarContrasena: '',
-    tipoParticipante: 'externo' as 'alumno' | 'externo',
+    tipoParticipante: (PARTICIPANT_TYPES && PARTICIPANT_TYPES.length > 0) ? PARTICIPANT_TYPES[0].id : 'externo' as any,
     carnet: '',
     ciclo: ''
   });
@@ -34,7 +35,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   // Auto-detección de dominio institucional
   useEffect(() => {
     if (formData.correo.toLowerCase().endsWith('@miumg.edu.gt')) {
-      if (formData.tipoParticipante !== 'alumno') {
+      if (formData.tipoParticipante !== 'alumno' && PARTICIPANT_TYPES.some(t => t.id === 'alumno')) {
         setFormData((prev: any) => ({ ...prev, tipoParticipante: 'alumno' }));
       }
     }
@@ -58,7 +59,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'carnet') {
-      setFormData((prev: any) => ({ ...prev, [name]: formatCarnet(value) }));
+      // Aplicar formato de guiones solo si es alumno
+      const formattedValue = formData.tipoParticipante === 'alumno' 
+        ? formatCarnet(value) 
+        : value.replace(/\D/g, '').substring(0, getParticipantIdMaxLength(formData.tipoParticipante));
+      
+      setFormData((prev: any) => ({ ...prev, [name]: formattedValue }));
     } else {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
@@ -67,7 +73,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const clearFields = () => {
     setFormData({
       nombres: '', apellidos: '', sexo: '', correo: '', contrasena: '', confirmarContrasena: '',
-      tipoParticipante: 'externo', carnet: '', ciclo: ''
+      tipoParticipante: PARTICIPANT_TYPES[0].id, carnet: '', ciclo: ''
     });
     setError(null);
     setIsRegistered(false);
@@ -125,15 +131,15 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
       correo: formData.correo,
       contrasena: formData.contrasena,
       tipoParticipante: formData.tipoParticipante,
-      carnet: formData.tipoParticipante === 'alumno' ? formData.carnet : '',
-      ciclo: formData.tipoParticipante === 'alumno' ? formData.ciclo : ''
+      carnet: requiresAcademicInfo(formData.tipoParticipante) ? formData.carnet : '',
+      ciclo: requiresAcademicInfo(formData.tipoParticipante) ? formData.ciclo : ''
     });
 
     if (result.success) {
       setIsRegistered(true);
       setFormData({
         nombres: '', apellidos: '', sexo: '', correo: '', contrasena: '', confirmarContrasena: '',
-        tipoParticipante: 'externo', carnet: '', ciclo: ''
+        tipoParticipante: PARTICIPANT_TYPES[0].id, carnet: '', ciclo: ''
       });
     } else {
       setError(result.message);
@@ -196,24 +202,33 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
             <FormField label="Tipo de Participante" required>
               <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required className="dashboard-input">
-                <option value="externo">Participante externo</option>
-                <option value="alumno">Alumno UMG</option>
+                {PARTICIPANT_TYPES.map(type => (
+                  <option key={type.id} value={type.id}>{type.label}</option>
+                ))}
               </select>
             </FormField>
 
-            {formData.tipoParticipante === 'alumno' && (
+            {requiresAcademicInfo(formData.tipoParticipante) && (
               <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
-                <FormField label="Carnet" required style={{ flex: 2 }}>
-                  <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder="Ej: 2023-00-1234" required className="dashboard-input" />
+                <FormField label={getParticipantIdLabel(formData.tipoParticipante)} required style={{ flex: 2 }}>
+                  <input type="text" name="carnet" value={formData.carnet} onChange={handleChange} placeholder={`Ej: ${formData.tipoParticipante === 'docente' ? '123456' : '09022412345'}`} required className="dashboard-input" />
+                  {showParticipantIdHelp(formData.tipoParticipante) && (
+                    <span style={{ fontSize: '12px', color: '#4b5563', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                      Ingresa solo números, el sistema pondrá los guiones por ti.
+                    </span>
+                  )}
                 </FormField>
-                <FormField label="Ciclo" required style={{ flex: 1 }}>
-                  <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
-                    <option value="">Selección</option>
-                    {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'].map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </FormField>
+                
+                {requiresCiclo(formData.tipoParticipante) && (
+                  <FormField label="Ciclo" required style={{ flex: 1 }}>
+                    <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
+                      <option value="">Selección</option>
+                      {CICLOS.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </FormField>
+                )}
               </div>
             )}
 

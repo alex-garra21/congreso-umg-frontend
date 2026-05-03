@@ -77,14 +77,6 @@ export default function AttendanceModule() {
     });
   };
 
-  const handleShowLink = (workshopId: string) => {
-    const workshop = agenda.find(w => w.id === workshopId);
-    if (!workshop) return;
-    const slug = generateSlug(workshop.title);
-    const link = `${window.location.origin}/asistencia/${slug}`;
-    window.open(link, '_blank');
-  };
-
   const handleShowQR = (workshopId: string) => {
     const workshop = agenda.find(w => w.id === workshopId);
     if (!workshop) return;
@@ -153,7 +145,13 @@ export default function AttendanceModule() {
                 <AdminButton size="sm" variant="secondary" onClick={() => handleUpdateGracePeriod(item.id)} style={{ marginRight: '8px' }}>
                   Gracia
                 </AdminButton>
-                <AdminButton size="sm" variant="info" onClick={() => handleShowLink(item.id)} style={{ marginRight: '8px' }}>
+                <AdminButton 
+                  size="sm" 
+                  variant="info" 
+                  href={`${window.location.origin}/asistencia/${generateSlug(item.title)}`}
+                  target="_blank"
+                  style={{ marginRight: '8px' }}
+                >
                   Enlace
                 </AdminButton>
                 <AdminButton size="sm" variant="success" onClick={() => handleShowQR(item.id)}>
