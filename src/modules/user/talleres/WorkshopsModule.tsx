@@ -5,7 +5,7 @@ import { updateUserDataMutation } from '../../../api/supabase/users/userMutation
 import ModuleTitle from '../../../components/ModuleTitle';
 import { useCharlas, useSalas } from '../../../api/hooks/useAgenda';
 import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
-import type { AgendaItem, Room } from '../../../data/agendaData';
+import type { AgendaItem } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';

@@ -4,18 +4,18 @@ import FormField from '../../../../components/ui/FormField';
 import AdminButton from '../../../../components/ui/AdminButton';
 import AdminBadge from '../../../../components/ui/AdminBadge';
 import ColorPicker from '../../../../components/ColorPicker';
-import type { CategoryStyle } from '../../../../data/agendaData';
+import type { Category } from '../../../../data/agendaData';
 
 interface CategoryEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  category: { name: string, style: CategoryStyle };
-  onSave: (category: { name: string, style: CategoryStyle }) => void;
+  category: Category;
+  onSave: (category: Category) => void;
   isNew: boolean;
 }
 
 export default function CategoryEditModal({ isOpen, onClose, category, onSave, isNew }: CategoryEditModalProps) {
-  const [editingCategory, setEditingCategory] = useState({ ...category });
+  const [editingCategory, setEditingCategory] = useState<Category>({ ...category });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -30,7 +30,7 @@ export default function CategoryEditModal({ isOpen, onClose, category, onSave, i
       maxWidth="450px"
     >
       <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>
-        Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
+        Elige un nombre y un color que represente a la categoría.
       </p>
       <form onSubmit={handleSubmit}>
         <FormField label="NOMBRE DE CATEGORÍA" required>
@@ -42,22 +42,23 @@ export default function CategoryEditModal({ isOpen, onClose, category, onSave, i
             required 
           />
         </FormField>
-        <FormField label="COLOR TEXTO" required>
+        <FormField label="COLOR REPRESENTATIVO" required>
           <ColorPicker
-            selectedColor={editingCategory.style.text}
+            selectedColor={editingCategory.text}
             onSelect={c => {
               const bgWithAlpha = c.startsWith('#') ? c + '26' : c;
               setEditingCategory({
                 ...editingCategory,
-                style: { ...editingCategory.style, text: c, bg: bgWithAlpha }
+                text: c,
+                bg: bgWithAlpha
               });
             }}
           />
         </FormField>
 
-        <div style={{ marginTop: '1.5rem', textAlign: 'center', padding: '1rem', background: '#f8f9fa', borderRadius: '12px' }}>
-          <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '10px', color: '#868e96', fontWeight: 700, textTransform: 'uppercase' }}>Previsualización</label>
-          <AdminBadge style={{ backgroundColor: editingCategory.style.bg, color: editingCategory.style.text, fontSize: '14px', padding: '6px 16px' }}>
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+          <label style={{ display: 'block', marginBottom: '0.8rem', fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Vista Previa</label>
+          <AdminBadge style={{ backgroundColor: editingCategory.bg, color: editingCategory.text, fontSize: '14px', padding: '6px 16px' }}>
             {editingCategory.name || 'Ejemplo'}
           </AdminBadge>
         </div>

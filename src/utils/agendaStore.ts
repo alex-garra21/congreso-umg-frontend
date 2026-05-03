@@ -1,6 +1,6 @@
-import { type AgendaItem, type Speaker, type CategoryStyle } from '../data/agendaData';
+import { type AgendaItem, type Category, type Speaker } from '../data/agendaData';
 
-export type { AgendaItem, Speaker, CategoryStyle };
+export type { AgendaItem, Speaker, Category };
 
 export const generateSlug = (text: string) => {
   return text.toLowerCase()

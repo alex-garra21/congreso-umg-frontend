@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { type CategoryStyle } from '../../../../data/agendaData';
-import { useCategorias, useSaveCategorias } from '../../../../api/hooks/useAgenda';
+import { type Category } from '../../../../data/agendaData';
+import { useCategorias, useSaveCategorias, useCharlas } from '../../../../api/hooks/useAgenda';
 import { showToast, showConfirm } from '../../../../utils/swal';
 import ModuleCard from '../../../../components/ui/ModuleCard';
 import AdminButton from '../../../../components/ui/AdminButton';
@@ -13,57 +13,58 @@ import CategoryEditModal from '../components/CategoryEditModal';
 const ITEMS_PER_PAGE = 5;
 
 export default function CategoriesTab() {
-  const { data: categories = {}, isLoading } = useCategorias();
+  const { data: categories = [], isLoading } = useCategorias();
+  const { data: agenda = [] } = useCharlas();
+  
   const saveCategoriesMutation = useSaveCategorias();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<{ name: string, style: CategoryStyle } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  const translateError = (errorMsg: string) => {
-    if (errorMsg.toLowerCase().includes('violates foreign key constraint')) {
-      return 'No puedes eliminar esta categoría porque hay actividades que la están usando.';
-    }
-    return errorMsg;
-  };
-
-  const handleSaveCategory = async (catData: { name: string, style: CategoryStyle }) => {
+  const handleSaveCategory = async (catData: Category) => {
     try {
-      const newCategories = { ...categories };
-      const isRename = editingCategory?.name && editingCategory.name !== catData.name;
+      let updatedCategories = [...categories];
       
-      if (isRename) {
-        delete newCategories[editingCategory!.name];
+      if (catData.id) {
+        updatedCategories = categories.map(c => c.id === catData.id ? catData : c);
+      } else {
+        updatedCategories.push(catData);
       }
       
-      newCategories[catData.name] = catData.style;
-      await saveCategoriesMutation.mutateAsync(newCategories);
-      showToast(editingCategory?.name ? 'Categoría actualizada' : 'Categoría creada', 'success');
+      await saveCategoriesMutation.mutateAsync(updatedCategories);
+
+      showToast(catData.id ? 'Categoría actualizada' : 'Categoría creada', 'success');
       setIsCategoryModalOpen(false);
     } catch (error: any) {
-      showToast(`Error: ${translateError(error.message)}`, 'error');
+      showToast(`Error: ${error.message}`, 'error');
     }
   };
 
-  const handleDeleteCategory = (name: string) => {
+  const handleDeleteCategory = (id: number, name: string) => {
+    const isAssigned = agenda.some(item => item.tagId === id);
+    
+    if (isAssigned) {
+      showToast(`No se puede eliminar: La categoría "${name}" está en uso.`, 'error');
+      return;
+    }
+
     showConfirm('Eliminar Categoría', `¿Eliminar la categoría "${name}"?`, 'Eliminar', true).then(async confirmed => {
       if (confirmed) {
         try {
-          const newCategories = { ...categories };
-          delete newCategories[name];
+          const newCategories = categories.filter(c => c.id !== id);
           await saveCategoriesMutation.mutateAsync(newCategories);
           showToast('Categoría eliminada', 'success');
         } catch (error: any) {
-          showToast(`Error: ${translateError(error.message)}`, 'error');
+          showToast(`Error: ${error.message}`, 'error');
         }
       }
     });
   };
 
   const { filteredCategories, currentCategories } = useMemo(() => {
-    const entries = Object.entries(categories);
-    const filtered = entries.filter(([name]) => name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filtered = categories.filter(cat => cat.name.toLowerCase().includes(searchTerm.toLowerCase()));
     return { 
       filteredCategories: filtered, 
       currentCategories: filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE) 
@@ -75,10 +76,10 @@ export default function CategoriesTab() {
   return (
     <ModuleCard
       title="Categorías"
-      description="Colores y etiquetas para actividades."
+      description="Gestión de etiquetas por ID."
       headerActions={
         <AdminButton onClick={() => { 
-          setEditingCategory({ name: '', style: { bg: '#eef2ff', text: '#4338ca' } }); 
+          setEditingCategory({ id: 0, name: '', bg: '#eef2ff', text: '#4338ca' }); 
           setIsCategoryModalOpen(true); 
         }}>+ Nueva Categoría</AdminButton>
       }
@@ -88,13 +89,13 @@ export default function CategoriesTab() {
       </div>
       
       <AdminTable headers={["Nombre", "Vista Previa", "Opciones"]} emptyMessage="No hay categorías.">
-        {currentCategories.map(([name, style]) => (
-          <tr key={name}>
-            <td><strong>{name}</strong></td>
-            <td><AdminBadge style={{ backgroundColor: style.bg, color: style.text }}>{name}</AdminBadge></td>
+        {currentCategories.map((cat) => (
+          <tr key={cat.id}>
+            <td><strong>{cat.name}</strong></td>
+            <td><AdminBadge style={{ backgroundColor: cat.bg, color: cat.text }}>{cat.name}</AdminBadge></td>
             <td style={{ textAlign: 'right' }}>
-              <AdminButton size="sm" variant="info" onClick={() => { setEditingCategory({ name, style }); setIsCategoryModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
-              <AdminButton size="sm" variant="danger" onClick={() => handleDeleteCategory(name)}>Eliminar</AdminButton>
+              <AdminButton size="sm" variant="info" onClick={() => { setEditingCategory(cat); setIsCategoryModalOpen(true); }} style={{ marginRight: '8px' }}>Editar</AdminButton>
+              <AdminButton size="sm" variant="danger" onClick={() => handleDeleteCategory(cat.id, cat.name)}>Eliminar</AdminButton>
             </td>
           </tr>
         ))}
@@ -108,7 +109,7 @@ export default function CategoriesTab() {
           onClose={() => setIsCategoryModalOpen(false)}
           onSave={handleSaveCategory}
           category={editingCategory}
-          isNew={editingCategory.name === ''}
+          isNew={editingCategory.id === 0}
         />
       )}
     </ModuleCard>

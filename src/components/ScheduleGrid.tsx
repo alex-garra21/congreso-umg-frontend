@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { type AgendaItem } from '../data/agendaData';
-import { useCharlas, useCategorias } from '../api/hooks/useAgenda';
+import { useCharlas } from '../api/hooks/useAgenda';
 
 // Constantes de configuración
 const START_H = 8, END_H = 21; 
@@ -9,7 +9,6 @@ const SALAS = ['Salón A', 'Salón B', 'Salón C', 'Auditorio'];
 
 export default function ScheduleGrid() {
   const { data: agenda = [], isLoading } = useCharlas();
-  const { data: categoryStyles = {} } = useCategorias();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [conflictMsg, setConflictMsg] = useState(false);
 
@@ -19,11 +18,11 @@ export default function ScheduleGrid() {
   const tallaresData = agenda.filter(item => item.speaker !== undefined);
 
   // Mapear salas a índices para el grid
-  const getSalaIndex = (location: string) => {
-    if (location.includes('Salón A')) return 0;
-    if (location.includes('Salón B')) return 1;
-    if (location.includes('Salón C')) return 2;
-    if (location.includes('Auditorio')) return 3;
+  const getSalaIndex = (roomName: string) => {
+    if (roomName.includes('Salón A')) return 0;
+    if (roomName.includes('Salón B')) return 1;
+    if (roomName.includes('Salón C')) return 2;
+    if (roomName.includes('Auditorio')) return 3;
     return 0;
   };
 
@@ -116,12 +115,12 @@ export default function ScheduleGrid() {
                 {Array.from({ length: 4 }).map((_, c) => {
                   const workshop = tallaresData.find(w => {
                     const wHour = parseHour(w.time);
-                    return wHour === hour && getSalaIndex(w.location) === c;
+                    return wHour === hour && getSalaIndex(w.room) === c;
                   });
 
                   if (workshop) {
                     const status = getTallerStatus(workshop);
-                    const style = categoryStyles[workshop.tag] || categoryStyles['General'];
+                    const style = workshop.tagStyle || { bg: 'rgba(107, 114, 128, 0.1)', text: '#6b7280' };
 
                     return (
                       <div
@@ -176,7 +175,7 @@ export default function ScheduleGrid() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {selectedIds.map(id => {
               const workshop = tallaresData.find(w => w.id === id);
-              const style = categoryStyles[workshop?.tag || 'General'];
+              const style = workshop?.tagStyle || { bg: 'rgba(107, 114, 128, 0.1)', text: '#6b7280' };
               return (
                 <div key={`sel-${id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: style.bg, color: style.text, borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
                   <span>{workshop?.time} · {workshop?.title}</span>

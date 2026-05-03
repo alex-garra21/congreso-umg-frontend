@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { type AgendaItem } from '../../../../data/agendaData';
-import { useCharlas, useSaveAgenda, usePonentes, useCategorias, useSalas } from '../../../../api/hooks/useAgenda';
+import { useCharlas, useSaveAgenda, useCategorias, useSalas } from '../../../../api/hooks/useAgenda';
 import { showToast, showConfirm } from '../../../../utils/swal';
 import ModuleCard from '../../../../components/ui/ModuleCard';
 import AdminButton from '../../../../components/ui/AdminButton';
@@ -14,8 +14,7 @@ const ITEMS_PER_PAGE = 5;
 
 export default function ScheduleTab() {
   const { data: agenda = [], isLoading } = useCharlas();
-  const { data: speakers = [] } = usePonentes();
-  const { data: categories = {} } = useCategorias();
+  const { data: categories = [] } = useCategorias();
   const { data: rooms = [] } = useSalas();
   
   const saveAgendaMutation = useSaveAgenda();
@@ -27,12 +26,13 @@ export default function ScheduleTab() {
 
   const handleSaveAgendaItem = async (updatedItem: AgendaItem) => {
     try {
-      const newAgenda = agenda.some(a => a.id === updatedItem.id)
+      const isExisting = agenda.some(a => a.id === updatedItem.id);
+      const newAgenda = isExisting
         ? agenda.map(a => a.id === updatedItem.id ? updatedItem : a)
         : [...agenda, updatedItem];
       
       await saveAgendaMutation.mutateAsync(newAgenda);
-      showToast(agenda.some(a => a.id === updatedItem.id) ? 'Actividad actualizada' : 'Actividad creada', 'success');
+      showToast(isExisting ? 'Actividad actualizada' : 'Actividad creada', 'success');
       setIsAgendaModalOpen(false);
     } catch (error: any) {
       showToast(`Error: ${error.message}`, 'error');
@@ -57,8 +57,9 @@ export default function ScheduleTab() {
     const filtered = agenda.filter(item => 
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.room.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.speaker?.name.toLowerCase().includes(searchTerm.toLowerCase())
+      (item.speaker?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
+    // Ordenar por hora
     const sorted = [...filtered].sort((a, b) => a.time.localeCompare(b.time));
     return { 
       filteredAgenda: sorted, 
@@ -75,12 +76,13 @@ export default function ScheduleTab() {
       time: '08:00 AM', 
       endTime: '09:00 AM', 
       room: rooms[0]?.name || 'SALA A', 
-      location: rooms[0]?.name || 'SALA A', 
-      tag: Object.keys(categories)[0] || '', 
+      locationId: rooms[0]?.id || 0,
+      tagId: categories[0]?.id || 0,
+      tag: categories[0]?.name || 'General', 
       gracePeriod: 10, 
       description: '', 
       period: 'Mañana' 
-    });
+    } as AgendaItem);
     setIsAgendaModalOpen(true);
   };
 
@@ -106,8 +108,8 @@ export default function ScheduleTab() {
             </td>
             <td>{item.room}</td>
             <td>
-              {item.tag && categories[item.tag] && (
-                <AdminBadge style={{ backgroundColor: categories[item.tag].bg, color: categories[item.tag].text }}>
+              {item.tagStyle && (
+                <AdminBadge style={{ backgroundColor: item.tagStyle.bg, color: item.tagStyle.text }}>
                   {item.tag}
                 </AdminBadge>
               )}
@@ -128,9 +130,6 @@ export default function ScheduleTab() {
           onClose={() => setIsAgendaModalOpen(false)}
           onSave={handleSaveAgendaItem}
           item={editingItem}
-          rooms={rooms}
-          speakers={speakers}
-          categories={Object.keys(categories)}
           isNew={!agenda.some(a => a.id === editingItem.id)}
         />
       )}

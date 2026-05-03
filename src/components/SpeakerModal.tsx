@@ -1,5 +1,5 @@
-import type { Speaker } from '../data/agendaData';
-import { agendaCompleta } from '../data/agendaData';
+import type { Speaker, AgendaItem } from '../data/agendaData';
+import { useCharlas } from '../api/hooks/useAgenda';
 import WorkshopCard from './workshops/WorkshopCard';
 import { Icons } from './Icons';
 
@@ -10,10 +10,12 @@ interface SpeakerModalProps {
 }
 
 export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalProps) {
+  const { data: agenda = [] } = useCharlas();
+
   if (!isOpen || !speaker) return null;
 
-  // Filtrar los talleres asignados a este ponente
-  const speakerWorkshops = agendaCompleta.filter(w => w.speaker?.id === speaker.id);
+  // Filtrar las charlas/talleres asignados a este ponente dinámicamente
+  const speakerWorkshops = agenda.filter((w: AgendaItem) => w.speaker?.id === speaker.id);
 
   return (
     <div className="modal-bg open" style={{ zIndex: 9999 }}>
@@ -57,26 +59,8 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
               {speaker.socialLinks && Object.entries(speaker.socialLinks).map(([type, url]) => {
                 if (!url) return null;
                 
-                const IconComponent = {
-                  facebook: Icons.Facebook,
-                  instagram: Icons.Instagram,
-                  tiktok: Icons.TikTok,
-                  x: Icons.TwitterX,
-                  linkedin: Icons.LinkedIn,
-                  youtube: Icons.Youtube,
-                  twitch: Icons.Twitch,
-                  pinterest: Icons.Pinterest,
-                  snapchat: Icons.Snapchat,
-                  whatsapp: Icons.WhatsApp,
-                  reddit: Icons.Reddit,
-                  discord: Icons.Discord,
-                  behance: Icons.Behance,
-                  dribbble: Icons.Dribbble,
-                  telegram: Icons.Telegram,
-                  threads: Icons.Threads
-                }[type];
-
-                if (!IconComponent) return null;
+                // Mapeo seguro de iconos
+                const IconComponent = (Icons as any)[type.charAt(0).toUpperCase() + type.slice(1)] || Icons.ExternalLink;
 
                 return (
                   <a 
@@ -109,7 +93,7 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
               Talleres que impartirá
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {speakerWorkshops.map(workshop => (
+              {speakerWorkshops.map((workshop: AgendaItem) => (
                 <WorkshopCard
                   key={workshop.id}
                   workshop={workshop}

@@ -11,7 +11,7 @@ import {
   saveAgendaMutation,
   savePonentesMutation
 } from '../supabase/agenda/agendaMutations';
-import type { AgendaItem, CategoryStyle, Speaker, Room } from '../../data/agendaData';
+import type { AgendaItem, Category, Speaker, Room } from '../../data/agendaData';
 
 // --- QUERIES ---
 
@@ -19,8 +19,7 @@ export function useSalas() {
   return useQuery({
     queryKey: ['salas'],
     queryFn: getSalasQuery,
-    staleTime: 1000 * 60 * 5, // 5 minutos (Datos muy estáticos)
-    gcTime: 1000 * 60 * 30,   // Mantener en memoria 30 min aunque no se use
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -29,7 +28,6 @@ export function useCategorias() {
     queryKey: ['categorias'],
     queryFn: getCategoriasQuery,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
   });
 }
 
@@ -38,15 +36,40 @@ export function usePonentes() {
     queryKey: ['ponentes'],
     queryFn: getPonentesQuery,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
   });
 }
 
+/**
+ * Hook de Charlas (Horario)
+ * Este hook es inteligente: Cruza los IDs con los nombres reales de salas y categorías
+ */
 export function useCharlas() {
+  const { data: salas = [] } = useSalas();
+  const { data: cats = [] } = useCategorias();
+  const { data: ponentes = [] } = usePonentes();
+
   return useQuery({
-    queryKey: ['charlas'],
-    queryFn: getCharlasQuery,
-    staleTime: 1000 * 60 * 2, // 2 minutos para la agenda
+    queryKey: ['charlas', salas, cats, ponentes],
+    queryFn: async () => {
+      const charlas = await getCharlasQuery();
+      
+      // Enriquecer datos para facilitar el renderizado
+      return charlas.map(c => {
+        const sala = salas.find(s => s.id === c.locationId);
+        const cat = cats.find(ct => ct.id === c.tagId);
+        const ponente = ponentes.find(p => p.id === c.speaker?.id);
+
+        return {
+          ...c,
+          room: sala?.name || 'Sin sala',
+          tagName: cat?.name || 'Sin categoría',
+          tag: cat?.name || 'General',
+          tagStyle: cat ? { bg: cat.bg, text: cat.text } : undefined,
+          speaker: ponente || c.speaker
+        };
+      });
+    },
+    staleTime: 1000 * 60 * 2,
   });
 }
 
@@ -54,48 +77,43 @@ export function useCharlas() {
 
 export function useSaveSalas() {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: (salas: Room[]) => saveSalasMutation(salas),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salas'] });
+      queryClient.invalidateQueries({ queryKey: ['charlas'] });
     },
   });
 }
 
 export function useSaveCategorias() {
   const queryClient = useQueryClient();
-  
   return useMutation({
-    mutationFn: (categorias: Record<string, CategoryStyle>) => saveCategoriasMutation(categorias),
+    mutationFn: (categorias: Category[]) => saveCategoriasMutation(categorias),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categorias'] });
+      queryClient.invalidateQueries({ queryKey: ['charlas'] });
     },
   });
 }
 
 export function useSavePonentes() {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: (ponentes: Speaker[]) => savePonentesMutation(ponentes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ponentes'] });
-      queryClient.invalidateQueries({ queryKey: ['charlas'] }); // Charlas embed ponentes
+      queryClient.invalidateQueries({ queryKey: ['charlas'] });
     },
   });
 }
 
 export function useSaveAgenda() {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: (agenda: AgendaItem[]) => saveAgendaMutation(agenda),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['charlas'] });
-      // Invalidate related queries if needed, e.g., categories if new ones are created implicitly
-      queryClient.invalidateQueries({ queryKey: ['categorias'] });
-      queryClient.invalidateQueries({ queryKey: ['salas'] });
     },
   });
 }

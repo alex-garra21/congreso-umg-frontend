@@ -1,5 +1,4 @@
 import { useCategorias } from '../../api/hooks/useAgenda';
-import { categoryStyles as fallbackStyles } from '../../data/agendaData';
 
 interface WorkshopBadgeProps {
   tag: string;
@@ -7,8 +6,13 @@ interface WorkshopBadgeProps {
 }
 
 export default function WorkshopBadge({ tag, className = "" }: WorkshopBadgeProps) {
-  const { data: dynamicCategories = {} } = useCategorias();
-  const style = dynamicCategories[tag] || fallbackStyles[tag] || fallbackStyles['General'];
+  const { data: dynamicCategories = [] } = useCategorias();
+  
+  // Buscar el estilo en las categorías dinámicas (ahora es un array)
+  const categoryData = dynamicCategories.find(c => c.name === tag);
+  
+  // Estilo por defecto si no se encuentra (Gris suave)
+  const style = categoryData ? { bg: categoryData.bg, text: categoryData.text } : { bg: 'rgba(107, 114, 128, 0.1)', text: '#6b7280' };
 
   return (
     <span 

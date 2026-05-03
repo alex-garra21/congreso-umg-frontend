@@ -1,133 +1,143 @@
 import { useState, type FormEvent } from 'react';
+import { type AgendaItem } from '../../../../data/agendaData';
+import { useSalas, useCategorias, usePonentes } from '../../../../api/hooks/useAgenda';
+import { showToast } from '../../../../utils/swal';
+import AdminButton from '../../../../components/ui/AdminButton';
 import Modal from '../../../../components/ui/Modal';
 import FormField from '../../../../components/ui/FormField';
-import AdminButton from '../../../../components/ui/AdminButton';
-import AdminSelect from '../../../../components/ui/AdminSelect';
-import type { AgendaItem, Speaker, Room } from '../../../../data/agendaData';
 
 interface AgendaItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  item: AgendaItem;
-  speakers: Speaker[];
-  categories: string[];
-  rooms: Room[];
   onSave: (item: AgendaItem) => void;
+  item: AgendaItem;
   isNew: boolean;
 }
 
-export default function AgendaItemModal({ 
-  isOpen, onClose, item, speakers, categories, rooms, onSave, isNew 
-}: AgendaItemModalProps) {
-  const [editingItem, setEditingItem] = useState<AgendaItem>({ ...item });
+export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew }: AgendaItemModalProps) {
+  const { data: rooms = [] } = useSalas();
+  const { data: categories = [] } = useCategorias();
+  const { data: speakers = [] } = usePonentes();
+
+  const [formData, setFormData] = useState<AgendaItem>({ ...item });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onSave(editingItem);
-  };
-
-  // Generar opciones de tiempo de 7:00 AM a 10:00 PM en intervalos de 15 min
-  const generateTimeOptions = () => {
-    const options = [];
-    for (let hour = 7; hour <= 22; hour++) {
-      for (let min = 0; min < 60; min += 15) {
-        const h = hour > 12 ? hour - 12 : hour;
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const m = min === 0 ? '00' : min;
-        const timeStr = `${h}:${m} ${ampm}`;
-        options.push({ value: timeStr, label: timeStr });
-        if (hour === 22 && min === 0) break; // Terminar en 10:00 PM
-      }
+    if (!formData.locationId || !formData.tagId) {
+      showToast('Por favor selecciona una Sala y una Categoría obligatoriamente', 'error');
+      return;
     }
-    return options;
+    onSave(formData);
   };
-
-  const timeOptions = generateTimeOptions();
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${isNew ? 'Nueva' : 'Editar'} Actividad`}
+      title={isNew ? 'Nueva Actividad' : 'Editar Actividad'}
       maxWidth="600px"
     >
-      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-        Los campos marcados con <span style={{ color: 'var(--status-error)' }}>*</span> son obligatorios.
+      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '2rem', marginTop: '-1rem' }}>
+        Configura los detalles de la charla o taller. Los cambios se sincronizan por ID.
       </p>
-      <form onSubmit={handleSubmit}>
-        <FormField label="TÍTULO DE LA ACTIVIDAD" required>
-          <input 
-            type="text" 
-            className="dashboard-input" 
-            value={editingItem.title} 
-            onChange={e => setEditingItem({ ...editingItem, title: e.target.value })} 
-            required 
-          />
-        </FormField>
-        <FormField label="DESCRIPCIÓN" required>
-          <textarea 
-            className="dashboard-input" 
-            value={editingItem.description} 
-            onChange={e => setEditingItem({ ...editingItem, description: e.target.value })} 
-            required 
-            style={{ minHeight: '80px' }} 
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+        <FormField label="TÍTULO DE LA ACTIVIDAD *" required>
+          <input
+            type="text"
+            required
+            className="dashboard-input"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            placeholder="Ej: Conferencia de Ciberseguridad"
           />
         </FormField>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <FormField label="HORA INICIO" required style={{ flex: 1 }}>
-            <AdminSelect
-              value={editingItem.time}
-              onChange={(e: { target: { value: string } }) => setEditingItem({ ...editingItem, time: e.target.value })}
-              options={timeOptions}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <FormField label="HORA INICIO *" required>
+            <input
+              type="text"
+              required
+              className="dashboard-input"
+              value={formData.time}
+              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+              placeholder="08:00 AM"
             />
           </FormField>
-          <FormField label="HORA FIN" required style={{ flex: 1 }}>
-            <AdminSelect
-              value={editingItem.endTime}
-              onChange={(e: { target: { value: string } }) => setEditingItem({ ...editingItem, endTime: e.target.value })}
-              options={timeOptions}
+          <FormField label="HORA FIN *" required>
+            <input
+              type="text"
+              required
+              className="dashboard-input"
+              value={formData.endTime}
+              onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+              placeholder="09:00 AM"
             />
           </FormField>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <FormField label="SALA" required style={{ flex: 1 }}>
-            <AdminSelect
-              value={editingItem.room}
-              onChange={(e: { target: { value: string } }) => setEditingItem({ ...editingItem, room: e.target.value, location: e.target.value })}
-              options={rooms.map(r => ({ value: r.name, label: r.name }))}
-            />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <FormField label="SALA / UBICACIÓN *" required>
+            <select
+              required
+              className="dashboard-input"
+              value={formData.locationId || ''}
+              onChange={(e) => setFormData({ ...formData, locationId: Number(e.target.value) })}
+            >
+              <option value="">-- Seleccionar Sala --</option>
+              {rooms.map(r => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
           </FormField>
-          <FormField label="CATEGORÍA" required style={{ flex: 1 }}>
-            <AdminSelect
-              value={editingItem.tag}
-              onChange={(e: { target: { value: string } }) => setEditingItem({ ...editingItem, tag: e.target.value })}
-              options={[
-                { value: '', label: 'Seleccionar...' },
-                ...categories.map(c => ({ value: c, label: c }))
-              ]}
-            />
+          <FormField label="CATEGORÍA *" required>
+            <select
+              required
+              className="dashboard-input"
+              value={formData.tagId || ''}
+              onChange={(e) => setFormData({ ...formData, tagId: Number(e.target.value) })}
+            >
+              <option value="">-- Seleccionar Categoría --</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
           </FormField>
         </div>
 
-        <FormField label="PONENTE (Opcional)">
-          <AdminSelect
-            value={editingItem.speaker?.id || ''}
-            onChange={(e: { target: { value: string } }) => {
-              const s = speakers.find(sp => sp.id === parseInt(e.target.value));
-              setEditingItem({ ...editingItem, speaker: s });
+        <FormField label="PONENTE (OPCIONAL)">
+          <select
+            className="dashboard-input"
+            value={formData.speaker?.id || ''}
+            onChange={(e) => {
+              const spk = speakers.find(s => s.id === parseInt(e.target.value));
+              setFormData({ ...formData, speaker: spk });
             }}
-            options={[
-              { value: '', label: 'Sin ponente' },
-              ...speakers.map(s => ({ value: s.id.toString(), label: s.name }))
-            ]}
+          >
+            <option value="">-- Sin Ponente --</option>
+            {speakers.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField label="DESCRIPCIÓN *" required>
+          <textarea
+            required
+            className="dashboard-input"
+            style={{ minHeight: '100px', paddingTop: '10px' }}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
         </FormField>
 
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-          <AdminButton type="submit" style={{ flex: 1 }}>Guardar Actividad</AdminButton>
-          <AdminButton type="button" variant="secondary" onClick={onClose} style={{ flex: 1 }}>Cancelar</AdminButton>
+        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
+          <AdminButton type="submit" style={{ flex: 2 }}>
+            {isNew ? 'Crear Actividad' : 'Guardar Cambios'}
+          </AdminButton>
+          <AdminButton type="button" variant="secondary" onClick={onClose} style={{ flex: 1 }}>
+            Cancelar
+          </AdminButton>
         </div>
       </form>
     </Modal>

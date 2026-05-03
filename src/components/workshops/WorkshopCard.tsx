@@ -34,7 +34,7 @@ export default function WorkshopCard({
         
         <div className="card-info-compact">
           <p className="workshop-speaker-small">Con {workshop.speaker?.name}</p>
-          <p className="location-small">📍 {workshop.location} {workshop.time && `· ${workshop.time}`}</p>
+          <p className="location-small">📍 {workshop.room} {workshop.time && `· ${workshop.time}`}</p>
         </div>
 
         {!readOnly && !isConfirmed && onToggle && (

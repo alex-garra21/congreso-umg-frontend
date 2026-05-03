@@ -1,94 +1,97 @@
 import { supabase } from '../../../utils/supabase';
-import type { AgendaItem, Speaker, CategoryStyle, Room } from '../../../data/agendaData';
-
+import type { AgendaItem, Speaker, Category, Room } from '../../../data/agendaData';
 
 /**
- * QUERIES - Lectura de datos de Agenda
+ * QUERIES - Lectura de datos de Agenda con IDs
  */
 
 export async function getSalasQuery(): Promise<Room[]> {
   const { data, error } = await supabase
     .from('salas')
-    .select('nombre, prioridad')
+    .select('id, nombre, prioridad')
     .order('prioridad', { ascending: true });
 
-  if (error) {
-    return [];
-  }
-  if (!data || data.length === 0) {
-    return [];
-  }
-  return data.map(d => ({ name: d.nombre, priority: d.prioridad }));
+  if (error) return [];
+  return (data || []).map(d => ({ 
+    id: d.id, 
+    name: d.nombre, 
+    priority: d.prioridad 
+  }));
 }
 
-export async function getCategoriasQuery(): Promise<Record<string, CategoryStyle>> {
-  const { data, error } = await supabase.from('categorias').select('*');
-  if (error) {
-    return {};
-  }
-  if (!data || data.length === 0) {
-    return {};
-  }
+export async function getCategoriasQuery(): Promise<Category[]> {
+  const { data, error } = await supabase
+    .from('categorias')
+    .select('id, nombre, bg_color, text_color');
 
-  const result: Record<string, CategoryStyle> = {};
-  data.forEach(d => {
-    result[d.nombre] = { bg: d.bg_color, text: d.text_color };
-  });
-  return result;
+  if (error) return [];
+  return (data || []).map(d => ({
+    id: d.id,
+    name: d.nombre,
+    bg: d.bg_color,
+    text: d.text_color
+  }));
 }
 
 export async function getPonentesQuery(): Promise<Speaker[]> {
   const { data, error } = await supabase.from('ponentes').select('*');
-  if (error || !data || data.length === 0) {
-    return [];
-  }
-
-  return data.map(d => ({
+  if (error) return [];
+  return (data || []).map(d => ({
     id: d.id,
     name: d.nombre,
+    initials: d.nombre.substring(0, 2).toUpperCase(),
     role: d.cargo,
-    initials: (d.nombre as string).split(' ').map((p: string) => p[0]).join('').substring(0, 2).toUpperCase(),
-    tag: d.tag || 'General',
-    bio: d.bio || '',
-    bgColor: d.bg_color || '#e3f2fd',
-    textColor: d.text_color || '#1565c0',
-    avatar: d.avatar_url || undefined,
-    socialLinks: d.redes_sociales || {}
+    tag: d.tag,
+    bio: d.bio,
+    bgColor: '#e6f1fb',
+    textColor: '#0C447C',
+    avatar: d.avatar_url,
+    socialLinks: {}
   }));
 }
 
 export async function getCharlasQuery(): Promise<AgendaItem[]> {
-  const { data, error } = await supabase.from('charlas').select(`
-    *,
-    ponentes (*)
-  `);
+  // Traemos las charlas con los IDs de sala y categoría
+  const { data, error } = await supabase
+    .from('charlas')
+    .select(`
+      id, titulo, descripcion, hora_inicio, hora_fin, periodo, 
+      sala_id, categoria_id, id_ponente
+    `);
 
-  if (error || !data || data.length === 0) {
-    return [];
-  }
+  if (error) return [];
 
-  return data.map(d => ({
+  // Nota: En una fase posterior podemos usar un JOIN real de SQL. 
+  // Por ahora mapeamos los datos básicos.
+  return (data || []).map(d => ({
     id: d.id,
     title: d.titulo,
     description: d.descripcion,
     time: d.hora_inicio,
     endTime: d.hora_fin,
-    tag: d.id_categoria || 'General',
-    room: d.sala || 'GENERAL',
-    speaker: d.ponentes ? {
-      id: d.ponentes.id,
-      name: d.ponentes.nombre,
-      role: d.ponentes.cargo,
-      initials: (d.ponentes.nombre as string).split(' ').map((p: string) => p[0]).join('').substring(0, 2).toUpperCase(),
-      tag: d.id_categoria || 'General',
-      bio: d.ponentes.bio || '',
-      bgColor: d.ponentes.bg_color || '#e3f2fd',
-      textColor: d.ponentes.text_color || '#1565c0',
-      avatar: d.ponentes.avatar_url || undefined,
-      socialLinks: d.ponentes.redes_sociales || {}
-    } : undefined,
-    period: d.hora_inicio.includes('AM') ? 'Mañana' : 'Tarde',
-    location: d.sala || 'SALA GENERAL',
-    gracePeriod: d.tiempo_gracia || undefined
-  }));
+    period: d.periodo as 'Mañana' | 'Tarde',
+    locationId: d.sala_id,
+    tagId: d.categoria_id,
+    room: '', // Se llenará en el hook con el nombre real
+    tag: ''   // Se llenará en el hook con el nombre real
+  } as AgendaItem));
+}
+
+/**
+ * MUTATIONS - Persistencia
+ */
+
+export async function saveSalasQuery(salas: Room[]) {
+  // Con IDs, el UPSERT es más seguro que borrar todo
+  const { error } = await supabase.from('salas').upsert(
+    salas.map(s => ({ id: s.id || undefined, nombre: s.name, prioridad: s.priority }))
+  );
+  if (error) throw error;
+}
+
+export async function saveCategoriasQuery(categorias: Category[]) {
+  const { error } = await supabase.from('categorias').upsert(
+    categorias.map(c => ({ id: c.id || undefined, nombre: c.name, bg_color: c.bg, text_color: c.text }))
+  );
+  if (error) throw error;
 }

@@ -103,7 +103,7 @@ export default function AgendaPage() {
 
                 <div className="agenda-content">
                   <span style={{ fontSize: '13px', color: '#81c784', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                    📍 {charla.location}
+                    📍 {charla.room}
                   </span>
                   <h3>{charla.title}</h3>
                   <p>

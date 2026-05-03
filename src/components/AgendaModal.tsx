@@ -1,17 +1,6 @@
-import type { Speaker } from "../data/agendaData";
+import type { AgendaItem } from "../data/agendaData";
 import WorkshopBadge from "./workshops/WorkshopBadge";
 import { Icons } from "./Icons";
-
-export interface AgendaItem {
-  id: string;
-  time: string;
-  title: string;
-  speaker?: Speaker;
-  description: string;
-  tag: string;
-  period: 'Mañana' | 'Tarde';
-  location: string;
-}
 
 interface AgendaModalProps {
   item: AgendaItem | null;
@@ -30,7 +19,8 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
         </button>
 
         <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
-          <WorkshopBadge tag={item.tag} />
+          {/* Usamos el tag o el nombre de la categoría */}
+          <WorkshopBadge tag={item.tag || 'General'} />
           <h3 style={{ fontSize: '26px', marginBottom: '8px', lineHeight: '1.2' }}>{item.title}</h3>
 
           <div style={{ display: 'flex', gap: '15px', color: 'var(--text-secondary)', fontSize: '14px', alignItems: 'center', marginTop: '15px', flexWrap: 'wrap' }}>
@@ -46,7 +36,7 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
             <span style={{ flex: 1, minWidth: '1px', maxWidth: '1px', height: '15px', background: 'var(--border-soft)' }}></span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#81c784', fontWeight: 600 }}>
               <Icons.MapPin size={16} />
-              {item.location}
+              {item.room}
             </span>
           </div>
         </div>
