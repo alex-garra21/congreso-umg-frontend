@@ -5,7 +5,7 @@ import { updateUserDataMutation } from '../../../api/supabase/users/userMutation
 import ModuleTitle from '../../../components/ModuleTitle';
 import { useCharlas, useSalas } from '../../../api/hooks/useAgenda';
 import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
-import type { AgendaItem } from '../../../data/agendaData';
+import type { AgendaItem, Room } from '../../../data/agendaData';
 import { showAlert, showConfirm } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
@@ -108,7 +108,7 @@ export default function WorkshopsModule() {
     // Sumamos 2 porque la fila 1 es para los encabezados
     const startRow = Math.floor((parseTime(w.time) - minHour) * 2) + 2; 
     const endRow = Math.floor((parseTime(w.endTime) - minHour) * 2) + 2;
-    const roomIndex = rooms.indexOf(w.room);
+    const roomIndex = rooms.findIndex(r => r.name === w.room);
     const colIndex = roomIndex !== -1 ? roomIndex + 2 : 2; 
     
     const colorTheme = roomColors[colIndex - 2 % roomColors.length];

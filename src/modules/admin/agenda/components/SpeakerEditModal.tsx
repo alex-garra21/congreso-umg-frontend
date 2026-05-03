@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import Modal from '../../../../components/ui/Modal';
 import FormField from '../../../../components/ui/FormField';
 import AdminButton from '../../../../components/ui/AdminButton';
@@ -20,7 +20,7 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
   const [editingSpeaker, setEditingSpeaker] = useState<Speaker>({ ...speaker });
   const [selectedSocialType, setSelectedSocialType] = useState('facebook');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSave(editingSpeaker);
   };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import Modal from '../../../../components/ui/Modal';
 import FormField from '../../../../components/ui/FormField';
 import AdminButton from '../../../../components/ui/AdminButton';
@@ -17,7 +17,7 @@ interface CategoryEditModalProps {
 export default function CategoryEditModal({ isOpen, onClose, category, onSave, isNew }: CategoryEditModalProps) {
   const [editingCategory, setEditingCategory] = useState({ ...category });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSave(editingCategory);
   };

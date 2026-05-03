@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import Modal from '../../../../components/ui/Modal';
 import FormField from '../../../../components/ui/FormField';
 import AdminButton from '../../../../components/ui/AdminButton';
 import AdminSelect from '../../../../components/ui/AdminSelect';
-import type { AgendaItem, Speaker } from '../../../../data/agendaData';
+import type { AgendaItem, Speaker, Room } from '../../../../data/agendaData';
 
 interface AgendaItemModalProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface AgendaItemModalProps {
   item: AgendaItem;
   speakers: Speaker[];
   categories: string[];
-  rooms: string[];
+  rooms: Room[];
   onSave: (item: AgendaItem) => void;
   isNew: boolean;
 }
@@ -21,7 +21,7 @@ export default function AgendaItemModal({
 }: AgendaItemModalProps) {
   const [editingItem, setEditingItem] = useState<AgendaItem>({ ...item });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSave(editingItem);
   };
@@ -96,7 +96,7 @@ export default function AgendaItemModal({
             <AdminSelect
               value={editingItem.room}
               onChange={(e: { target: { value: string } }) => setEditingItem({ ...editingItem, room: e.target.value, location: e.target.value })}
-              options={rooms.map(r => ({ value: r, label: r }))}
+              options={rooms.map(r => ({ value: r.name, label: r.name }))}
             />
           </FormField>
           <FormField label="CATEGORÍA" required style={{ flex: 1 }}>

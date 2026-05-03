@@ -1,23 +1,24 @@
 import { supabase } from '../../../utils/supabase';
-import type { AgendaItem, CategoryStyle, Speaker } from '../../../data/agendaData';
+import type { AgendaItem, CategoryStyle, Speaker, Room } from '../../../data/agendaData';
 
 /**
  * MUTATIONS - Escritura y modificación de datos de Agenda
  */
 
-export async function saveSalasMutation(rooms: string[]): Promise<void> {
+export async function saveSalasMutation(rooms: Room[]): Promise<void> {
   const { data: actuales, error: fetchError } = await supabase.from('salas').select('nombre');
   if (fetchError) throw fetchError;
 
   const nombresActuales = actuales?.map(a => a.nombre) || [];
+  const nuevosNombres = rooms.map(r => r.name);
 
-  const toDelete = nombresActuales.filter(n => !rooms.includes(n));
+  const toDelete = nombresActuales.filter(n => !nuevosNombres.includes(n));
   if (toDelete.length > 0) {
     const { error: deleteError } = await supabase.from('salas').delete().in('nombre', toDelete);
     if (deleteError) throw deleteError;
   }
 
-  const toInsert = rooms.map(r => ({ nombre: r }));
+  const toInsert = rooms.map(r => ({ nombre: r.name, prioridad: r.priority }));
   const { error: upsertError } = await supabase.from('salas').upsert(toInsert);
   if (upsertError) throw upsertError;
 }

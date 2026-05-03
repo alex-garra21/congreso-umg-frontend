@@ -1,9 +1,9 @@
 import React from 'react';
 import { WorkshopCard } from './WorkshopCard';
-import type { AgendaItem } from '../../../../data/agendaData';
+import type { AgendaItem, Room } from '../../../../data/agendaData';
 
 interface CalendarGridProps {
-  rooms: string[];
+  rooms: Room[];
   HOURS: number[];
   minHour: number;
   roomColors: any[];
@@ -38,7 +38,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         {rooms.map((room, idx) => {
           const colorTheme = roomColors[idx % roomColors.length];
           return (
-            <div key={room} className="grid-header room-label" style={{ 
+            <div key={room.name} className="grid-header room-label" style={{ 
               gridRow: 1, 
               gridColumn: idx + 2,
               backgroundColor: colorTheme.text,
@@ -48,7 +48,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               letterSpacing: '1px',
               textTransform: 'uppercase'
             }}>
-              {room}
+              {room.name}
             </div>
           );
         })}

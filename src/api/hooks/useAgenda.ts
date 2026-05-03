@@ -11,7 +11,7 @@ import {
   saveAgendaMutation,
   savePonentesMutation
 } from '../supabase/agenda/agendaMutations';
-import type { AgendaItem, CategoryStyle, Speaker } from '../../data/agendaData';
+import type { AgendaItem, CategoryStyle, Speaker, Room } from '../../data/agendaData';
 
 // --- QUERIES ---
 
@@ -56,7 +56,7 @@ export function useSaveSalas() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (salas: string[]) => saveSalasMutation(salas),
+    mutationFn: (salas: Room[]) => saveSalasMutation(salas),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salas'] });
     },

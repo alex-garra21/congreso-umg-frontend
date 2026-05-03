@@ -1,25 +1,35 @@
 import { supabase } from '../../../utils/supabase';
-import type { AgendaItem, Speaker, CategoryStyle } from '../../../data/agendaData';
-import { initialRooms, categoryStyles as initialCategories } from '../../../data/agendaData';
+import type { AgendaItem, Speaker, CategoryStyle, Room } from '../../../data/agendaData';
+
 
 /**
  * QUERIES - Lectura de datos de Agenda
  */
 
-export async function getSalasQuery(): Promise<string[]> {
-  const { data, error } = await supabase.from('salas').select('nombre');
-  if (error || !data || data.length === 0) {
-    return initialRooms;
+export async function getSalasQuery(): Promise<Room[]> {
+  const { data, error } = await supabase
+    .from('salas')
+    .select('nombre, prioridad')
+    .order('prioridad', { ascending: true });
+
+  if (error) {
+    return [];
   }
-  return data.map(d => d.nombre);
+  if (!data || data.length === 0) {
+    return [];
+  }
+  return data.map(d => ({ name: d.nombre, priority: d.prioridad }));
 }
 
 export async function getCategoriasQuery(): Promise<Record<string, CategoryStyle>> {
   const { data, error } = await supabase.from('categorias').select('*');
-  if (error || !data || data.length === 0) {
-    return initialCategories;
+  if (error) {
+    return {};
   }
-  
+  if (!data || data.length === 0) {
+    return {};
+  }
+
   const result: Record<string, CategoryStyle> = {};
   data.forEach(d => {
     result[d.nombre] = { bg: d.bg_color, text: d.text_color };
@@ -32,7 +42,7 @@ export async function getPonentesQuery(): Promise<Speaker[]> {
   if (error || !data || data.length === 0) {
     return [];
   }
-  
+
   return data.map(d => ({
     id: d.id,
     name: d.nombre,
@@ -52,7 +62,7 @@ export async function getCharlasQuery(): Promise<AgendaItem[]> {
     *,
     ponentes (*)
   `);
-  
+
   if (error || !data || data.length === 0) {
     return [];
   }
