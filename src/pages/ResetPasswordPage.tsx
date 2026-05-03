@@ -39,12 +39,22 @@ export default function ResetPasswordPage() {
     fetchUserProfile();
   }, []);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (retries = 3) => {
     setIsLoadingProfile(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Intentar obtener la sesión (esperando a que Supabase procese el hash)
+      let sessionData = await supabase.auth.getSession();
+      
+      // Si no hay sesión, esperar un poco y reintentar (útil en móviles lentos)
+      if (!sessionData.data.session && retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        return fetchUserProfile(retries - 1);
+      }
+
+      const user = sessionData.data.session?.user;
       
       if (!user) {
+        console.warn("No se encontró sesión de usuario tras reintentos.");
         navigate('/');
         return;
       }
@@ -64,7 +74,7 @@ export default function ResetPasswordPage() {
       }
     } catch (err) {
       console.error("Error fetching profile for reset page:", err);
-      navigate('/');
+      if (retries === 0) navigate('/');
     } finally {
       setIsLoadingProfile(false);
     }

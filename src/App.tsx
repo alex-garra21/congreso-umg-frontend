@@ -69,11 +69,18 @@ function AuthHandler() {
       }
     });
 
-    if (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token=')) {
+    if (
+      window.location.hash.includes('type=recovery') || 
+      window.location.hash.includes('access_token=') ||
+      window.location.search.includes('type=recovery')
+    ) {
       localStorage.setItem('is_recovering_pw', 'true');
-      if (window.location.pathname !== '/reset-password') {
-        navigate('/reset-password');
-      }
+      // Esperar un momento a que el Router esté listo antes de navegar
+      setTimeout(() => {
+        if (window.location.pathname !== '/reset-password') {
+          navigate('/reset-password');
+        }
+      }, 100);
     }
 
     return () => subscription.unsubscribe();
