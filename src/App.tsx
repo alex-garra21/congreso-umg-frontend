@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { supabase } from './utils/supabase';
 
 // Importar el Layout
@@ -53,46 +53,39 @@ const PageLoader = () => (
   </div>
 );
 
-function App() {
+function AuthHandler() {
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Escuchar cambios en la autenticación de Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         localStorage.setItem('is_recovering_pw', 'true');
-        if (window.location.pathname !== '/reset-password') {
-          window.location.href = '/reset-password';
-        }
+        navigate('/reset-password');
       }
 
-      // Bloqueo de seguridad: Si está recuperando, no puede ir al dashboard
       if (localStorage.getItem('is_recovering_pw') === 'true' && 
           window.location.pathname.startsWith('/dashboard')) {
-        window.location.href = '/reset-password';
+        navigate('/reset-password');
       }
     });
 
-    // Verificación inmediata por URL
-    if (window.location.hash.includes('type=recovery')) {
+    if (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token=')) {
       localStorage.setItem('is_recovering_pw', 'true');
       if (window.location.pathname !== '/reset-password') {
-        window.location.href = '/reset-password';
+        navigate('/reset-password');
       }
     }
-    
-    // Verificación de persistencia: si intenta entrar al dashboard con la bandera activa
-    if (localStorage.getItem('is_recovering_pw') === 'true' && 
-        window.location.pathname.startsWith('/dashboard')) {
-      window.location.href = '/reset-password';
-    }
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
+  return null;
+}
+
+function App() {
   return (
     <BrowserRouter>
+      <AuthHandler />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Rutas Públicas */}
