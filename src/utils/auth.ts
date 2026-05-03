@@ -14,7 +14,7 @@ export interface UserData {
   tipoParticipante?: string;
   carnet?: string;
   ciclo?: string;
-  rol?: 'usuario' | 'admin';
+  rol?: 'usuario' | 'admin' | 'participante';
   talleres?: string[];
   diplomaEditado?: boolean;
   correoDiploma?: string;

@@ -157,6 +157,8 @@
 .admin-badge-warning { background: rgba(234, 179, 8, 0.1); color: #ca8a04; }
 .admin-badge-danger { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
 .admin-badge-info { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+.admin-badge-purple { background: rgba(139, 92, 246, 0.1); color: #7c3aed; }
+.admin-badge-neutral { background: var(--bg-app); color: var(--text-secondary); border: 1px solid var(--border-soft); }
 
 /* ── DRAG & DROP ── */
 .drag-handle {
