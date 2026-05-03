@@ -32,7 +32,7 @@ export default function ReportsModule() {
 
   // Ayudante para obtener solo talleres reales (excluye GENERAL)
   const getRealWorkshops = (talleres?: { id: string; category: string }[]) => 
-    (talleres || []).filter(t => t.category !== 'GENERAL');
+    (talleres || []).filter(t => t.category?.toUpperCase().trim() !== 'GENERAL');
 
   const filteredUsers = users.filter(u => u.rol !== 'admin' && !u.desactivado).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
@@ -64,6 +64,10 @@ export default function ReportsModule() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(isDiplomaList ? 'Diplomas' : 'Reporte_General');
     
+    // Si hay un taller específico seleccionado
+    const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
+    const workshopTitle = isSpecificWorkshop ? getWorkshopTitle(selectedWorkshopFilter) : '';
+
     if (isDiplomaList) {
       worksheet.columns = [{ header: 'Participante', key: 'name', width: 35 }, { header: 'Correo', key: 'email', width: 35 }, { header: 'Taller(es)', key: 'workshops', width: 45 }];
       filteredUsers.forEach(u => {
@@ -71,26 +75,62 @@ export default function ReportsModule() {
         worksheet.addRow({ 
           name: getDisplayName(u), 
           email: u.correoDiploma || u.correo, 
-          workshops: realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-' 
+          workshops: isSpecificWorkshop ? workshopTitle : (realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-') 
         });
       });
     } else {
-      const maxWorkshops = Math.max(...filteredUsers.map(u => getRealWorkshops(u.talleres).length), 1);
-      const cols = [{ header: 'Participante', key: 'name', width: 30 }, { header: 'Correo', key: 'email', width: 30 }];
-      for (let i = 1; i <= maxWorkshops; i++) cols.push({ header: `Taller ${i}`, key: `w${i}`, width: 35 });
+      // Columnas Base
+      const cols: any[] = [
+        { header: 'Participante', key: 'name', width: 30 }, 
+        { header: 'Correo', key: 'email', width: 30 }
+      ];
+
+      // Si es un taller específico, solo una columna de Taller
+      if (isSpecificWorkshop) {
+        cols.push({ header: 'Taller', key: 'workshop', width: 35 });
+      } else {
+        const maxWorkshops = Math.max(...filteredUsers.map(u => getRealWorkshops(u.talleres).length), 1);
+        for (let i = 1; i <= maxWorkshops; i++) cols.push({ header: `Taller ${i}`, key: `w${i}`, width: 35 });
+      }
+
       cols.push({ header: 'Tipo', key: 'type', width: 25 }, { header: 'Pago', key: 'pay', width: 15 });
       worksheet.columns = cols;
+
       filteredUsers.forEach(u => {
-        const row: any = { name: getDisplayName(u), email: u.correo, type: getParticipantLabel(u.tipoParticipante), pay: u.pagoValidado ? 'SÍ' : 'NO' };
-        const realW = getRealWorkshops(u.talleres);
-        realW.forEach((tw, i) => row[`w${i + 1}`] = getWorkshopTitle(tw.id));
+        const row: any = { 
+          name: getDisplayName(u), 
+          email: u.correo, 
+          type: getParticipantLabel(u.tipoParticipante), 
+          pay: u.pagoValidado ? 'SÍ' : 'NO' 
+        };
+
+        if (isSpecificWorkshop) {
+          row.workshop = workshopTitle;
+        } else {
+          const realW = getRealWorkshops(u.talleres);
+          realW.forEach((tw, i) => row[`w${i + 1}`] = getWorkshopTitle(tw.id));
+        }
         worksheet.addRow(row);
       });
     }
 
     worksheet.getRow(1).font = { bold: true };
+    
+    // Generar Nombre de Archivo Inteligente
+    let fileName = isDiplomaList ? 'Lista_Diplomas' : 'Reporte';
+    if (isSpecificWorkshop) fileName += `_${workshopTitle.replace(/[^a-z0-9]/gi, '_')}`;
+    else if (selectedWorkshopFilter === 'none') fileName += '_Sin_Talleres';
+    
+    if (paymentFilter !== 'all') fileName += `_${paymentFilter === 'paid' ? 'Pagados' : 'Pendientes'}`;
+    
+    // Si no están todos los tipos seleccionados, agregar al nombre
+    if (participantTypeFilter.length < PARTICIPANT_TYPES.length) {
+      fileName += `_${participantTypeFilter.join('_')}`;
+    }
+
+    const timeStamp = new Date().toLocaleString().replace(/[/]/g, '-').replace(/[:]/g, '-').replace(/[,]/g, '').replace(/ /g, '_');
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `${isDiplomaList ? 'Lista_Diplomas' : 'Reporte_General'}_${Date.now()}.xlsx`);
+    saveAs(new Blob([buffer]), `${fileName}_${timeStamp}.xlsx`);
     showToast('Exportación completada', 'success');
   };
 
@@ -126,7 +166,20 @@ export default function ReportsModule() {
             <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo..." />
           </div>
           <div style={{ width: '220px' }}>
-            <AdminSelect label="TALLER" value={selectedWorkshopFilter} onChange={(e) => setSelectedWorkshopFilter(e.target.value)} options={[{ value: 'all_records', label: 'Todos los registros' }, { value: 'none', label: 'Sin talleres' }, { value: '', label: 'Cualquier taller' }, ...agenda.filter(a => a.speaker).map(w => ({ value: w.id, label: w.title }))]} />
+            <AdminSelect 
+              label="TALLER" 
+              value={selectedWorkshopFilter} 
+              onChange={(e) => setSelectedWorkshopFilter(e.target.value)} 
+              options={[
+                { value: 'all_records', label: 'Todos los registros' }, 
+                { value: 'none', label: 'Sin talleres' }, 
+                { value: '', label: 'Cualquier taller' }, 
+                ...agenda
+                  .filter(a => a.tagId !== 1 && a.tag?.toUpperCase().trim() !== 'GENERAL')
+                  .sort((a, b) => a.title.localeCompare(b.title))
+                  .map(w => ({ value: w.id, label: w.title }))
+              ]} 
+            />
           </div>
           <div style={{ width: '150px' }}>
             <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
@@ -145,9 +198,20 @@ export default function ReportsModule() {
               </td>
               <td style={{ maxWidth: '300px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                  {getRealWorkshops(u.talleres).length > 0 ? getRealWorkshops(u.talleres).map(tw => (
-                    <AdminBadge key={tw.id} variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(tw.id)}</AdminBadge>
-                  )) : <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Ninguno</span>}
+                  {(() => {
+                    const realW = getRealWorkshops(u.talleres);
+                    if (realW.length === 0) return <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Ninguno</span>;
+                    
+                    // Si hay un taller específico filtrado, mostrar solo ese
+                    if (selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none') {
+                      return <AdminBadge variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(selectedWorkshopFilter)}</AdminBadge>;
+                    }
+                    
+                    // Si no, mostrar todos
+                    return realW.map(tw => (
+                      <AdminBadge key={tw.id} variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(tw.id)}</AdminBadge>
+                    ));
+                  })()}
                 </div>
               </td>
               <td><AdminBadge variant="neutral">{getParticipantLabel(u.tipoParticipante)}</AdminBadge></td>

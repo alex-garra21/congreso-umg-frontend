@@ -79,7 +79,7 @@ const AttendanceQR = forwardRef<AttendanceQRHandle, AttendanceQRProps>(({ worksh
         {/* Información del taller en la parte inferior */}
         <div className="qr-info-footer">
           <h3 className="qr-workshop-title">{workshop.title}</h3>
-          
+
           <div className="qr-details-grid">
             <div className="qr-detail-item">
               <span className="qr-label">HORARIO</span>
@@ -93,7 +93,7 @@ const AttendanceQR = forwardRef<AttendanceQRHandle, AttendanceQRProps>(({ worksh
 
           <div className="qr-speaker-box">
             <span className="qr-label">PONENTE</span>
-            <span className="qr-value">{workshop.speaker?.name || 'General'}</span>
+            <span className="qr-value">{workshop.speaker?.name || ''}</span>
           </div>
         </div>
 

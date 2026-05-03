@@ -89,7 +89,8 @@ export default function AttendanceModule() {
 
   const filteredAgenda = agenda.filter(item => {
     // 1. Excluir categorías GENERALES del control de asistencia
-    if (item.tag === 'GENERAL') return false;
+    // Usamos el ID 1 que corresponde a GENERAL para máxima precisión
+    if (item.tagId === 1 || item.tag?.toUpperCase().trim() === 'GENERAL') return false;
 
     const matchesSearch = item.title.toLowerCase().includes(searchAgenda.toLowerCase());
     

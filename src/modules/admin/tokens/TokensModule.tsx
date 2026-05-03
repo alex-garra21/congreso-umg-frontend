@@ -162,10 +162,28 @@ export default function TokensModule() {
     }
 
     worksheet.getRow(1).font = { bold: true };
+    
+    // Generar Nombre de Archivo Inteligente
+    let fileName = forUse ? 'Tokens_Disponibles' : 'Reporte_Tokens';
+    
+    if (statusFilter !== 'all') {
+      fileName += `_${statusFilter === 'used' ? 'Utilizados' : 'Disponibles'}`;
+    }
+    
+    if (typeFilter !== 'all') {
+      fileName += `_${typeFilter === 'alumno' ? 'Estudiantes' : 'Externos'}`;
+    }
+
+    if (startDate || endDate) {
+      if (startDate && endDate) fileName += `_del_${startDate}_al_${endDate}`;
+      else if (startDate) fileName += `_desde_${startDate}`;
+      else if (endDate) fileName += `_hasta_${endDate}`;
+    }
+
+    const timeStamp = new Date().toLocaleString().replace(/[/]/g, '-').replace(/[:]/g, '-').replace(/[,]/g, '').replace(/ /g, '_');
     const buffer = await workbook.xlsx.writeBuffer();
-    const filename = forUse ? `Tokens_Disponibles_${Date.now()}` : `Reporte_Tokens_${Date.now()}`;
-    saveAs(new Blob([buffer]), `${filename}.xlsx`);
-    showToast('Archivo Excel generado', 'success');
+    saveAs(new Blob([buffer]), `${fileName}_${timeStamp}.xlsx`);
+    showToast(forUse ? 'Códigos exportados' : 'Reporte generado', 'success');
   };
 
   return (
