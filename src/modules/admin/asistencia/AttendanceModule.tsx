@@ -88,6 +88,9 @@ export default function AttendanceModule() {
   };
 
   const filteredAgenda = agenda.filter(item => {
+    // 1. Excluir categorías GENERALES del control de asistencia
+    if (item.tag === 'GENERAL') return false;
+
     const matchesSearch = item.title.toLowerCase().includes(searchAgenda.toLowerCase());
     
     let matchesTime = true;
@@ -163,7 +166,7 @@ export default function AttendanceModule() {
                 </AdminBadge>
               </td>
               <td>
-                <AdminBadge variant="neutral">{users.filter(u => u.talleres?.includes(item.id)).length} pers.</AdminBadge>
+                <AdminBadge variant="neutral">{users.filter(u => u.talleres?.some(t => t.id === item.id)).length} pers.</AdminBadge>
               </td>
               <td>
                 <AdminBadge variant="success" dot>{users.filter(u => u.asistencias?.some(a => a.workshopId === item.id)).length} marcadas</AdminBadge>

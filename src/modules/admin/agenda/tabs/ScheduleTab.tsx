@@ -179,6 +179,7 @@ export default function ScheduleTab() {
           onSave={handleSaveAgendaItem}
           item={editingItem}
           isNew={!agenda.some(a => a.id === editingItem.id)}
+          agenda={agenda}
         />
       )}
     </ModuleCard>

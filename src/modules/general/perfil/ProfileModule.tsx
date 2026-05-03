@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { useUpdateUserData } from '../../../api/hooks/useUsers';
 import { type UserData } from '../../../utils/auth';
@@ -9,12 +8,14 @@ import { showAlert } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
+import AdminSelect from '../../../components/ui/AdminSelect';
 import AvatarUpload from '../../../components/ui/AvatarUpload';
+import LoadingButton from '../../../components/ui/LoadingButton';
+import BackButton from '../../../components/ui/BackButton';
 import { PARTICIPANT_TYPES, requiresAcademicInfo, CICLOS, getParticipantIdLabel, requiresCiclo, getParticipantIdMaxLength, showParticipantIdHelp } from '../../../data/userTypes';
 
 export default function ProfileModule() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const updateUserDataMutation = useUpdateUserData();
   const [formData, setFormData] = useState({
     nombres: '',
@@ -182,11 +183,16 @@ export default function ProfileModule() {
               <input type="text" name="dpi" value={formData.dpi} onChange={handleChange} placeholder="0000 00000 0000" required className="dashboard-input" />
             </FormField>
             <FormField label="Sexo" required style={{ flex: 1 }}>
-              <select name="sexo" value={formData.sexo} onChange={handleChange} required className="dashboard-input">
-                <option value="">Selección</option>
-                <option value="M">Hombre</option>
-                <option value="F">Mujer</option>
-              </select>
+              <AdminSelect 
+                name="sexo" 
+                value={formData.sexo} 
+                onChange={handleChange as any} 
+                options={[
+                  { value: 'M', label: 'Hombre' },
+                  { value: 'F', label: 'Mujer' }
+                ]}
+                placeholder="Selección"
+              />
             </FormField>
           </div>
 
@@ -201,11 +207,12 @@ export default function ProfileModule() {
               />
             </FormField>
             <FormField label="Tipo de participante" required style={{ flex: 1 }}>
-              <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required className="dashboard-input">
-                {PARTICIPANT_TYPES.map(type => (
-                  <option key={type.id} value={type.id}>{type.label}</option>
-                ))}
-              </select>
+              <AdminSelect 
+                name="tipoParticipante" 
+                value={formData.tipoParticipante} 
+                onChange={handleChange as any} 
+                options={PARTICIPANT_TYPES.map(type => ({ value: type.id, label: type.label }))}
+              />
             </FormField>
           </div>
 
@@ -222,12 +229,13 @@ export default function ProfileModule() {
               
               {requiresCiclo(formData.tipoParticipante) && (
                 <FormField label="Ciclo" required style={{ flex: 1 }}>
-                  <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
-                    <option value="">Selección</option>
-                    {CICLOS.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                  <AdminSelect 
+                    name="ciclo" 
+                    value={formData.ciclo} 
+                    onChange={handleChange as any} 
+                    options={CICLOS.map(c => ({ value: c, label: c }))}
+                    placeholder="Selección"
+                  />
                 </FormField>
               )}
             </div>
@@ -239,28 +247,30 @@ export default function ProfileModule() {
             </FormField>
           </div>
 
-          <div className="profile-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-            <button type="submit" className="submit-btn" style={{ width: 'auto', padding: '12px 32px' }}>
+          <div className="profile-actions" style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <LoadingButton 
+              type="submit" 
+              isLoading={updateUserDataMutation.isPending}
+              loadingText="Guardando..."
+              style={{ minWidth: '180px' }}
+            >
               Guardar cambios
-            </button>
-            <button
+            </LoadingButton>
+
+            <LoadingButton
               type="button"
-              className="btn-ghost"
-              style={{ width: 'auto', padding: '12px 24px', border: '1.5px solid var(--accent-primary)', color: 'var(--accent-primary)', backgroundColor: 'transparent' }}
+              variant="secondary"
               onClick={() => setIsPasswordModalOpen(true)}
+              style={{ minWidth: '180px' }}
             >
               Cambiar contraseña
-            </button>
+            </LoadingButton>
           </div>
         </form>
       </section>
       
       {/* Botón regresar al inicio */}
-      <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
-        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--accent-primary)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
-          Ir al Inicio
-        </button>
-      </div>
+      <BackButton />
 
       <Modal
         isOpen={isSuccessModalOpen}
@@ -273,7 +283,7 @@ export default function ProfileModule() {
             <Icons.CheckCircle size={64} color="var(--status-success)" />
           </div>
           <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu información ha sido actualizada correctamente.</p>
-          <button className="submit-btn" onClick={() => setIsSuccessModalOpen(false)}>Entendido</button>
+          <LoadingButton fullWidth onClick={() => setIsSuccessModalOpen(false)}>Entendido</LoadingButton>
         </div>
       </Modal>
 

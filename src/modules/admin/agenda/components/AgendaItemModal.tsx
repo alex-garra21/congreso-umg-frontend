@@ -6,19 +6,19 @@ import AdminButton from '../../../../components/ui/AdminButton';
 import Modal from '../../../../components/ui/Modal';
 import FormField from '../../../../components/ui/FormField';
 import AdminSelect from '../../../../components/ui/AdminSelect';
-import { generateTimeOptions } from '../../../../utils/timeUtils';
+import { generateTimeOptions, timeToMinutes } from '../../../../utils/timeUtils';
 import { useTimeConfig } from '../../../../context/TimeContext';
 
 interface AgendaItemModalProps {
-// ...
   isOpen: boolean;
   onClose: () => void;
   onSave: (item: AgendaItem) => void;
   item: AgendaItem;
   isNew: boolean;
+  agenda: AgendaItem[];
 }
 
-export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew }: AgendaItemModalProps) {
+export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, agenda }: AgendaItemModalProps) {
   const { data: rooms = [] } = useSalas();
   const { data: categories = [] } = useCategorias();
   const { data: speakers = [] } = usePonentes();
@@ -28,10 +28,41 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    
     if (!formData.locationId || !formData.tagId) {
       showToast('Por favor selecciona una Sala y una Categoría obligatoriamente', 'error');
       return;
     }
+
+    // Validación de Disponibilidad (Traslape en la misma sala)
+    const newStart = timeToMinutes(formData.time);
+    const newEnd = timeToMinutes(formData.endTime);
+
+    if (newStart >= newEnd) {
+      showToast('La hora de inicio debe ser menor a la hora de fin', 'error');
+      return;
+    }
+
+    const collision = agenda.find(a => {
+      // Omitir el mismo item si estamos editando
+      if (a.id === formData.id) return false;
+      
+      // Misma sala
+      if (a.locationId === formData.locationId) {
+        const aStart = timeToMinutes(a.time);
+        const aEnd = timeToMinutes(a.endTime);
+        
+        // Lógica de traslape: (StartA < EndB) && (EndA > StartB)
+        return (newStart < aEnd && newEnd > aStart);
+      }
+      return false;
+    });
+
+    if (collision) {
+      showToast(`¡Conflicto de Horario! El salón ya está ocupado por: "${collision.title}" de ${collision.time} a ${collision.endTime}`, 'error');
+      return;
+    }
+
     onSave(formData);
   };
 
@@ -77,47 +108,33 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew }
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <FormField label="SALA / UBICACIÓN *" required>
-            <select
-              required
-              className="dashboard-input"
+            <AdminSelect
               value={formData.locationId || ''}
               onChange={(e) => setFormData({ ...formData, locationId: Number(e.target.value) })}
-            >
-              <option value="">-- Seleccionar Sala --</option>
-              {rooms.map(r => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
+              options={rooms.map(r => ({ value: r.id.toString(), label: r.name }))}
+              placeholder="-- Seleccionar Sala --"
+            />
           </FormField>
           <FormField label="CATEGORÍA *" required>
-            <select
-              required
-              className="dashboard-input"
+            <AdminSelect
               value={formData.tagId || ''}
               onChange={(e) => setFormData({ ...formData, tagId: Number(e.target.value) })}
-            >
-              <option value="">-- Seleccionar Categoría --</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
+              options={categories.map(cat => ({ value: cat.id.toString(), label: cat.name }))}
+              placeholder="-- Seleccionar Categoría --"
+            />
           </FormField>
         </div>
 
         <FormField label="PONENTE (OPCIONAL)">
-          <select
-            className="dashboard-input"
+          <AdminSelect
             value={formData.speaker?.id || ''}
             onChange={(e) => {
               const spk = speakers.find(s => s.id === parseInt(e.target.value));
               setFormData({ ...formData, speaker: spk });
             }}
-          >
-            <option value="">-- Sin Ponente --</option>
-            {speakers.map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+            options={speakers.map(s => ({ value: s.id.toString(), label: s.name }))}
+            placeholder="-- Sin Ponente --"
+          />
         </FormField>
 
         <FormField label="DESCRIPCIÓN *" required>

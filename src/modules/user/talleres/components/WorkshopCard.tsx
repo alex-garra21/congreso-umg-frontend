@@ -25,18 +25,27 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({
       style={styles}
       onClick={onClick}
     >
-      <div className="workshop-content">
-        <span className="w-title">{workshop.title}</span>
-        <span className="w-time">
+      <div className="workshop-content" style={{ display: 'flex', flexDirection: 'column', height: '100%', pointerEvents: 'none' }}>
+        <div className="w-time">
+          <Icons.Clock size={10} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
           {workshop.time.replace(' AM', '').replace(' PM', '')} - {workshop.endTime.replace(' AM', '').replace(' PM', '')}
-        </span>
-        <span className="w-speaker">
-          {isGeneral ? 'Actividad General' : (workshop.speaker?.name || 'General')}
-        </span>
+        </div>
+        
+        <div className="w-title">{workshop.title}</div>
+        
+        <div className="w-speaker">
+          {isGeneral ? (
+            <Icons.Star size={11} strokeWidth={3} />
+          ) : (
+            <Icons.User size={11} />
+          )}
+          <span>{isGeneral ? 'Actividad General' : (workshop.speaker?.name || 'Ponente por definir')}</span>
+        </div>
       </div>
+      
       {isSelected && (
         <div className="selected-check">
-          {isGeneral ? <Icons.Award size={12} strokeWidth={4} /> : <Icons.Check size={12} strokeWidth={4} />}
+          {isGeneral ? <Icons.Award size={14} strokeWidth={3} /> : <Icons.Check size={14} strokeWidth={3} />}
         </div>
       )}
     </div>

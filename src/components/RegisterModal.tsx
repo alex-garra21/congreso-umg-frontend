@@ -6,6 +6,7 @@ import { Icons } from './Icons';
 import { showToast } from '../utils/swal';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
+import AdminSelect from './ui/AdminSelect';
 import Alert from './ui/Alert';
 import LoadingButton from './ui/LoadingButton';
 import { PARTICIPANT_TYPES, requiresAcademicInfo, CICLOS, getParticipantIdLabel, requiresCiclo, getParticipantIdMaxLength, showParticipantIdHelp } from '../data/userTypes';
@@ -210,11 +211,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
             </div>
 
             <FormField label="Tipo de Participante" required>
-              <select name="tipoParticipante" value={formData.tipoParticipante} onChange={handleChange} required className="dashboard-input">
-                {PARTICIPANT_TYPES.map(type => (
-                  <option key={type.id} value={type.id}>{type.label}</option>
-                ))}
-              </select>
+              <AdminSelect 
+                name="tipoParticipante" 
+                value={formData.tipoParticipante} 
+                onChange={handleChange as any} 
+                options={PARTICIPANT_TYPES.map(type => ({ value: type.id, label: type.label }))}
+              />
             </FormField>
 
             {requiresAcademicInfo(formData.tipoParticipante) && (
@@ -229,25 +231,31 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 </FormField>
                 
                 {requiresCiclo(formData.tipoParticipante) && (
-                  <FormField label="Ciclo" required style={{ flex: 1 }}>
-                    <select name="ciclo" value={formData.ciclo} onChange={handleChange} required className="dashboard-input">
-                      <option value="">Selección</option>
-                      {CICLOS.map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </FormField>
+                <FormField label="Ciclo" required style={{ flex: 1 }}>
+                  <AdminSelect 
+                    name="ciclo" 
+                    value={formData.ciclo} 
+                    onChange={handleChange as any} 
+                    options={CICLOS.map(c => ({ value: c, label: c }))}
+                    placeholder="Selección"
+                  />
+                </FormField>
                 )}
               </div>
             )}
 
             <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
               <FormField label="Sexo" required style={{ flex: 1 }}>
-                <select name="sexo" value={formData.sexo} onChange={handleChange} required className="dashboard-input">
-                  <option value="">Selección</option>
-                  <option value="M">Hombre</option>
-                  <option value="F">Mujer</option>
-                </select>
+                <AdminSelect 
+                  name="sexo" 
+                  value={formData.sexo} 
+                  onChange={handleChange as any} 
+                  options={[
+                    { value: 'M', label: 'Hombre' },
+                    { value: 'F', label: 'Mujer' }
+                  ]}
+                  placeholder="Selección"
+                />
               </FormField>
               <FormField label="Correo Electrónico" required style={{ flex: 2 }}>
                 <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="correo@ejemplo.com" required className="dashboard-input" />
@@ -273,8 +281,8 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 </span>
               )}
               {currentPasswordStrength && currentPasswordStrength.isValid && (
-                <span style={{ color: '#16a34a', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                  ✓ Contraseña segura
+                <span style={{ color: '#16a34a', marginTop: '4px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Icons.Check size={14} /> Contraseña segura
                 </span>
               )}
             </div>

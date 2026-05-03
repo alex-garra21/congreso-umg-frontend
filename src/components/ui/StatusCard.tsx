@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface StatusCardProps {
   label: string;
@@ -9,6 +10,7 @@ interface StatusCardProps {
   icon?: React.ReactNode;
   footerLink?: string;
   onClick?: () => void;
+  navigateTo?: string;
   variant?: 'light' | 'dark'; // Por si en el futuro quieres variantes
   className?: string;
   style?: React.CSSProperties;
@@ -23,13 +25,25 @@ const StatusCard: React.FC<StatusCardProps> = ({
   icon,
   footerLink,
   onClick,
+  navigateTo,
   className = "",
   style = {}
 }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    if (navigateTo) {
+      navigate(navigateTo);
+    }
+    if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <div 
-      className={`status-card-reusable ${onClick ? 'clickable' : ''} ${className}`}
-      onClick={onClick}
+      className={`status-card-reusable ${(onClick || navigateTo) ? 'clickable' : ''} ${className}`}
+      onClick={handleCardClick}
       style={{ ...style }}
     >
       <div className="card-accent" style={{ backgroundColor: accentColor }}></div>

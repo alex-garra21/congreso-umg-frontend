@@ -38,7 +38,8 @@ export default function CategoriesTab() {
       showToast(catData.id ? 'Categoría actualizada' : 'Categoría creada', 'success');
       setIsCategoryModalOpen(false);
     } catch (error: any) {
-      showToast(`Error: ${error.message}`, 'error');
+      console.error("Error al guardar categoría:", error);
+      showToast(error.message || 'Error desconocido al guardar', 'error');
     }
   };
 

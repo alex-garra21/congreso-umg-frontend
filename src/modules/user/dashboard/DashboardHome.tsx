@@ -29,9 +29,16 @@ export default function DashboardHome() {
     if (user?.rol !== 'admin' && user?.correo) {
       const saved = localStorage.getItem(`workshops_${user.correo}`);
       if (saved) {
-        setWorkshopsCount(JSON.parse(saved).length);
+        // En el localStorage guardamos la lista completa (agenda)
+        const allSaved = JSON.parse(saved);
+        // Pero para el contador, solo lo que no es GENERAL
+        // Nota: Si el objeto en localStorage no tiene category, asumimos que es un taller 
+        // hasta que el perfil se sincronice desde BD.
+        const onlyWorkshops = allSaved.filter((w: any) => w.category !== 'GENERAL');
+        setWorkshopsCount(onlyWorkshops.length);
       } else {
-        setWorkshopsCount(user?.talleres?.length || 0);
+        const onlyWorkshops = (user?.talleres || []).filter(w => w.category !== 'GENERAL');
+        setWorkshopsCount(onlyWorkshops.length);
       }
     }
 
@@ -63,11 +70,11 @@ export default function DashboardHome() {
         <ModuleTitle title="Inicio (Panel Administrativo)" />
 
         <div className="status-grid-container">
-          <StatusCard label="TOTAL PARTICIPANTES" value={loadingAdmin ? '...' : totalUsers} sub="Excluye administradores" accentColor="var(--accent-primary)" icon={<Icons.Users />} />
-          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsers} sub="Inscripciones completadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} />
-          <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos universitarios" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} />
-          <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Profesionales y público" accentColor="var(--status-pending)" icon={<Icons.Users />} />
-          <StatusCard label="ADMINISTRADORES" value={loadingAdmin ? '...' : adminsCount} sub="Personal del evento" accentColor="var(--accent-dark)" icon={<Icons.CheckCircle />} />
+          <StatusCard label="TOTAL PARTICIPANTES" value={loadingAdmin ? '...' : totalUsers} sub="Excluye administradores" accentColor="var(--accent-primary)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsers} sub="Inscripciones completadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos universitarios" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Profesionales y público" accentColor="var(--status-pending)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="ADMINISTRADORES" value={loadingAdmin ? '...' : adminsCount} sub="Personal del evento" accentColor="var(--accent-dark)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
         </div>
 
         <section className="dashboard-section" style={{ marginTop: '2rem' }}>
@@ -76,27 +83,27 @@ export default function DashboardHome() {
             <p>Métricas generales sobre el estado de las inscripciones y los participantes.</p>
           </div>
 
-          <div className="steps-vertical">
-            <EnrollmentStep 
-              status="completed" icon={<Icons.Layout />} title="Tipos de Participantes" 
-              description={`Actualmente hay ${studentUsers} alumnos UMG y ${externalUsers} participantes externos registrados.`} 
-              badgeLabel="Informativo" badgeVariant="neutral" 
+          <div className="steps-vertical" style={{ marginTop: '1rem' }}>
+            <EnrollmentStep
+              status="completed" icon={<Icons.Layout />} title="Tipos de Participantes"
+              description={`Actualmente hay ${studentUsers} alumnos UMG y ${externalUsers} participantes externos registrados.`}
+              badgeLabel="Informativo" badgeVariant="neutral"
             />
-            <EnrollmentStep 
-              status="in-progress" icon={<Icons.CreditCard />} title="Estado Financiero General" 
-              description={`${paidUsers} usuarios han completado el proceso de pago. Aún faltan ${totalUsers - paidUsers} cuentas por validar.`} 
-              badgeLabel="En Revisión" badgeVariant="warning" 
+            <EnrollmentStep
+              status="in-progress" icon={<Icons.CreditCard />} title="Estado Financiero General"
+              description={`${paidUsers} usuarios han completado el proceso de pago. Aún faltan ${totalUsers - paidUsers} cuentas por validar.`}
+              badgeLabel="En Revisión" badgeVariant="warning"
             />
             {deactivatedUsers > 0 && (
-              <EnrollmentStep 
-                status="pending" icon={<Icons.AlertTriangle />} title="Cuentas Inactivas" 
-                description={`Existen ${deactivatedUsers} usuario(s) con cuenta desactivada.`} 
-                badgeLabel="Atención" badgeVariant="danger" 
+              <EnrollmentStep
+                status="pending" icon={<Icons.AlertTriangle />} title="Cuentas Inactivas"
+                description={`Existen ${deactivatedUsers} usuario(s) con cuenta desactivada.`}
+                badgeLabel="Atención" badgeVariant="danger"
               />
             )}
           </div>
         </section>
-        
+
         <style>{`.status-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }`}</style>
       </div>
     );
@@ -112,27 +119,27 @@ export default function DashboardHome() {
       <ModuleTitle title="Inicio" />
 
       <div className="status-grid-container">
-        <StatusCard 
+        <StatusCard
           label="ESTADO DE PAGO" accentColor={isPaid ? 'var(--status-success)' : isSent ? 'var(--status-pending)' : 'var(--status-error)'}
           badge={isPaid ? <span className="step-badge-reusable success">Validado</span> : isSent ? <span className="step-badge-reusable warning">En revisión</span> : <span className="step-badge-reusable danger">Pendiente</span>}
           sub={isPaid ? 'Inscripción activa' : isSent ? 'Validando comprobante' : 'Pago requerido para participar'}
           footerLink="Ver detalles de pago →" onClick={() => navigate('/dashboard/pago')}
         />
 
-        <StatusCard 
+        <StatusCard
           label="TALLERES" value={workshopsCount} accentColor="var(--accent-primary)"
           sub={workshopsCount === 1 ? 'Taller seleccionado' : 'Talleres en tu agenda'}
           footerLink="Gestionar talleres →" onClick={() => navigate('/dashboard/talleres')}
         />
 
-        <StatusCard 
+        <StatusCard
           label="DIPLOMA" accentColor={diplomaReady ? 'var(--accent-primary)' : 'var(--text-muted)'}
           badge={diplomaReady ? <span className="step-badge-reusable success" style={{ background: 'rgba(121, 80, 242, 0.15)', color: '#7950f2' }}>Confirmado</span> : <span className="step-badge-reusable neutral">Pendiente</span>}
           sub={diplomaReady ? 'Datos listos para impresión' : 'Confirma tus datos aquí'}
           footerLink="Revisar datos →" onClick={() => navigate('/dashboard/diploma')}
         />
 
-        <StatusCard 
+        <StatusCard
           label="FECHA EVENTO" value="23 de Mayo" accentColor="var(--status-success)" sub="Hotel Alcazar doña Victoria"
           icon={<Icons.Calendar />}
           footerLink="Añadir a Calendario →" onClick={() => window.open('https://www.google.com/calendar/render?action=TEMPLATE&text=CONGRESO+2026+UMG+SISTEMAS+COBÁN&dates=20260523T140000Z/20260523T230000Z&details=El+evento+académico+más+importante+del+año.&location=Hotel+Alcazar+doña+Victoria,+Cobán', '_blank')}
@@ -146,7 +153,7 @@ export default function DashboardHome() {
         </div>
 
         <div className="steps-vertical">
-          <EnrollmentStep 
+          <EnrollmentStep
             status={hasDpi ? "completed" : "pending"} icon={hasDpi ? <Icons.Check /> : <Icons.Users />}
             title={hasDpi ? "Perfil completo" : "Datos de perfil pendientes"}
             description={hasDpi ? "Los datos del perfil han sido registrados y actualizados correctamente" : "Por favor, ingresa tu número de DPI para completar tu perfil"}
@@ -154,8 +161,8 @@ export default function DashboardHome() {
             onClick={() => navigate('/dashboard/perfil')}
           />
 
-          <EnrollmentStep 
-            status={isPaid ? "completed" : isSent ? "in-progress" : "pending"} 
+          <EnrollmentStep
+            status={isPaid ? "completed" : isSent ? "in-progress" : "pending"}
             icon={isPaid ? <Icons.Check /> : <Icons.CreditCard />}
             title="Validación de Pago"
             description={isPaid ? "Inscripción activada correctamente" : isSent ? "Comprobante recibido, en revisión" : "Pendiente de realizar pago"}
@@ -164,7 +171,7 @@ export default function DashboardHome() {
             onClick={() => navigate('/dashboard/pago')}
           />
 
-          <EnrollmentStep 
+          <EnrollmentStep
             status={workshopsReady ? "completed" : workshopsCount > 0 ? "in-progress" : "pending"}
             icon={workshopsReady ? <Icons.Check /> : <Icons.Layout />}
             title="Selección de Talleres"
@@ -174,7 +181,7 @@ export default function DashboardHome() {
             onClick={() => navigate('/dashboard/talleres')}
           />
 
-          <EnrollmentStep 
+          <EnrollmentStep
             status={diplomaReady ? "completed" : "pending"}
             icon={diplomaReady ? <Icons.Check /> : <Icons.Award />}
             title="Confirmación de Diploma"
@@ -187,7 +194,7 @@ export default function DashboardHome() {
       </section>
 
       <LocationLink variant="banner" />
-      
+
       <style>{`.status-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }`}</style>
     </div>
   );

@@ -11,7 +11,7 @@ export async function getSalasQuery(): Promise<Room[]> {
     .select('id, nombre, prioridad')
     .order('prioridad', { ascending: true });
 
-  if (error) return [];
+  if (error) throw new Error(`Error al obtener salas: ${error.message}`);
   return (data || []).map(d => ({ 
     id: d.id, 
     name: d.nombre, 
@@ -24,7 +24,7 @@ export async function getCategoriasQuery(): Promise<Category[]> {
     .from('categorias')
     .select('id, nombre, bg_color, text_color');
 
-  if (error) return [];
+  if (error) throw new Error(`Error al obtener categorías: ${error.message}`);
   return (data || []).map(d => ({
     id: d.id,
     name: d.nombre,
@@ -35,7 +35,7 @@ export async function getCategoriasQuery(): Promise<Category[]> {
 
 export async function getPonentesQuery(): Promise<Speaker[]> {
   const { data, error } = await supabase.from('ponentes').select('*');
-  if (error) return [];
+  if (error) throw new Error(`Error al obtener ponentes: ${error.message}`);
   return (data || []).map(d => ({
     id: d.id,
     name: d.nombre,
@@ -59,7 +59,7 @@ export async function getCharlasQuery(): Promise<AgendaItem[]> {
       sala_id, categoria_id, id_ponente
     `);
 
-  if (error) return [];
+  if (error) throw new Error(`Error al obtener charlas: ${error.message}`);
 
   // Nota: En una fase posterior podemos usar un JOIN real de SQL. 
   // Por ahora mapeamos los datos básicos.

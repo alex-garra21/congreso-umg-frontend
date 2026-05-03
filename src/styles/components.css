@@ -275,3 +275,19 @@ select.dashboard-input {
   border: 0.5px solid var(--border-soft) !important;
 }
 
+/* ── BACK BUTTON PREMIUM ── */
+.btn-back-home-premium {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 8px 15px rgba(24, 95, 165, 0.25);
+}
+
+.btn-back-home-premium:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(24, 95, 165, 0.4) !important;
+  filter: brightness(1.15);
+}
+
+.btn-back-home-premium:active {
+  transform: translateY(-1px) scale(0.98);
+}
+

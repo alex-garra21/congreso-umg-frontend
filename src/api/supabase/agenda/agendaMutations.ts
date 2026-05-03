@@ -10,7 +10,9 @@ export async function saveSalasMutation(rooms: Room[]): Promise<void> {
   if (fetchError) throw fetchError;
 
   const idsActuales = actuales?.map(a => a.id) || [];
-  const nuevosIds = rooms.map(r => r.id).filter(id => id !== undefined);
+  const maxId = idsActuales.length > 0 ? Math.max(...idsActuales) : 0;
+  
+  const nuevosIds = rooms.map(r => r.id).filter(id => id !== undefined && id > 0);
 
   // Borrar los que ya no existen en la lista
   const toDelete = idsActuales.filter(id => !nuevosIds.includes(id));
@@ -19,12 +21,18 @@ export async function saveSalasMutation(rooms: Room[]): Promise<void> {
     if (deleteError) throw deleteError;
   }
 
-  const toInsert = rooms.map(r => ({ 
-    id: r.id || undefined, 
-    nombre: r.name, 
-    prioridad: r.priority 
-  }));
-  const { error: upsertError } = await supabase.from('salas').upsert(toInsert);
+  // Asignar IDs a las nuevas salas que tienen id <= 0 o missing
+  let nextId = maxId + 1;
+  const mapped = rooms.map(r => {
+    const finalId = (r.id && r.id > 0) ? r.id : nextId++;
+    return {
+      id: finalId,
+      nombre: r.name,
+      prioridad: r.priority 
+    };
+  });
+
+  const { error: upsertError } = await supabase.from('salas').upsert(mapped);
   if (upsertError) throw upsertError;
 }
 
@@ -33,7 +41,10 @@ export async function saveCategoriasMutation(categories: Category[]): Promise<vo
   if (fetchError) throw fetchError;
 
   const idsActuales = actuales?.map(a => a.id) || [];
-  const nuevosIds = categories.map(c => c.id).filter(id => id !== undefined);
+  const maxId = idsActuales.length > 0 ? Math.max(...idsActuales) : 0;
+  
+  // Los nuevos IDs son aquellos que ya tienen un ID numérico válido > 0
+  const nuevosIds = categories.map(c => c.id).filter(id => id !== undefined && id > 0);
 
   const toDelete = idsActuales.filter(id => !nuevosIds.includes(id));
   if (toDelete.length > 0) {
@@ -41,14 +52,23 @@ export async function saveCategoriasMutation(categories: Category[]): Promise<vo
     if (deleteError) throw deleteError;
   }
 
-  const mapped = categories.map(c => ({
-    id: c.id || undefined,
-    nombre: c.name,
-    bg_color: c.bg,
-    text_color: c.text
-  }));
+  // Asignar IDs a las nuevas categorías que tienen id <= 0 o missing
+  let nextId = maxId + 1;
+  const mapped = categories.map(c => {
+    const finalId = (c.id && c.id > 0) ? c.id : nextId++;
+    return {
+      id: finalId,
+      nombre: c.name,
+      bg_color: c.bg,
+      text_color: c.text
+    };
+  });
+
   const { error: upsertError } = await supabase.from('categorias').upsert(mapped);
-  if (upsertError) throw upsertError;
+  if (upsertError) {
+    console.error("Payload enviado:", mapped);
+    throw upsertError;
+  }
 }
 
 export async function saveAgendaMutation(agenda: AgendaItem[]): Promise<void> {

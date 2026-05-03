@@ -17,8 +17,8 @@ export default function DashboardLayout() {
     }
   }, [session, isLoading, navigate]);
 
-  // Si está cargando o si hay sesión pero el perfil aún no ha llegado, mostramos spinner
-  if (isLoading || (session && !user)) {
+  // Si está cargando, mostramos spinner
+  if (isLoading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', gap: '15px' }}>
         <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(99, 179, 237, 0.2)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>

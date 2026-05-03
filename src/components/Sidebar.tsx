@@ -81,7 +81,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
         </div>
         {isExpanded && (
           <button className="expand-toggle" onClick={() => setIsExpanded(false)}>
-            ◀
+            <Icons.ChevronLeft size={16} />
           </button>
         )}
       </div>

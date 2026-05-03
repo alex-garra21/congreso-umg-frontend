@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { updateUserDataMutation } from '../../../api/supabase/users/userMutations';
@@ -11,10 +10,10 @@ import Modal from '../../../components/ui/Modal';
 import Alert from '../../../components/ui/Alert';
 import FormField from '../../../components/ui/FormField';
 import LoadingButton from '../../../components/ui/LoadingButton';
+import BackButton from '../../../components/ui/BackButton';
 
 export default function DiplomaModule() {
   const { user, refetchProfile } = useAuth();
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nombreDiploma: '',
     correoDiploma: ''
@@ -89,12 +88,6 @@ export default function DiplomaModule() {
       <ModuleTitle title="Datos para diploma" />
 
       <section className="dashboard-section diploma-container">
-        <div className="diploma-header">
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '2rem' }}>
-            Ingresa exactamente cómo deseas que aparezca tu nombre en el diploma y el correo donde quieres recibirlo.
-          </p>
-        </div>
-
         {!isPaid ? (
           <Alert variant="warning" title="PAGO PENDIENTE">
             Debes validar tu pago para poder confirmar los datos de tu diploma. Una vez validado, podrás ingresar tu nombre y correo para la emisión de tus certificados.
@@ -107,7 +100,7 @@ export default function DiplomaModule() {
           )
         )}
 
-        <Alert variant="info" title="¿Cuándo recibirás tu diploma?" icon={<Icons.Award size={20} />}>
+        <Alert variant="warning" title="¿Cuándo recibirás tu diploma?" icon={<Icons.Award size={20} />}>
           <p>El diploma se genera y envía automáticamente por cada taller en el que cumplas <strong>los tres requisitos</strong>:</p>
           <ul style={{ listStyleType: 'disc', paddingLeft: '1.2rem', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <li>Estar inscrito al Congreso 2026 con pago validado</li>
@@ -310,11 +303,7 @@ export default function DiplomaModule() {
       </Modal>
 
       {/* Botón regresar al inicio */}
-      <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
-        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--accent-primary)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
-          Ir al Inicio
-        </button>
-      </div>
+      <BackButton />
     </div>
   );
 }

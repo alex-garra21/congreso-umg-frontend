@@ -31,22 +31,23 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     <div className={`calendar-container ${isConfirmed ? 'confirmed' : ''}`}>
       <div className="calendar-grid" style={{ 
         gridTemplateColumns: `80px repeat(${rooms.length}, 1fr)`, 
-        gridTemplateRows: `60px repeat(${HOURS.length * 2}, 40px)` 
+        gridTemplateRows: `60px repeat(${HOURS.length * 12}, 6px)` 
       }}>
         {/* Encabezados */}
-        <div className="grid-header time-label" style={{ gridRow: 1, gridColumn: 1, background: 'var(--bg-app)', color: 'var(--text-secondary)' }}>HORA</div>
+        <div className="grid-header time-label" style={{ 
+          gridRow: 1, 
+          gridColumn: 1, 
+          borderTopLeftRadius: '16px' 
+        }}>HORA</div>
         {rooms.map((room, idx) => {
           const colorTheme = roomColors[idx % roomColors.length];
           return (
             <div key={room.name} className="grid-header room-label" style={{ 
               gridRow: 1, 
               gridColumn: idx + 2,
-              backgroundColor: colorTheme.text,
+              backgroundColor: colorTheme.main,
               color: '#ffffff',
-              fontWeight: '900',
-              fontSize: '13px',
-              letterSpacing: '1px',
-              textTransform: 'uppercase'
+              borderTopRightRadius: idx === rooms.length - 1 ? '16px' : '0'
             }}>
               {room.name}
             </div>
@@ -59,27 +60,28 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           return (
             <div key={`col-bg-${idx}`} className="column-grid-bg" style={{ 
               gridColumn: idx + 2, 
-              gridRow: `2 / span ${HOURS.length * 2}`,
-              backgroundColor: colorTheme.bg
+              gridRow: `2 / span ${HOURS.length * 12}`,
+              backgroundColor: colorTheme.bg,
+              borderLeft: '1px solid rgba(0,0,0,0.03)'
             }}></div>
           );
         })}
 
         {/* Etiquetas de Horas */}
         {HOURS.map(hour => (
-          <div key={hour} className="hour-row-label" style={{ gridRow: (hour - minHour) * 2 + 2 }}>
+          <div key={hour} className="hour-row-label" style={{ gridRow: `${(hour - minHour) * 12 + 2} / span 12` }}>
             {hour > 12 ? `${hour - 12}:00` : `${hour}:00`}
           </div>
         ))}
 
         {/* Líneas Horizontales */}
         {HOURS.map(hour => (
-          <div key={`line-${hour}`} className="hour-grid-line" style={{ gridRow: (hour - minHour) * 2 + 2 }}></div>
+          <div key={`line-${hour}`} className="hour-grid-line" style={{ gridRow: (hour - minHour) * 12 + 2 }} />
         ))}
 
         {/* Tarjetas de Talleres */}
-        {agenda.filter((w: AgendaItem) => w.speaker || w.room === 'GENERAL').map((workshop: AgendaItem) => {
-          const isGeneral = workshop.room === 'GENERAL';
+        {agenda.map((workshop: AgendaItem) => {
+          const isGeneral = workshop.tag === 'GENERAL';
           const isSelected = enrolledIds.includes(workshop.id) || isGeneral;
           const isBlocked = !isSelected && (isTimeCollision(workshop) || isConfirmed);
           

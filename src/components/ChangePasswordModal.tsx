@@ -4,6 +4,7 @@ import PasswordField from './PasswordField';
 import { Icons } from './Icons';
 import Modal from './ui/Modal';
 import Alert from './ui/Alert';
+import LoadingButton from './ui/LoadingButton';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -80,7 +81,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             <Icons.CheckCircle size={64} color="#7ed321" />
           </div>
           <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu contraseña ha sido actualizada con éxito.</p>
-          <button className="submit-btn" onClick={handleClose}>Cerrar</button>
+          <LoadingButton fullWidth onClick={handleClose}>Cerrar</LoadingButton>
         </div>
       ) : (
         <>
@@ -133,29 +134,28 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             />
 
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
+              <LoadingButton 
                 type="submit" 
-                className="submit-btn" 
-                style={{ flex: 2, opacity: isSubmitting ? 0.7 : 1 }}
-                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                loadingText="Actualizando..."
+                style={{ flex: 2 }}
               >
-                {isSubmitting ? 'Actualizando...' : 'Actualizar'}
-              </button>
-              <button 
+                Actualizar
+              </LoadingButton>
+              <LoadingButton 
                 type="button" 
-                className="submit-btn" 
+                variant="ghost"
                 onClick={handleClose}
                 disabled={isSubmitting}
                 style={{ 
-                  flex: 1, 
-                  backgroundColor: '#fff5f5', 
-                  color: '#e53e3e', 
-                  border: '1px solid #fed7d7',
-                  opacity: isSubmitting ? 0.7 : 1
+                  flex: 1,
+                  color: '#e53e3e',
+                  borderColor: '#fed7d7',
+                  background: '#fff5f5'
                 }}
               >
                 Cancelar
-              </button>
+              </LoadingButton>
             </div>
           </form>
         </>

@@ -5,6 +5,41 @@ import type { UserData } from '../../../utils/auth';
  * MUTATIONS - Escritura y acciones de usuarios y tokens
  */
 
+/**
+ * Asigna automáticamente las charlas de categoría "GENERAL" a un usuario.
+ * Estas actividades son informativas y no cuentan como talleres.
+ */
+async function assignGeneralActivities(userId: string): Promise<void> {
+  try {
+    // 1. Buscar el ID de la categoría GENERAL
+    const { data: catData } = await supabase
+      .from('categorias')
+      .select('id')
+      .ilike('nombre', 'GENERAL')
+      .maybeSingle();
+
+    if (!catData) return;
+
+    // 2. Buscar todas las charlas de esa categoría
+    const { data: charlas } = await supabase
+      .from('charlas')
+      .select('id')
+      .eq('categoria_id', catData.id);
+
+    if (!charlas || charlas.length === 0) return;
+
+    // 3. Inscribir al usuario (evitando duplicados)
+    const inscripciones = charlas.map(c => ({
+      id_usuario: userId,
+      id_charla: c.id
+    }));
+
+    await supabase.from('inscripciones_talleres').upsert(inscripciones, { onConflict: 'id_usuario,id_charla' });
+  } catch (error) {
+    console.error("Error auto-asignando actividades generales:", error);
+  }
+}
+
 export async function registerUserMutation(user: UserData): Promise<{ success: boolean; message: string; userId?: string }> {
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: user.correo,
@@ -145,6 +180,9 @@ export async function adminValidateUserMutation(userId: string, adminId?: string
 
   if (userError) return { success: false, message: 'Error al validar el perfil del usuario.' };
 
+  // 3. Asignar actividades generales automáticamente
+  await assignGeneralActivities(userId);
+
   return { success: true, message: `Pago validado con token: ${adminCode}` };
 }
 
@@ -225,6 +263,9 @@ export async function validateTokenMutation(code: string, userId: string): Promi
 
   // 4. Activar al usuario
   await supabase.from('usuarios').update({ pago_validado: true }).eq('id', userId);
+
+  // 5. Asignar actividades generales automáticamente
+  await assignGeneralActivities(userId);
 
   return { success: true };
 }

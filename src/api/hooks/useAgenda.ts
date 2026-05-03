@@ -12,30 +12,35 @@ import {
   savePonentesMutation
 } from '../supabase/agenda/agendaMutations';
 import type { AgendaItem, Category, Speaker, Room } from '../../data/agendaData';
+import { useAuth } from './useAuth';
+import { getStaleTimeByRole } from '../../utils/queryUtils';
 
 // --- QUERIES ---
 
 export function useSalas() {
+  const { user } = useAuth();
   return useQuery({
     queryKey: ['salas'],
     queryFn: getSalasQuery,
-    staleTime: 1000 * 60 * 5,
+    staleTime: getStaleTimeByRole(user?.rol),
   });
 }
 
 export function useCategorias() {
+  const { user } = useAuth();
   return useQuery({
     queryKey: ['categorias'],
     queryFn: getCategoriasQuery,
-    staleTime: 1000 * 60 * 5,
+    staleTime: getStaleTimeByRole(user?.rol),
   });
 }
 
 export function usePonentes() {
+  const { user } = useAuth();
   return useQuery({
     queryKey: ['ponentes'],
     queryFn: getPonentesQuery,
-    staleTime: 1000 * 60 * 5,
+    staleTime: getStaleTimeByRole(user?.rol),
   });
 }
 
@@ -44,6 +49,7 @@ export function usePonentes() {
  * Este hook es inteligente: Cruza los IDs con los nombres reales de salas y categorías
  */
 export function useCharlas() {
+  const { user } = useAuth();
   const { data: salas = [] } = useSalas();
   const { data: cats = [] } = useCategorias();
   const { data: ponentes = [] } = usePonentes();
@@ -69,7 +75,7 @@ export function useCharlas() {
         };
       });
     },
-    staleTime: 1000 * 60 * 2,
+    staleTime: getStaleTimeByRole(user?.rol),
   });
 }
 

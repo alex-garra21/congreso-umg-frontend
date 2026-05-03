@@ -91,7 +91,8 @@ export async function getUserProfileQuery(userId: string): Promise<UserData | nu
     .eq('id', userId)
     .single();
 
-  if (error || !userData) return null;
+  if (error) throw new Error(`Error al obtener perfil: ${error.message}`);
+  if (!userData) return null;
 
   const talleres = await getEnrolledWorkshopsQuery(userData.id);
   const asistencias = await getAttendancesQuery(userData.id);

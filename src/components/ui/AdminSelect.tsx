@@ -9,7 +9,8 @@ interface Option {
 interface AdminSelectProps {
   options: Option[];
   value: string | number;
-  onChange: (e: { target: { value: string } }) => void;
+  onChange: (e: { target: { name?: string, value: string } }) => void;
+  name?: string;
   label?: React.ReactNode;
   containerStyle?: React.CSSProperties;
   className?: string;
@@ -21,6 +22,7 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
   options, 
   value,
   onChange,
+  name,
   label, 
   containerStyle, 
   className = "",
@@ -42,7 +44,7 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
   }, []);
 
   const handleSelect = (optionValue: string) => {
-    onChange({ target: { value: optionValue } });
+    onChange({ target: { name, value: optionValue } });
     setIsOpen(false);
   };
 

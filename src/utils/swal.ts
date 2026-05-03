@@ -8,9 +8,20 @@ const isDarkMode = () => {
   return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
 };
 
+// Inyectar estilos globales para asegurar que Swal esté siempre por encima de todo (incluyendo backdrops de modales)
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .swal2-container {
+      z-index: 999999 !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 export const showToast = (title: string, icon: SweetAlertIcon = 'success') => {
   const dark = isDarkMode();
-  
+
   return Swal.fire({
     title,
     icon,
@@ -29,9 +40,9 @@ export const showToast = (title: string, icon: SweetAlertIcon = 'success') => {
 };
 
 export const showConfirm = async (
-  title: string, 
-  text: string, 
-  confirmText: string = 'Confirmar', 
+  title: string,
+  text: string,
+  confirmText: string = 'Confirmar',
   isDestructive: boolean = false
 ): Promise<boolean> => {
   const dark = isDarkMode();

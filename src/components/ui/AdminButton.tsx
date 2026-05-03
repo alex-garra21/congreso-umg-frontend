@@ -6,6 +6,7 @@ interface AdminButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
   icon?: React.ReactNode;
   href?: string;
   target?: string;
+  fullWidth?: boolean;
 }
 
 const AdminButton: React.FC<AdminButtonProps> = ({ 
@@ -17,6 +18,7 @@ const AdminButton: React.FC<AdminButtonProps> = ({
   style: customStyle,
   href,
   target,
+  fullWidth = false,
   ...props 
 }) => {
   const getVariantStyles = () => {
@@ -35,7 +37,8 @@ const AdminButton: React.FC<AdminButtonProps> = ({
   const internalStyle: React.CSSProperties = {
     ...getVariantStyles(),
     ...getSizeStyles(),
-    display: 'inline-flex',
+    display: fullWidth ? 'flex' : 'inline-flex',
+    width: fullWidth ? '100%' : 'auto',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',

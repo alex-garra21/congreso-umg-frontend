@@ -81,7 +81,7 @@ export function useAuth() {
     user,
     session,
     isAuthenticated: !!session,
-    isLoading: isSessionLoading || isProfileLoading || (!!userId && !user),
+    isLoading: isSessionLoading || (!!userId && isProfileLoading),
     isError,
     refetchProfile: refetch
   };

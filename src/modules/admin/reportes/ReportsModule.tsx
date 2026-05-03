@@ -30,9 +30,22 @@ export default function ReportsModule() {
     return w ? w.title : id;
   };
 
+  // Ayudante para obtener solo talleres reales (excluye GENERAL)
+  const getRealWorkshops = (talleres?: { id: string; category: string }[]) => 
+    (talleres || []).filter(t => t.category !== 'GENERAL');
+
   const filteredUsers = users.filter(u => u.rol !== 'admin' && !u.desactivado).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesWorkshop = selectedWorkshopFilter === 'all_records' ? true : selectedWorkshopFilter === '' ? (u.talleres && u.talleres.length > 0) : selectedWorkshopFilter === 'none' ? (!u.talleres || u.talleres.length === 0) : (u.talleres && u.talleres.includes(selectedWorkshopFilter));
+    
+    const realWorkshops = getRealWorkshops(u.talleres);
+    const matchesWorkshop = selectedWorkshopFilter === 'all_records' 
+      ? true 
+      : selectedWorkshopFilter === '' 
+        ? (realWorkshops.length > 0) 
+        : selectedWorkshopFilter === 'none' 
+          ? (realWorkshops.length === 0) 
+          : (realWorkshops.some(tw => tw.id === selectedWorkshopFilter));
+
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
     const matchesType = participantTypeFilter.length === PARTICIPANT_TYPES.length ? true : participantTypeFilter.includes(u.tipoParticipante || 'externo');
     return matchesSearch && matchesWorkshop && matchesPayment && matchesType;
@@ -53,16 +66,24 @@ export default function ReportsModule() {
     
     if (isDiplomaList) {
       worksheet.columns = [{ header: 'Participante', key: 'name', width: 35 }, { header: 'Correo', key: 'email', width: 35 }, { header: 'Taller(es)', key: 'workshops', width: 45 }];
-      filteredUsers.forEach(u => worksheet.addRow({ name: getDisplayName(u), email: u.correoDiploma || u.correo, workshops: u.talleres?.map(tid => getWorkshopTitle(tid)).join(', ') || '-' }));
+      filteredUsers.forEach(u => {
+        const realW = getRealWorkshops(u.talleres);
+        worksheet.addRow({ 
+          name: getDisplayName(u), 
+          email: u.correoDiploma || u.correo, 
+          workshops: realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-' 
+        });
+      });
     } else {
-      const maxWorkshops = Math.max(...filteredUsers.map(u => u.talleres?.length || 0), 1);
+      const maxWorkshops = Math.max(...filteredUsers.map(u => getRealWorkshops(u.talleres).length), 1);
       const cols = [{ header: 'Participante', key: 'name', width: 30 }, { header: 'Correo', key: 'email', width: 30 }];
       for (let i = 1; i <= maxWorkshops; i++) cols.push({ header: `Taller ${i}`, key: `w${i}`, width: 35 });
       cols.push({ header: 'Tipo', key: 'type', width: 25 }, { header: 'Pago', key: 'pay', width: 15 });
       worksheet.columns = cols;
       filteredUsers.forEach(u => {
         const row: any = { name: getDisplayName(u), email: u.correo, type: getParticipantLabel(u.tipoParticipante), pay: u.pagoValidado ? 'SÍ' : 'NO' };
-        u.talleres?.forEach((tid: string, i: number) => row[`w${i + 1}`] = getWorkshopTitle(tid));
+        const realW = getRealWorkshops(u.talleres);
+        realW.forEach((tw, i) => row[`w${i + 1}`] = getWorkshopTitle(tw.id));
         worksheet.addRow(row);
       });
     }
@@ -124,8 +145,8 @@ export default function ReportsModule() {
               </td>
               <td style={{ maxWidth: '300px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                  {u.talleres && u.talleres.length > 0 ? u.talleres.map(tid => (
-                    <AdminBadge key={tid} variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(tid)}</AdminBadge>
+                  {getRealWorkshops(u.talleres).length > 0 ? getRealWorkshops(u.talleres).map(tw => (
+                    <AdminBadge key={tw.id} variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(tw.id)}</AdminBadge>
                   )) : <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Ninguno</span>}
                 </div>
               </td>

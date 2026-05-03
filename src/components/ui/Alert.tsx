@@ -29,10 +29,10 @@ const Alert: React.FC<AlertProps> = ({
       defaultIcon: <Icons.CheckCircle size={20} />
     },
     warning: {
-      bg: '#fffaf0',
-      border: '#feebc8',
-      text: '#744210',
-      titleColor: '#652b19',
+      bg: '#fff9db',
+      border: '#fab005',
+      text: '#862e00',
+      titleColor: '#5c2b0a',
       defaultIcon: <Icons.AlertTriangle size={20} />
     },
     error: {
@@ -64,6 +64,9 @@ const Alert: React.FC<AlertProps> = ({
         gap: '12px',
         alignItems: 'flex-start',
         marginBottom: '1.5rem',
+        backgroundColor: config.bg,
+        border: `1px solid ${config.border}`,
+        color: config.text,
         ...style
       }}
     >
@@ -78,7 +81,8 @@ const Alert: React.FC<AlertProps> = ({
             fontSize: '15px', 
             fontWeight: 700, 
             marginBottom: '4px', 
-            margin: 0
+            margin: 0,
+            color: config.titleColor
           }}>
             {title}
           </h4>

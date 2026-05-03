@@ -12,27 +12,31 @@ import {
 } from '../supabase/users/userMutations';
 import type { UserData } from '../../utils/auth';
 
+import { getStaleTimeByRole } from '../../utils/queryUtils';
+
 // --- QUERIES ---
 
 export function useAllUsers(enabled: boolean = true) {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const userId = session?.user?.id;
 
   return useQuery({
     queryKey: ['users', userId],
     queryFn: getAllUsersQuery,
-    enabled: enabled && !!userId
+    enabled: enabled && !!userId,
+    staleTime: getStaleTimeByRole(user?.rol),
   });
 }
 
 export function useTokens() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const userId = session?.user?.id;
 
   return useQuery({
     queryKey: ['tokens', userId],
     queryFn: getTokensQuery,
-    enabled: !!userId
+    enabled: !!userId,
+    staleTime: getStaleTimeByRole(user?.rol),
   });
 }
 
