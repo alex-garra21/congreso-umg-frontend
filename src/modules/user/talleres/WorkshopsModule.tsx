@@ -621,10 +621,8 @@ export default function WorkshopsModule() {
           z-index: 50; 
         }
         .calendar-workshop .w-title {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+          display: block;
+          overflow: visible;
         }
         .calendar-workshop.selected { 
           background: linear-gradient(135deg, #185fa5 0%, #0c3b69 100%) !important; 
@@ -648,11 +646,9 @@ export default function WorkshopsModule() {
           font-family: 'Source Sans 3', sans-serif; 
           line-height: 1.25; 
           margin: 8px 0; 
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          display: block;
+          overflow: visible;
+          text-overflow: clip;
           flex: 1;
         }
         .w-time { 
@@ -677,7 +673,7 @@ export default function WorkshopsModule() {
           align-items: center; 
           gap: 6px; 
           margin-top: auto;
-          white-space: nowrap;
+          white-space: normal;
           overflow: hidden;
           text-overflow: ellipsis;
         }
@@ -827,7 +823,6 @@ export default function WorkshopsModule() {
 
           .w-title {
             font-size: 11px;
-            -webkit-line-clamp: 2;
           }
 
           .w-time {

@@ -29,21 +29,21 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 }) => {
   return (
     <div className={`calendar-container ${isConfirmed ? 'confirmed' : ''}`}>
-      <div className="calendar-grid" style={{ 
-        gridTemplateColumns: `80px repeat(${rooms.length}, 1fr)`, 
-        gridTemplateRows: `60px repeat(${HOURS.length * 12}, 6px)` 
+      <div className="calendar-grid" style={{
+        gridTemplateColumns: `80px repeat(${rooms.length}, 1fr)`,
+        gridTemplateRows: `60px repeat(${HOURS.length * 12}, minmax(15px, auto))`
       }}>
         {/* Encabezados */}
-        <div className="grid-header time-label" style={{ 
-          gridRow: 1, 
-          gridColumn: 1, 
-          borderTopLeftRadius: '16px' 
+        <div className="grid-header time-label" style={{
+          gridRow: 1,
+          gridColumn: 1,
+          borderTopLeftRadius: '16px'
         }}>HORA</div>
         {rooms.map((room, idx) => {
           const colorTheme = roomColors[idx % roomColors.length];
           return (
-            <div key={room.name} className="grid-header room-label" style={{ 
-              gridRow: 1, 
+            <div key={room.name} className="grid-header room-label" style={{
+              gridRow: 1,
               gridColumn: idx + 2,
               backgroundColor: colorTheme.main,
               color: '#ffffff',
@@ -58,8 +58,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         {rooms.map((_room, idx) => {
           const colorTheme = roomColors[idx % roomColors.length];
           return (
-            <div key={`col-bg-${idx}`} className="column-grid-bg" style={{ 
-              gridColumn: idx + 2, 
+            <div key={`col-bg-${idx}`} className="column-grid-bg" style={{
+              gridColumn: idx + 2,
               gridRow: `2 / span ${HOURS.length * 12}`,
               backgroundColor: colorTheme.bg,
               borderLeft: '1px solid rgba(0,0,0,0.03)'
@@ -84,7 +84,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           const isGeneral = workshop.tag === 'GENERAL';
           const isSelected = enrolledIds.includes(workshop.id) || isGeneral;
           const isBlocked = !isSelected && (isTimeCollision(workshop) || isConfirmed);
-          
+
           return (
             <WorkshopCard
               key={workshop.id}
