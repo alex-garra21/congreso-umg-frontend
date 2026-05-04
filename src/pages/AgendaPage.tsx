@@ -6,6 +6,7 @@ import AgendaModal from '../components/AgendaModal';
 import CalendarLink from '../components/CalendarLink';
 import LocationLink from '../components/LocationLink';
 import { Icons } from '../components/Icons';
+import PublicContainer from '../components/layout/PublicContainer';
 
 export default function AgendaPage() {
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<'Mañana' | 'Tarde'>('Mañana');
@@ -24,145 +25,150 @@ export default function AgendaPage() {
     return hours * 60 + minutes;
   };
 
-  const charlasMostradas = agenda
-    .filter(c => c.period === periodoSeleccionado)
+  const charlasFiltradas = agenda
+    .filter(item => item.period === periodoSeleccionado)
     .sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time));
 
   return (
-    <div style={{ flex: 1, position: 'relative', minHeight: '100%' }}>
-      {/* Fondo estático */}
-      <div className="hero-grid" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}></div>
-      <div className="hero-accent" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}></div>
-
-      <div style={{ padding: '4rem 2rem', color: 'var(--text-primary)', maxWidth: '1000px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
-
-        <div className="speakers-header" style={{ flexDirection: 'column', textAlign: 'center', justifyContent: 'center', marginBottom: '3.5rem' }}>
-          <span className="speakers-header-badge">Programa</span>
-          <h2>Agenda del evento</h2>
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '10px', alignItems: 'center' }}>
-            <CalendarLink>
-              <div 
-                style={{ 
-                  color: 'var(--text-secondary)', 
-                  cursor: 'pointer', 
-                  transition: 'opacity 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }} 
-                onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} 
-                onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
-              >
-                <Icons.Calendar size={16} color="var(--accent-primary)" />
-                <p style={{ margin: 0 }}>Sábado 23 de Mayo —</p>
-              </div>
-            </CalendarLink>
-            <LocationLink>
-              <p style={{ color: 'var(--text-secondary)', cursor: 'pointer', transition: 'opacity 0.2s', margin: 0 }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
-                Hotel Alcazar doña Victoria, Cobán
-              </p>
-            </LocationLink>
-          </div>
-        </div>
-
-        {/* TABS para Periodos */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '2rem', justifyContent: 'center' }}>
-          {(['Mañana', 'Tarde'] as const).map(periodo => (
-            <button
-              key={periodo}
-              className="btn-solid"
+    <PublicContainer
+      title="Agenda del evento"
+      description={
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '10px', alignItems: 'center' }}>
+          <CalendarLink>
+            <div
               style={{
-                background: periodoSeleccionado === periodo ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                color: periodoSeleccionado === periodo ? 'white' : 'var(--text-primary)',
-                border: periodoSeleccionado !== periodo ? '1px solid var(--border-soft)' : 'none',
-                minWidth: '150px'
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'opacity 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
-              onClick={() => setPeriodoSeleccionado(periodo)}
+              onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
+              onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
             >
-              JORNADA {periodo.toUpperCase()}
-            </button>
-          ))}
-        </div>
-
-        {/* LISTA DE LA AGENDA */}
-        <div className="agenda-list">
-          {isLoading ? (
-            <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-              Cargando agenda...
+              <Icons.Calendar size={16} color="var(--accent-primary)" />
+              <p style={{ margin: 0 }}>Sábado 23 de Mayo —</p>
             </div>
-          ) : charlasMostradas.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '4rem 2rem',
-              color: 'var(--text-secondary)'
-            }}>
-              <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-                <div style={{ 
-                  background: 'var(--accent-light)', 
-                  padding: '20px', 
-                  borderRadius: '24px',
-                  color: 'var(--accent-primary)'
-                }}>
-                  <Icons.ClipboardList size={48} strokeWidth={1.5} />
-                </div>
-              </div>
-              <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)', fontFamily: 'Source Sans 3, sans-serif' }}>Programa próximamente</h3>
-              <p style={{ fontSize: '0.95rem' }}>
-                La jornada de la {periodoSeleccionado.toLowerCase()} aún no ha sido publicada.<br />
-                Vuelve pronto para ver las charlas y talleres confirmados.
-              </p>
+          </CalendarLink>
+          <LocationLink>
+            <div
+              style={{
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'opacity 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
+              onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              <Icons.MapPin size={16} color="var(--accent-primary)" />
+              <p style={{ margin: 0 }}>Sede Central UMG</p>
             </div>
-          ) : (
-            charlasMostradas.map(charla => (
-              <div
-                key={charla.id}
-                className="agenda-list-item"
-                onClick={() => setCharlaSeleccionada(charla)}
-              >
-                <div className="agenda-time">
-                  {charla.time}
-                </div>
-
-                <div className="agenda-content">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                    <div style={{ 
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '11px', 
-                      fontWeight: 800, 
-                      color: '#16a34a', 
-                      background: '#f0fdf4',
-                      padding: '4px 10px',
-                      borderRadius: '8px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>
-                      <Icons.MapPin size={12} strokeWidth={2.5} color="var(--accent-primary)" />
-                      {charla.room}
-                    </div>
-                  </div>
-                  <h3>{charla.title}</h3>
-                  <p style={{ minHeight: '1.2em' }}>
-                    {charla.speaker ? charla.speaker.name : ''}
-                  </p>
-                </div>
-
-                <div>
-                  <WorkshopBadge tag={charla.tag} />
-                </div>
-              </div>
-            ))
-          )}
+          </LocationLink>
         </div>
+      }
+    >
 
-        <AgendaModal
-          isOpen={charlaSeleccionada !== null}
-          item={charlaSeleccionada}
-          onClose={() => setCharlaSeleccionada(null)}
-        />
-
+      {/* TABS para Periodos */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '2rem', justifyContent: 'center' }}>
+        {(['Mañana', 'Tarde'] as const).map(periodo => (
+          <button
+            key={periodo}
+            className="btn-solid"
+            style={{
+              background: periodoSeleccionado === periodo ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+              color: periodoSeleccionado === periodo ? 'white' : 'var(--text-primary)',
+              border: periodoSeleccionado !== periodo ? '1px solid var(--border-soft)' : 'none',
+              minWidth: '150px'
+            }}
+            onClick={() => setPeriodoSeleccionado(periodo)}
+          >
+            JORNADA {periodo.toUpperCase()}
+          </button>
+        ))}
       </div>
-    </div>
+
+      {/* LISTA DE LA AGENDA */}
+      <div className="agenda-list">
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            Cargando agenda...
+          </div>
+        ) : charlasFiltradas.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '4rem 2rem',
+            color: 'var(--text-secondary)'
+          }}>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+              <div style={{
+                background: 'var(--accent-light)',
+                padding: '20px',
+                borderRadius: '24px',
+                color: 'var(--accent-primary)'
+              }}>
+                <Icons.ClipboardList size={48} strokeWidth={1.5} />
+              </div>
+            </div>
+            <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)', fontFamily: 'Source Sans 3, sans-serif' }}>Programa próximamente</h3>
+            <p style={{ fontSize: '0.95rem' }}>
+              La jornada de la {periodoSeleccionado.toLowerCase()} aún no ha sido publicada.<br />
+              Vuelve pronto para ver las charlas y talleres confirmados.
+            </p>
+          </div>
+        ) : (
+          charlasFiltradas.map(charla => (
+            <div
+              key={charla.id}
+              className="agenda-list-item"
+              onClick={() => setCharlaSeleccionada(charla)}
+            >
+              <div className="agenda-time">
+                {charla.time}
+              </div>
+
+              <div className="agenda-content">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    color: '#16a34a',
+                    background: '#f0fdf4',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}>
+                    <Icons.MapPin size={12} strokeWidth={2.5} color="var(--accent-primary)" />
+                    {charla.room}
+                  </div>
+                </div>
+                <h3>{charla.title}</h3>
+                <p style={{ minHeight: '1.2em' }}>
+                  {charla.speaker ? charla.speaker.name : ''}
+                </p>
+              </div>
+
+              <div>
+                <WorkshopBadge tag={charla.tag} />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <AgendaModal
+        isOpen={charlaSeleccionada !== null}
+        item={charlaSeleccionada}
+        onClose={() => setCharlaSeleccionada(null)}
+      />
+
+    </PublicContainer>
   );
 }

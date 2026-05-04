@@ -101,6 +101,18 @@ export const Icons = {
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </BaseIcon>
   ),
+  QrCode: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+      <line x1="7" y1="7" x2="7" y2="7" />
+      <line x1="17" y1="7" x2="17" y2="7" />
+      <line x1="17" y1="17" x2="17" y2="17" />
+      <line x1="7" y1="17" x2="7" y2="17" />
+    </BaseIcon>
+  ),
   Plus: (props: IconProps) => (
     <BaseIcon {...props}>
       <line x1="12" y1="5" x2="12" y2="19" />

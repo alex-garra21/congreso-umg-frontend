@@ -1,92 +1,42 @@
 import { Icons } from '../components/Icons';
+import PublicContainer from '../components/layout/PublicContainer';
 
 export default function AsistenciaInfo() {
+  const features = [
+    {
+      Icon: Icons.QrCode,
+      title: "Acceso Instantáneo",
+      desc: "Olvídate de las filas. Presenta tu código QR personal desde tu móvil y obtén acceso inmediato a todas las conferencias y talleres. El sistema registrará tu entrada en tiempo real."
+    },
+    {
+      Icon: Icons.Award,
+      title: "Diplomas Digitales",
+      desc: "Tu asistencia es validada automáticamente por el sistema QR. Al completar el congreso, tu diploma estará listo para descargar desde tu perfil, garantizando la validez de tu participación."
+    },
+    {
+      Icon: Icons.Shield,
+      title: "Seguridad y Control",
+      desc: "Cada entrada es única y está vinculada a tu perfil. Esto nos permite mantener un control de aforo preciso y garantizar que la experiencia sea cómoda y segura para todos los asistentes."
+    }
+  ];
+
   return (
-    <div style={{ flex: 1, position: 'relative', minHeight: '100%' }}>
-      {/* Fondo estático */}
-      <div className="hero-grid" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}></div>
-      <div className="hero-accent" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}></div>
-
-      <div style={{ padding: '6rem 2rem', color: 'var(--text-primary)', maxWidth: '900px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
-
-        <div className="speakers-header" style={{ flexDirection: 'column', textAlign: 'center', justifyContent: 'center', marginBottom: '4rem' }}>
-          <span className="speakers-header-badge">Tecnología</span>
-          <h2>Control de Asistencia QR</h2>
-          <p style={{ marginTop: '15px', color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-            Innovación y agilidad en cada entrada.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gap: '2rem' }}>
-          <div className="speaker-card" style={{ padding: '2.5rem', display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{
-              background: 'var(--accent-light)',
-              width: '80px',
-              height: '80px',
-              borderRadius: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--accent-primary)',
-              boxShadow: '0 8px 16px rgba(24, 95, 165, 0.1)'
-            }}>
-              <Icons.Smartphone size={40} strokeWidth={1.5} />
+    <PublicContainer
+      badge="Tecnología"
+      title="Control de Asistencia QR"
+      description="Innovación y agilidad en cada entrada."
+    >
+      <div className="robotics-rules-grid" style={{ marginTop: '2rem' }}>
+        {features.map((f, i) => (
+          <div key={i} className="robotics-rule-card">
+            <div className="robotics-rule-icon">
+              <f.Icon size={32} />
             </div>
-            <div style={{ flex: 1, minWidth: '300px' }}>
-              <h3 style={{ marginBottom: '10px', fontSize: '22px', fontFamily: 'Source Sans 3, sans-serif' }}>Tu entrada en el bolsillo</h3>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                Olvídate de las listas impresas. Al completar tu inscripción y pago, recibirás un código QR único vinculado a tu perfil. Podrás acceder a él en cualquier momento desde tu panel de usuario.
-              </p>
-            </div>
+            <h4>{f.title}</h4>
+            <p>{f.desc}</p>
           </div>
-
-          <div className="speaker-card" style={{ padding: '2.5rem', display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{
-              background: 'rgba(129, 199, 132, 0.15)',
-              width: '80px',
-              height: '80px',
-              borderRadius: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#2e7d32',
-              boxShadow: '0 8px 16px rgba(46, 125, 50, 0.1)'
-            }}>
-              <Icons.Zap size={40} strokeWidth={1.5} />
-            </div>
-            <div style={{ flex: 1, minWidth: '300px' }}>
-              <h3 style={{ marginBottom: '10px', fontSize: '22px', fontFamily: 'Source Sans 3, sans-serif' }}>Validación instantánea</h3>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                En la entrada de cada charla o taller, nuestro equipo escaneará tu código. El sistema verificará tu asistencia en tiempo real, asegurando tu lugar y registrando tu participación para el diploma final.
-              </p>
-            </div>
-          </div>
-
-          <div className="speaker-card" style={{ padding: '2.5rem', display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{
-              background: 'rgba(255, 183, 77, 0.15)',
-              width: '80px',
-              height: '80px',
-              borderRadius: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ef6c00',
-              boxShadow: '0 8px 16px rgba(239, 108, 0, 0.1)'
-            }}>
-              <Icons.Shield size={40} strokeWidth={1.5} />
-            </div>
-            <div style={{ flex: 1, minWidth: '300px' }}>
-              <h3 style={{ marginBottom: '10px', fontSize: '22px', fontFamily: 'Source Sans 3, sans-serif' }}>Seguridad y Orden</h3>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                El código QR es personal e intransferible. Esto nos permite mantener un control exacto del aforo y garantizar que todos los participantes tengan una experiencia cómoda y segura.
-              </p>
-            </div>
-          </div>
-        </div>
-
-
+        ))}
       </div>
-    </div>
+    </PublicContainer>
   );
 }

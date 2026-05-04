@@ -3,122 +3,114 @@ import { usePonentes } from '../api/hooks/useAgenda';
 import type { Speaker } from '../data/agendaData';
 import SpeakerModal from '../components/SpeakerModal';
 import { Icons } from '../components/Icons';
+import PublicContainer from '../components/layout/PublicContainer';
 
 export default function PonentesPage() {
   const { data: speakers = [], isLoading } = usePonentes();
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
 
   return (
-    <div style={{ flex: 1, position: 'relative', minHeight: '100%' }}>
-      {/* Fondo estático copiado del Hero */}
-      <div className="hero-grid" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}></div>
-      <div className="hero-accent" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}></div>
-
-      <div style={{ padding: '4rem 2rem', color: 'var(--text-primary)', maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
-
-        <div className="speakers-header" style={{ flexDirection: 'column', textAlign: 'center', justifyContent: 'center', marginBottom: '3.5rem' }}>
-          <h1>Ponentes invitados</h1>
-          <h2 style={{ color: 'var(--text-secondary)', marginTop: '10px' }}>Conoce a los expertos que compartirán su conocimiento y experiencia en el congreso.</h2>
-        </div>
-
-        <div className="speakers-grid">
-          {isLoading ? (
-            <div style={{
-              gridColumn: '1 / -1',
-              textAlign: 'center',
-              padding: '4rem 2rem',
-              color: 'var(--text-secondary)'
-            }}>
-              Cargando ponentes...
-            </div>
-          ) : speakers.length === 0 ? (
-            <div style={{
-              gridColumn: '1 / -1',
-              textAlign: 'center',
-              padding: '4rem 2rem',
-              color: 'var(--text-secondary)'
-            }}>
-              <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-                <div style={{
-                  background: 'var(--accent-light)',
-                  padding: '20px',
-                  borderRadius: '24px',
-                  color: 'var(--accent-primary)'
-                }}>
-                  <Icons.Mic size={48} strokeWidth={1.5} />
-                </div>
+    <PublicContainer
+      title="Ponentes invitados"
+      description="Conoce a los expertos que compartirán su conocimiento y experiencia en el congreso."
+    >
+      <div className="speakers-grid">
+        {isLoading ? (
+          <div style={{
+            gridColumn: '1 / -1',
+            textAlign: 'center',
+            padding: '4rem 2rem',
+            color: 'var(--text-secondary)'
+          }}>
+            Cargando ponentes...
+          </div>
+        ) : speakers.length === 0 ? (
+          <div style={{
+            gridColumn: '1 / -1',
+            textAlign: 'center',
+            padding: '4rem 2rem',
+            color: 'var(--text-secondary)'
+          }}>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+              <div style={{
+                background: 'var(--accent-light)',
+                padding: '20px',
+                borderRadius: '24px',
+                color: 'var(--accent-primary)'
+              }}>
+                <Icons.Mic size={48} strokeWidth={1.5} />
               </div>
-              <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Ponentes próximamente</h3>
-              <p style={{ fontSize: '0.95rem' }}>
-                Los ponentes confirmados serán publicados en cuanto estén disponibles.<br />
-                Vuelve pronto para conocer a los expertos del evento.
-              </p>
             </div>
-          ) : (
-            speakers.map(speaker => (
-              <div key={speaker.id} className="speaker-card" onClick={() => setSelectedSpeaker(speaker)}>
-                <div
-                  className="speaker-avatar"
-                  style={{ background: speaker.bgColor, color: speaker.textColor }}
-                >
-                  {speaker.avatar ? (
-                    <img src={speaker.avatar} alt={speaker.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                  ) : (
-                    speaker.initials
-                  )}
-                </div>
-                <h3 className="speaker-name">{speaker.name}</h3>
-                <p className="speaker-role">{speaker.role}</p>
-
-                {speaker.socialLinks && Object.entries(speaker.socialLinks).some(([_, url]) => url && url.trim() !== '') && (
-                  <div className="speaker-card-socials" onClick={(e) => e.stopPropagation()}>
-                    {Object.entries(speaker.socialLinks).map(([type, url]) => {
-                      if (!url || typeof url !== 'string' || url.trim() === '') return null;
-
-                      const getIcon = (type: string) => {
-                        const t = type.toLowerCase();
-                        if (t === 'x' || t === 'twitter') return Icons.TwitterX;
-                        if (t === 'linkedin') return Icons.LinkedIn;
-                        if (t === 'facebook') return Icons.Facebook;
-                        if (t === 'instagram') return Icons.Instagram;
-                        if (t === 'tiktok') return Icons.TikTok;
-                        if (t === 'youtube') return Icons.Youtube;
-                        if (t === 'whatsapp') return Icons.WhatsApp;
-                        if (t === 'threads') return Icons.Threads;
-                        if (t === 'website' || t === 'web' || t === 'globe') return Icons.Globe;
-
-                        return (Icons as any)[type.charAt(0).toUpperCase() + type.slice(1)] || Icons.ExternalLink;
-                      };
-
-                      const IconComponent = getIcon(type);
-
-                      return (
-                        <a
-                          key={type}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="social-icon-link"
-                          title={type.charAt(0).toUpperCase() + type.slice(1)}
-                        >
-                          <IconComponent size={14} color="var(--text-secondary)" />
-                        </a>
-                      );
-                    })}
-                  </div>
+            <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Ponentes próximamente</h3>
+            <p style={{ fontSize: '0.95rem' }}>
+              Los ponentes confirmados serán publicados en cuanto estén disponibles.<br />
+              Vuelve pronto para conocer a los expertos del evento.
+            </p>
+          </div>
+        ) : (
+          speakers.map(speaker => (
+            <div key={speaker.id} className="speaker-card" onClick={() => setSelectedSpeaker(speaker)}>
+              <div
+                className="speaker-avatar"
+                style={{ background: speaker.bgColor, color: speaker.textColor }}
+              >
+                {speaker.avatar ? (
+                  <img src={speaker.avatar} alt={speaker.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                ) : (
+                  speaker.initials
                 )}
               </div>
-            ))
-          )}
-        </div>
+              <h3 className="speaker-name">{speaker.name}</h3>
+              <p className="speaker-role">{speaker.role}</p>
 
-        <SpeakerModal
-          isOpen={selectedSpeaker !== null}
-          speaker={selectedSpeaker}
-          onClose={() => setSelectedSpeaker(null)}
-        />
+              {speaker.socialLinks && Object.entries(speaker.socialLinks).some(([_, url]) => url && url.trim() !== '') && (
+                <div className="speaker-card-socials" onClick={(e) => e.stopPropagation()}>
+                  {Object.entries(speaker.socialLinks).map(([type, url]) => {
+                    if (!url || typeof url !== 'string' || url.trim() === '') return null;
 
+                    const getIcon = (type: string) => {
+                      const t = type.toLowerCase();
+                      if (t === 'x' || t === 'twitter') return Icons.TwitterX;
+                      if (t === 'linkedin') return Icons.LinkedIn;
+                      if (t === 'facebook') return Icons.Facebook;
+                      if (t === 'instagram') return Icons.Instagram;
+                      if (t === 'tiktok') return Icons.TikTok;
+                      if (t === 'youtube') return Icons.Youtube;
+                      if (t === 'whatsapp') return Icons.WhatsApp;
+                      if (t === 'threads') return Icons.Threads;
+                      if (t === 'website' || t === 'web' || t === 'globe') return Icons.Globe;
+
+                      return (Icons as any)[type.charAt(0).toUpperCase() + type.slice(1)] || Icons.ExternalLink;
+                    };
+
+                    const IconComponent = getIcon(type);
+
+                    return (
+                      <a
+                        key={type}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="social-icon-link"
+                        title={type.charAt(0).toUpperCase() + type.slice(1)}
+                      >
+                        <IconComponent size={14} color="var(--text-secondary)" />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
+
+      <SpeakerModal
+        isOpen={selectedSpeaker !== null}
+        speaker={selectedSpeaker}
+        onClose={() => setSelectedSpeaker(null)}
+      />
+
       <style>{`
         .speakers-grid {
           display: grid;
@@ -249,6 +241,6 @@ export default function PonentesPage() {
           }
         }
       `}</style>
-    </div>
+    </PublicContainer>
   );
 }
