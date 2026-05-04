@@ -53,8 +53,8 @@ export default function UsersModule() {
     }
   };
 
-  const handleRoleChange = async (user: UserData, newRole: 'admin' | 'usuario' | 'participante') => {
-    const roleLabels = { admin: 'Administrador', usuario: 'Usuario', participante: 'Participante' };
+  const handleRoleChange = async (user: UserData, newRole: 'admin' | 'colaborador' | 'participante') => {
+    const roleLabels = { admin: 'Administrador', colaborador: 'Colaborador', participante: 'Participante' };
     const confirmed = await showConfirm(
       `Cambiar a ${roleLabels[newRole]}`, 
       `¿Confirmar cambio de rol para ${user.nombres}?`, 
@@ -107,7 +107,7 @@ export default function UsersModule() {
             <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo electrónico..." />
           </div>
           <div style={{ width: '160px' }}>
-            <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos' }, { value: 'admin', label: 'Administradores' }, { value: 'usuario', label: 'Usuarios' }, { value: 'participante', label: 'Participantes' }]} />
+            <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos' }, { value: 'admin', label: 'Administradores' }, { value: 'colaborador', label: 'Colaboradores' }, { value: 'participante', label: 'Participantes' }]} />
           </div>
           <div style={{ width: '180px' }}>
             <MultiSelectFilter label="TIPO DE PERFIL" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={typeFilter} onChange={(ids) => { setTypeFilter(ids); setPage(1); }} />
@@ -124,26 +124,26 @@ export default function UsersModule() {
               <td><AdminBadge variant="neutral" style={{ fontSize: '11px' }}>{getParticipantLabel(u.tipoParticipante)}</AdminBadge></td>
               <td><div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '13px' }}><Icons.Mail size={14} /> {u.correo}</div></td>
               <td>
-                <AdminBadge variant={u.rol === 'admin' ? "purple" : u.rol === 'usuario' ? "success" : "info"} dot={u.rol !== 'participante'}>
-                  {u.rol === 'admin' ? 'Administrador' : u.rol === 'usuario' ? 'Usuario' : 'Participante'}
+                <AdminBadge variant={u.rol === 'admin' ? "purple" : u.rol === 'colaborador' ? "success" : "info"} dot={u.rol !== 'participante'}>
+                  {u.rol === 'admin' ? 'Administrador' : u.rol === 'colaborador' ? 'Colaborador' : 'Participante'}
                 </AdminBadge>
               </td>
               <td>{u.desactivado ? <AdminBadge variant="danger">OFF</AdminBadge> : u.pagoValidado ? <AdminBadge variant="success" dot>SÍ</AdminBadge> : <AdminBadge variant="danger" dot>NO</AdminBadge>}</td>
               <td style={{ textAlign: 'right' }}>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                   {/* Validar Pago */}
-                  {!u.desactivado && (u.rol === 'participante' || u.rol === 'usuario') && !u.pagoValidado && (
+                  {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && !u.pagoValidado && (
                     <button onClick={() => handleValidateUser(u)} className="action-btn" title="Validar Pago" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.CheckCircle size={18} /></button>
                   )}
                   {/* Anular Pago */}
-                  {!u.desactivado && (u.rol === 'participante' || u.rol === 'usuario') && u.pagoValidado && (
+                  {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && u.pagoValidado && (
                     <button onClick={() => handleInvalidatePayment(u)} className="action-btn" title="Anular Pago" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.AlertTriangle size={18} /></button>
                   )}
                   
                   {/* Ciclo de Roles: Si es participante -> a Usuario, si es usuario -> a Admin, si es admin -> a Participante */}
                   <button 
                     onClick={() => {
-                      const next = u.rol === 'admin' ? 'participante' : u.rol === 'usuario' ? 'admin' : 'usuario';
+                      const next = u.rol === 'admin' ? 'participante' : u.rol === 'colaborador' ? 'admin' : 'colaborador';
                       handleRoleChange(u, next as any);
                     }} 
                     className="action-btn" 

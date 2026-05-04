@@ -9,7 +9,7 @@ export const getStaleTimeByRole = (rol?: string) => {
   switch (rol) {
     case 'admin':
       return 1000 * 60 * 1; // 1 minuto (Alta frescura para gestión)
-    case 'usuario':
+    case 'colaborador':
       return 1000 * 60 * 5; // 5 minutos (Frescura media para personal)
     case 'participante':
       return 1000 * 60 * 15; // 15 minutos (Baja frescura para consulta)

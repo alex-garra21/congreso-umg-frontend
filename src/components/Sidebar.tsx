@@ -35,7 +35,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
   if (isAdmin) {
     menuItems.push(
       { id: 'admin-tokens', label: 'Tokens de Pago', Icon: Icons.Shield, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-usuarios', label: 'Usuarios', Icon: Icons.User, section: 'ADMINISTRACIÓN' },
+      { id: 'admin-usuarios', label: 'Colaboradores', Icon: Icons.User, section: 'ADMINISTRACIÓN' },
       { id: 'admin-asistencia', label: 'Control Asistencia', Icon: Icons.CheckCircle, section: 'ADMINISTRACIÓN' },
       { id: 'admin-reportes', label: 'Reportes', Icon: Icons.BarChart, section: 'ADMINISTRACIÓN' },
       { id: 'admin-agenda', label: 'Gestión Agenda', Icon: Icons.Clipboard, section: 'ADMINISTRACIÓN' }
@@ -100,7 +100,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
         {isExpanded && (
           <div className="user-info" key={`${user?.correo}-${user?.nombres}-${user?.tipoParticipante}`}>
             <span className="user-name">
-              {user?.nombres || 'Usuario'} {user?.apellidos || ''}
+              {user?.nombres || 'Colaborador'} {user?.apellidos || ''}
             </span>
             <span className="user-role">
               {getParticipantLabel(user?.tipoParticipante)}

@@ -21,7 +21,7 @@
   background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); 
   border-right-color: rgba(124, 58, 237, 0.2);
 }
-.sidebar.role-usuario { 
+.sidebar.role-colaborador { 
   background: linear-gradient(180deg, #064e3b 0%, #0f172a 100%); 
   border-right-color: rgba(22, 163, 74, 0.2);
 }
@@ -100,7 +100,7 @@
 }
 
 .user-avatar.admin { background: #7c3aed !important; box-shadow: 0 0 15px rgba(124, 58, 237, 0.3); }
-.user-avatar.usuario { background: #16a34a !important; box-shadow: 0 0 15px rgba(22, 163, 74, 0.3); }
+.user-avatar.colaborador { background: #16a34a !important; box-shadow: 0 0 15px rgba(22, 163, 74, 0.3); }
 .user-avatar.participante { background: #2563eb !important; box-shadow: 0 0 15px rgba(37, 99, 235, 0.3); }
 
 .user-info { display: flex; flex-direction: column; min-width: 0; }
