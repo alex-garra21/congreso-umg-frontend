@@ -68,7 +68,7 @@ export default function AgendaPage() {
               onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
             >
               <Icons.Map size={16} color="var(--accent-primary)" />
-              <p style={{ margin: 0 }}>Sede Central UMG</p>
+              <p style={{ margin: 0 }}>Hotel Alcazar Doña Victoria</p>
             </div>
           </LocationLink>
         </div>

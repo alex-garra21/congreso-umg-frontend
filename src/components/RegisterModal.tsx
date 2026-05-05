@@ -62,15 +62,15 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     const { name, value } = e.target;
     if (name === 'carnet') {
       // Aplicar formato de guiones solo si es alumno
-      const formattedValue = formData.tipoParticipante === 'alumno' 
-        ? formatCarnet(value) 
+      const formattedValue = formData.tipoParticipante === 'alumno'
+        ? formatCarnet(value)
         : value.replace(/\D/g, '').substring(0, getParticipantIdMaxLength(formData.tipoParticipante));
-      
+
       setFormData((prev: any) => ({ ...prev, [name]: formattedValue }));
     } else if (name === 'tipoParticipante') {
       // Al cambiar el tipo, limpiamos carnet y ciclo para evitar conflictos de formato
-      setFormData((prev: any) => ({ 
-        ...prev, 
+      setFormData((prev: any) => ({
+        ...prev,
         [name]: value,
         carnet: '',
         ciclo: ''
@@ -211,10 +211,10 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
             </div>
 
             <FormField label="Tipo de Participante" required>
-              <AdminSelect 
-                name="tipoParticipante" 
-                value={formData.tipoParticipante} 
-                onChange={handleChange as any} 
+              <AdminSelect
+                name="tipoParticipante"
+                value={formData.tipoParticipante}
+                onChange={handleChange as any}
                 options={PARTICIPANT_TYPES.map(type => ({ value: type.id, label: type.label }))}
               />
             </FormField>
@@ -229,27 +229,27 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                     </span>
                   )}
                 </FormField>
-                
+
                 {requiresCiclo(formData.tipoParticipante) && (
-                <FormField label="Ciclo" required style={{ flex: 1 }}>
-                  <AdminSelect 
-                    name="ciclo" 
-                    value={formData.ciclo} 
-                    onChange={handleChange as any} 
-                    options={CICLOS.map(c => ({ value: c, label: c }))}
-                    placeholder="Selección"
-                  />
-                </FormField>
+                  <FormField label="Ciclo" required style={{ flex: 1 }}>
+                    <AdminSelect
+                      name="ciclo"
+                      value={formData.ciclo}
+                      onChange={handleChange as any}
+                      options={CICLOS.map(c => ({ value: c, label: c }))}
+                      placeholder="Selección"
+                    />
+                  </FormField>
                 )}
               </div>
             )}
 
             <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
               <FormField label="Sexo" required style={{ flex: 1 }}>
-                <AdminSelect 
-                  name="sexo" 
-                  value={formData.sexo} 
-                  onChange={handleChange as any} 
+                <AdminSelect
+                  name="sexo"
+                  value={formData.sexo}
+                  onChange={handleChange as any}
                   options={[
                     { value: 'M', label: 'Hombre' },
                     { value: 'F', label: 'Mujer' }
@@ -273,7 +273,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               autoComplete="new-password"
             />
 
-            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '14px', color: '#ff0000ff', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
               La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
               {currentPasswordStrength && !currentPasswordStrength.isValid && (
                 <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>

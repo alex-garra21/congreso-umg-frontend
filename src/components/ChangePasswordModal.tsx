@@ -97,7 +97,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             <PasswordField
               label="Contraseña Actual"
               value={passwords.oldPassword}
-              onChange={e => setPasswords({...passwords, oldPassword: e.target.value})}
+              onChange={e => setPasswords({ ...passwords, oldPassword: e.target.value })}
               placeholder="********"
               required
             />
@@ -105,12 +105,12 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             <PasswordField
               label="Nueva Contraseña"
               value={passwords.newPassword}
-              onChange={e => setPasswords({...passwords, newPassword: e.target.value})}
+              onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
               placeholder="********"
               required
             />
 
-            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '14px', color: '#ff0000ff', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
               La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
               {currentPasswordStrength && !currentPasswordStrength.isValid && (
                 <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>
@@ -127,27 +127,27 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             <PasswordField
               label="Confirmar Nueva Contraseña"
               value={passwords.confirmPassword}
-              onChange={e => setPasswords({...passwords, confirmPassword: e.target.value})}
+              onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
               placeholder="********"
               required
               style={{ marginBottom: '2rem' }}
             />
 
             <div style={{ display: 'flex', gap: '12px' }}>
-              <LoadingButton 
-                type="submit" 
+              <LoadingButton
+                type="submit"
                 isLoading={isSubmitting}
                 loadingText="Actualizando..."
                 style={{ flex: 2 }}
               >
                 Actualizar
               </LoadingButton>
-              <LoadingButton 
-                type="button" 
+              <LoadingButton
+                type="button"
                 variant="ghost"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                style={{ 
+                style={{
                   flex: 1,
                   color: '#e53e3e',
                   borderColor: '#fed7d7',

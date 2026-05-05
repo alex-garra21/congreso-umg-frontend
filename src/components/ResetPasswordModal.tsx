@@ -113,10 +113,10 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
       ) : (
         <>
           {/* Perfil de Usuario Verificado */}
-          <div style={{ 
-            background: 'var(--accent-light)', 
-            padding: '1rem', 
-            borderRadius: '12px', 
+          <div style={{
+            background: 'var(--accent-light)',
+            padding: '1rem',
+            borderRadius: '12px',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
@@ -129,13 +129,13 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
               </div>
             ) : (
               <>
-                <div style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  borderRadius: '50%', 
-                  background: 'var(--accent-primary)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'var(--accent-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
                   overflow: 'hidden',
@@ -182,7 +182,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
               autoComplete="new-password"
             />
 
-            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '14px', color: '#ff0000ff', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
               La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
               {currentPasswordStrength && !currentPasswordStrength.isValid && (
                 <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>
@@ -208,9 +208,9 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
               style={{ marginBottom: '2rem' }}
             />
 
-            <button 
-              type="submit" 
-              className="submit-btn" 
+            <button
+              type="submit"
+              className="submit-btn"
               disabled={isSubmitting || isLoadingProfile}
               style={{ width: '100%', opacity: (isSubmitting || isLoadingProfile) ? 0.7 : 1 }}
             >
