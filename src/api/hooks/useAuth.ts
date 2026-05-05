@@ -25,10 +25,13 @@ export function useAuth() {
       if (_event === 'SIGNED_OUT') {
         queryClient.setQueryData(['userProfile'], null);
         localStorage.removeItem('congreso_current_user'); 
-      } else if (_event === 'SIGNED_IN') {
+      } else if (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION' || _event === 'USER_UPDATED') {
+        // Al entrar o restaurar sesión, nos aseguramos de limpiar errores previos
         queryClient.invalidateQueries({ queryKey: ['userProfile'] });
         queryClient.invalidateQueries({ queryKey: ['users'] });
         queryClient.invalidateQueries({ queryKey: ['tokens'] });
+        queryClient.invalidateQueries({ queryKey: ['reports'] });
+        queryClient.invalidateQueries({ queryKey: ['attendance'] });
       }
     });
 
