@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { useGeneralReport } from '../../../api/hooks/useReports';
 import { useCharlas } from '../../../api/hooks/useAgenda';
@@ -35,6 +35,21 @@ export default function ReportsModule() {
   const [participantTypeFilter, setParticipantTypeFilter] = useState<string[]>(allowedParticipantTypes.map(t => t.id));
   const [page, setPage] = useState(1);
 
+  // Sincronizar filtros si cambia el rol (ej: al cargar la sesión)
+  useEffect(() => {
+    setParticipantTypeFilter(allowedParticipantTypes.map(t => t.id));
+  }, [allowedParticipantTypes]);
+
+  // Forzar selección de un taller para colaboradores
+  useEffect(() => {
+    if (isColaborador && agenda.length > 0 && (selectedWorkshopFilter === 'all_records' || selectedWorkshopFilter === 'none' || selectedWorkshopFilter === '')) {
+      const realWorkshops = agenda.filter(a => a.tagId !== 1 && a.tag?.toUpperCase().trim() !== 'GENERAL');
+      if (realWorkshops.length > 0) {
+        setSelectedWorkshopFilter(realWorkshops[0].id);
+      }
+    }
+  }, [isColaborador, agenda, selectedWorkshopFilter]);
+
   const getWorkshopTitle = (id: string) => {
     const w = agenda.find(item => item.id === id);
     return w ? w.title : id;
@@ -61,8 +76,15 @@ export default function ReportsModule() {
           : (realWorkshops.some(tw => tw.id === selectedWorkshopFilter));
 
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
-    const matchesType = participantTypeFilter.length === PARTICIPANT_TYPES.length ? true : participantTypeFilter.includes(u.tipoParticipante || 'externo');
-    return matchesSearch && matchesWorkshop && matchesPayment && matchesType;
+    const matchesType = participantTypeFilter.length === allowedParticipantTypes.length ? true : participantTypeFilter.includes(u.tipoParticipante || 'externo');
+
+    const matchesAttendance = !isColaborador 
+      ? true 
+      : selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none' && selectedWorkshopFilter !== ''
+        ? (u.asistencias || []).some((a: any) => a.workshopId === selectedWorkshopFilter)
+        : (u.asistencias || []).length > 0;
+
+    return matchesSearch && matchesWorkshop && matchesPayment && matchesType && matchesAttendance;
   });
 
   const paginatedUsers = filteredUsers.slice((page - 1) * 10, page * 10);
@@ -100,7 +122,7 @@ export default function ReportsModule() {
         { header: 'DPI', key: 'dpi', width: 20 },
         { header: 'Sexo', key: 'sex', width: 15 },
         { header: 'Teléfono', key: 'phone', width: 15 },
-        { header: 'Carnet/codigo docente', key: 'identifier', width: 25 }
+        { header: isColaborador ? 'Carnet' : 'Carnet/codigo docente', key: 'identifier', width: 25 }
       ];
 
       // Si es un taller específico, solo una columna de Taller
@@ -166,10 +188,12 @@ export default function ReportsModule() {
         title="Base de Datos de Inscritos"
         description="Filtra y exporta la información necesaria para diplomas y logística."
         headerActions={
-          <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            <AdminButton variant="success" onClick={() => exportExcel(false)} icon={<Icons.Download size={18} />}>Reporte General</AdminButton>
-            <AdminButton variant="outline" onClick={() => exportExcel(true)} icon={<Icons.Award size={18} />}>Lista de Diplomas</AdminButton>
-          </div>
+          (!isColaborador || (selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none' && selectedWorkshopFilter !== '')) && (
+            <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              <AdminButton variant="success" onClick={() => exportExcel(false)} icon={<Icons.Download size={18} />}>Reporte General</AdminButton>
+              <AdminButton variant="outline" onClick={() => exportExcel(true)} icon={<Icons.Award size={18} />}>Lista de Diplomas</AdminButton>
+            </div>
+          )
         }
       >
         <div style={{ 
@@ -193,9 +217,11 @@ export default function ReportsModule() {
               value={selectedWorkshopFilter} 
               onChange={(e) => setSelectedWorkshopFilter(e.target.value)} 
               options={[
-                { value: 'all_records', label: 'Todos los registros' }, 
-                { value: 'none', label: 'Sin talleres' }, 
-                { value: '', label: 'Cualquier taller' }, 
+                ...(!isColaborador ? [
+                  { value: 'all_records', label: 'Todos los registros' }, 
+                  { value: 'none', label: 'Sin talleres' }, 
+                  { value: '', label: 'Cualquier taller' }
+                ] : []),
                 ...agenda
                   .filter(a => a.tagId !== 1 && a.tag?.toUpperCase().trim() !== 'GENERAL')
                   .sort((a, b) => a.title.localeCompare(b.title))
@@ -203,9 +229,11 @@ export default function ReportsModule() {
               ]} 
             />
           </div>
-          <div style={{ width: '150px' }}>
-            <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
-          </div>
+          {!isColaborador && (
+            <div style={{ width: '150px' }}>
+              <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
+            </div>
+          )}
           <div style={{ width: '180px' }}>
             <MultiSelectFilter 
               label="TIPO PARTICIPANTE" 

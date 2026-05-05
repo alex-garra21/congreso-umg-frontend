@@ -20,6 +20,7 @@ export default function UsersModule() {
   const invalidatePaymentMutation = useInvalidatePayment();
   const adminValidateMutation = useAdminValidateUser();
   const { user: currentAdmin } = useAuth();
+  const isColaborador = currentAdmin?.rol === 'colaborador';
 
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,8 +71,6 @@ export default function UsersModule() {
       }
     }
   };
-
-  const isColaborador = currentAdmin?.rol === 'colaborador';
 
   const filteredUsers = users.filter((u: UserData) => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
@@ -127,9 +126,11 @@ export default function UsersModule() {
           <div style={{ flex: '1 1 300px' }}>
             <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo electrónico..." />
           </div>
-          <div style={{ width: '160px' }}>
-            <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={roleOptions} />
-          </div>
+          {!isColaborador && (
+            <div style={{ width: '160px' }}>
+              <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={roleOptions} />
+            </div>
+          )}
           <div style={{ width: '180px' }}>
             <MultiSelectFilter label="TIPO DE PERFIL" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={typeFilter} onChange={(ids) => { setTypeFilter(ids); setPage(1); }} />
           </div>
