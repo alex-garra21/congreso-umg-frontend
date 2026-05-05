@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../api/hooks/useAuth';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
 import { Icons } from './Icons';
@@ -9,6 +10,8 @@ export default function Navbar() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const handleOpenRegister = () => {
@@ -19,17 +22,29 @@ export default function Navbar() {
     return () => window.removeEventListener('openRegisterModal', handleOpenRegister);
   }, []);
 
-  const openLogin = () => {
-    setIsRegisterOpen(false);
-    setIsLoginOpen(true);
-    setIsMenuOpen(false);
+  const handleAuthAction = (action: 'login' | 'register') => {
+    if (isAuthenticated && user) {
+      // Si ya está logueado, redirigir al dashboard
+      if (user.rol === 'admin') {
+        navigate('/dashboard/admin-tokens');
+      } else {
+        navigate('/dashboard/inicio');
+      }
+    } else {
+      // Si no, abrir modales
+      setIsMenuOpen(false);
+      if (action === 'login') {
+        setIsRegisterOpen(false);
+        setIsLoginOpen(true);
+      } else {
+        setIsLoginOpen(false);
+        setIsRegisterOpen(true);
+      }
+    }
   };
 
-  const openRegister = () => {
-    setIsLoginOpen(false);
-    setIsRegisterOpen(true);
-    setIsMenuOpen(false);
-  };
+  const openLogin = () => handleAuthAction('login');
+  const openRegister = () => handleAuthAction('register');
 
   const navLinks = [
     { name: 'Inicio', path: '/', Icon: Icons.Home },
@@ -64,11 +79,11 @@ export default function Navbar() {
         </ul>
 
         <div className="nav-right">
-          <button className="btn-ghost" onClick={() => setIsLoginOpen(true)}>
-            Iniciar sesión
+          <button className="btn-ghost" onClick={openLogin}>
+            {isAuthenticated ? 'Ir al Dashboard' : 'Iniciar sesión'}
           </button>
-          <button className="btn-solid" onClick={() => setIsRegisterOpen(true)}>
-            Regístrate aquí
+          <button className="btn-solid" onClick={openRegister}>
+            {isAuthenticated ? 'Mi Cuenta' : 'Regístrate aquí'}
           </button>
         </div>
       </nav>
