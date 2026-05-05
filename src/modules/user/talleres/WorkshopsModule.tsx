@@ -442,7 +442,7 @@ export default function WorkshopsModule() {
                   alignItems: 'center',
                   gap: '6px'
                 }}>
-                  <Icons.MapPin size={14} color="var(--accent-primary)" /> {selectedWorkshop.room}
+                  <Icons.Map size={14} color="var(--accent-primary)" /> {selectedWorkshop.room}
                 </span>
                 <span style={{ 
                   background: 'rgba(0, 0, 0, 0.05)', 

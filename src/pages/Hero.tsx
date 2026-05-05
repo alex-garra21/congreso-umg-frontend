@@ -53,7 +53,7 @@ export default function Hero() {
             {/* Fila 4: Metadata (Chips de información) */}
             <div className="hero-meta" style={{ margin: '0.5rem 0 1rem 0', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               <CalendarLink className="meta-chip">
-                <Icons.Calendar size={14} color="var(--accent-primary)" />
+                <Icons.Calendar size={14} color="currentColor" />
                 23 de mayo, 2026
               </CalendarLink>
               <LocationLink className="meta-chip" />
@@ -63,7 +63,7 @@ export default function Hero() {
                 onClick={() => navigate('/ponentes')}
                 title="Ver ponentes"
               >
-                <Icons.Mic size={14} color="var(--accent-primary)" />
+                <Icons.Mic size={14} color="currentColor" />
                 12 ponentes
               </span>
               <span
@@ -72,7 +72,7 @@ export default function Hero() {
                 onClick={() => navigate('/agenda')}
                 title="Ver la agenda de charlas"
               >
-                <Icons.Clock size={14} color="var(--accent-primary)" />
+                <Icons.Clock size={14} color="currentColor" />
                 30+ charlas simultáneas
               </span>
             </div>

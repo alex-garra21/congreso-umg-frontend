@@ -36,7 +36,7 @@ export default function WorkshopCard({
         <div className="card-info-compact">
           <p className="workshop-speaker-small">Con {workshop.speaker?.name}</p>
           <p className="location-small" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Icons.MapPin size={14} color="var(--accent-primary)" />
+            <Icons.Map size={14} color="var(--accent-primary)" />
             {workshop.room} {workshop.time && `· ${workshop.time}`}
           </p>
         </div>

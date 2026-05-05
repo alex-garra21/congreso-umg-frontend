@@ -9,7 +9,10 @@ import { Icons } from '../components/Icons';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
 function parseTimeStr(timeStr: string, baseDate?: string): Date {
-  const [time, modifier] = timeStr.trim().split(' ');
+  if (!timeStr) return new Date();
+  const parts = timeStr.trim().split(' ');
+  if (parts.length < 2) return new Date();
+  const [time, modifier] = parts;
   let [hours, minutes] = time.split(':').map(Number);
 
   if (hours === 12) {
@@ -226,7 +229,7 @@ export default function AttendancePage() {
           </div>
 
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '100px', fontSize: '13px', fontWeight: 600 }}>
-            <Icons.MapPin size={14} color="var(--accent-primary)" /> {workshop.room}
+            <Icons.Map size={14} color="#ffffff" /> {workshop.room}
           </div>
         </div>
       </div>

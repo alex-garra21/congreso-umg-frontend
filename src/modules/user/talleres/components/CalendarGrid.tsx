@@ -31,7 +31,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     <div className={`calendar-container ${isConfirmed ? 'confirmed' : ''}`}>
       <div className="calendar-grid" style={{
         gridTemplateColumns: `80px repeat(${rooms.length}, 1fr)`,
-        gridTemplateRows: `60px repeat(${HOURS.length * 12}, minmax(15px, auto))`
+        gridTemplateRows: `60px repeat(${HOURS.length * 12}, var(--agenda-row-height, 14px))`
       }}>
         {/* Encabezados */}
         <div className="grid-header time-label" style={{

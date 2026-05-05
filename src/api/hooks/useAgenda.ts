@@ -50,31 +50,10 @@ export function usePonentes() {
  */
 export function useCharlas() {
   const { user } = useAuth();
-  const { data: salas = [] } = useSalas();
-  const { data: cats = [] } = useCategorias();
-  const { data: ponentes = [] } = usePonentes();
 
   return useQuery({
-    queryKey: ['charlas', salas, cats, ponentes],
-    queryFn: async () => {
-      const charlas = await getCharlasQuery();
-      
-      // Enriquecer datos para facilitar el renderizado
-      return charlas.map(c => {
-        const sala = salas.find(s => s.id === c.locationId);
-        const cat = cats.find(ct => ct.id === c.tagId);
-        const ponente = ponentes.find(p => p.id === c.speaker?.id);
-
-        return {
-          ...c,
-          room: sala?.name || 'Sin sala',
-          tagName: cat?.name || 'Sin categoría',
-          tag: cat?.name || 'General',
-          tagStyle: cat ? { bg: cat.bg, text: cat.text } : undefined,
-          speaker: ponente || c.speaker
-        };
-      });
-    },
+    queryKey: ['charlas'],
+    queryFn: getCharlasQuery,
     staleTime: getStaleTimeByRole(user?.rol),
   });
 }

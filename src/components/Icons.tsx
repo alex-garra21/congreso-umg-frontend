@@ -3,22 +3,31 @@ import React from 'react';
 interface IconProps {
   size?: number | string;
   color?: string;
+  fill?: string;
   className?: string;
   strokeWidth?: number;
   style?: React.CSSProperties;
 }
 
-const BaseIcon = ({ size = 24, color = "currentColor", strokeWidth = 2, className = "", style = {}, children }: IconProps & { children: React.ReactNode }) => (
+const BaseIcon = ({ 
+  size = 24, 
+  color = "currentColor", 
+  strokeWidth = 2, 
+  fill = "none", 
+  className = "", 
+  style = {}, 
+  children 
+}: IconProps & { children: React.ReactNode }) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 24 24"
-    fill="none"
+    fill={fill}
     stroke={color}
     strokeWidth={strokeWidth}
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={`icon-base ${className}`}
+    className={className}
     style={style}
   >
     {children}
@@ -150,6 +159,17 @@ export const Icons = {
     <BaseIcon {...props}>
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
       <circle cx="12" cy="9" r="2.5" />
+    </BaseIcon>
+  ),
+  Map: (props: IconProps) => (
+    <BaseIcon {...props} fill={props.color || "currentColor"} strokeWidth={0}>
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
+    </BaseIcon>
+  ),
+
+  Navigation: (props: IconProps) => (
+    <BaseIcon {...props}>
+      <polygon points="3 11 22 2 13 21 11 13 3 11" />
     </BaseIcon>
   ),
   Download: (props: IconProps) => (

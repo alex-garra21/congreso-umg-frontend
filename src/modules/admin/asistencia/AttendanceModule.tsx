@@ -154,7 +154,10 @@ export default function AttendanceModule() {
             <tr key={item.id}>
               <td>
                 <div style={{ fontWeight: 800 }}>{item.title}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>📍 {item.room}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Icons.Map size={12} color="var(--accent-primary)" />
+                  {item.room}
+                </div>
               </td>
               <td style={{ fontSize: '13px', fontWeight: 600 }}>{item.time} - {item.endTime}</td>
               <td>

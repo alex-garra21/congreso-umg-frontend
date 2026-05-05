@@ -15,7 +15,10 @@ export default function AgendaPage() {
 
   // Función para convertir "8:00 AM" en un valor numérico comparable
   const parseTimeToNumber = (timeStr: string) => {
-    const [time, modifier] = timeStr.split(' ');
+    if (!timeStr) return 0;
+    const parts = timeStr.split(' ');
+    if (parts.length < 2) return 0;
+    const [time, modifier] = parts;
     let [hours, minutes] = time.split(':').map(Number);
     if (hours === 12) {
       hours = modifier === 'PM' ? 12 : 0;
@@ -64,7 +67,7 @@ export default function AgendaPage() {
               onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
               onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
             >
-              <Icons.MapPin size={16} color="var(--accent-primary)" />
+              <Icons.Map size={16} color="var(--accent-primary)" />
               <p style={{ margin: 0 }}>Sede Central UMG</p>
             </div>
           </LocationLink>
@@ -145,7 +148,7 @@ export default function AgendaPage() {
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px'
                   }}>
-                    <Icons.MapPin size={12} strokeWidth={2.5} color="var(--accent-primary)" />
+                    <Icons.Map size={12} strokeWidth={2.5} color="var(--accent-primary)" />
                     {charla.room}
                   </div>
                 </div>

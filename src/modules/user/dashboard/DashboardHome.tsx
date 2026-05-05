@@ -145,7 +145,7 @@ export default function DashboardHome() {
 
         <StatusCard
           label="FECHA EVENTO" value="23 de Mayo" accentColor="var(--status-success)" sub="Hotel Alcazar doña Victoria"
-          icon={<Icons.Calendar />}
+          icon={<Icons.Calendar color="var(--accent-primary)" />}
           footerLink="Añadir a Calendario →" onClick={() => window.open('https://www.google.com/calendar/render?action=TEMPLATE&text=CONGRESO+2026+UMG+SISTEMAS+COBÁN&dates=20260523T140000Z/20260523T230000Z&details=El+evento+académico+más+importante+del+año.&location=Hotel+Alcazar+doña+Victoria,+Cobán', '_blank')}
         />
       </div>

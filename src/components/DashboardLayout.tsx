@@ -5,10 +5,11 @@ import { useAuth } from '../api/hooks/useAuth';
 import { useDashboardTitle } from '../utils/DashboardTitleContext';
 import AdminBadge from './ui/AdminBadge';
 import { isStaff } from '../utils/auth';
+import { Icons } from './Icons';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
-  const { user, session, isLoading } = useAuth();
+  const { user, session, isLoading, isError, refetchProfile } = useAuth();
   const { title } = useDashboardTitle();
 
   useEffect(() => {
@@ -18,12 +19,29 @@ export default function DashboardLayout() {
     }
   }, [session, isLoading, navigate]);
 
+  // Si hubo un error cargando el perfil (común en conexiones inestables de móvil)
+  if (isError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ color: '#ef4444', marginBottom: '1.5rem' }}><Icons.AlertTriangle size={48} /></div>
+        <h2 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', fontFamily: 'Source Sans 3' }}>Error de Conexión</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '300px' }}>No pudimos sincronizar tu perfil. Esto puede pasar por una conexión inestable.</p>
+        <button 
+          onClick={() => refetchProfile()}
+          style={{ padding: '0.8rem 2rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}
+        >
+          Reintentar ahora
+        </button>
+      </div>
+    );
+  }
+
   // Si está cargando, mostramos spinner
   if (isLoading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', gap: '15px' }}>
         <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(99, 179, 237, 0.2)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-        <div style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500 }}>Iniciando sesión segura...</div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500 }}>Sincronizando sesión...</div>
         <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );

@@ -176,11 +176,26 @@ h1 span {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--accent-primary);
+  font-weight: 700;
+  color: var(--accent-primary) !important; /* Forzamos el color de acento */
   background: var(--accent-light);
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  text-decoration: none !important;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.meta-chip:hover {
+  background: var(--accent-primary);
+  color: white !important;
+}
+
+/* Aseguramos que tanto el texto como el icono dentro del chip usen el color correcto */
+.meta-chip, 
+.meta-chip svg,
+.meta-chip a {
+  color: inherit;
 }
 
 .hero-ctas {

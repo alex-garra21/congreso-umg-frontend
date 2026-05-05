@@ -51,31 +51,46 @@ export async function getPonentesQuery(): Promise<Speaker[]> {
 }
 
 export async function getCharlasQuery(): Promise<AgendaItem[]> {
-  // Traemos las charlas con los IDs de sala y categoría
   const { data, error } = await supabase
     .from('charlas')
     .select(`
       id, titulo, descripcion, hora_inicio, hora_fin, periodo, 
-      sala_id, categoria_id, id_ponente
+      sala_id, categoria_id, id_ponente,
+      sala:sala_id(nombre), 
+      categoria:categoria_id(nombre, bg_color, text_color),
+      ponente:id_ponente(*)
     `);
 
   if (error) throw new Error(`Error al obtener charlas: ${error.message}`);
 
-  // Nota: En una fase posterior podemos usar un JOIN real de SQL. 
-  // Por ahora mapeamos los datos básicos.
-  return (data || []).map(d => ({
-    id: d.id,
-    title: d.titulo,
-    description: d.descripcion,
-    time: d.hora_inicio,
-    endTime: d.hora_fin,
-    period: d.periodo as 'Mañana' | 'Tarde',
-    locationId: d.sala_id,
-    tagId: d.categoria_id,
-    speaker: d.id_ponente ? { id: d.id_ponente } : undefined,
-    room: '', // Se llenará en el hook con el nombre real
-    tag: ''   // Se llenará en el hook con el nombre real
-  } as AgendaItem));
+  return (data || []).map(d => {
+    const sala = d.sala as any;
+    const cat = d.categoria as any;
+    const p = d.ponente as any;
+
+    return {
+      id: d.id,
+      title: d.titulo,
+      description: d.descripcion,
+      time: d.hora_inicio,
+      endTime: d.hora_fin,
+      period: d.periodo as 'Mañana' | 'Tarde',
+      locationId: d.sala_id,
+      tagId: d.categoria_id,
+      room: sala?.nombre || 'Sin sala',
+      tag: cat?.nombre || 'General',
+      tagStyle: cat ? { bg: cat.bg_color, text: cat.text_color } : undefined,
+      speaker: p ? {
+        id: p.id,
+        name: p.nombre,
+        role: p.cargo,
+        avatar: p.avatar_url,
+        bgColor: p.bg_color,
+        textColor: p.text_color,
+        initials: p.nombre ? p.nombre.substring(0, 2).toUpperCase() : '??'
+      } : undefined
+    } as AgendaItem;
+  });
 }
 
 /**

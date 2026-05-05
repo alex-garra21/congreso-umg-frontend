@@ -19,7 +19,7 @@ export default function CalendarLink({ children, className, style }: CalendarLin
       target="_blank"
       rel="noopener noreferrer"
       className={className}
-      style={{ textDecoration: 'none', color: 'inherit', ...style }}
+      style={{ textDecoration: 'none', ...style }}
     >
       {children}
     </a>

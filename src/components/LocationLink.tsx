@@ -24,7 +24,7 @@ const LocationLink: React.FC<LocationLinkProps> = ({ variant = 'simple', classNa
         onClick={handleClick}
       >
         <div className="banner-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icons.MapPin size={24} color="var(--accent-primary)" />
+          <Icons.Map size={24} color="var(--accent-primary)" />
         </div>
         <div className="banner-text">
           <h3>{LOCATION_NAME.split(',')[0]} — {EVENT_DATE}</h3>
@@ -40,11 +40,11 @@ const LocationLink: React.FC<LocationLinkProps> = ({ variant = 'simple', classNa
       target="_blank" 
       rel="noopener noreferrer" 
       className={`location-link ${className}`}
-      style={{ color: 'inherit', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+      style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
     >
       {children ? children : (
         <>
-          {!disableEmoji && <Icons.MapPin size={14} color="inherit" style={{ opacity: 0.9 }} />} {LOCATION_NAME}
+          {!disableEmoji && <Icons.Map size={14} color="currentColor" />} {LOCATION_NAME}
         </>
       )}
     </a>
