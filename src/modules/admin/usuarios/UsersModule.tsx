@@ -153,12 +153,12 @@ export default function UsersModule() {
               <td>{u.desactivado ? <AdminBadge variant="danger">OFF</AdminBadge> : u.pagoValidado ? <AdminBadge variant="success" dot>SÍ</AdminBadge> : <AdminBadge variant="danger" dot>NO</AdminBadge>}</td>
               <td style={{ textAlign: 'right' }}>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                  {/* Validar Pago - Disponible para colaborador/admin */}
-                  {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && !u.pagoValidado && (
+                  {/* Validar Pago - SOLO para Admin (No colaborador) */}
+                  {!isColaborador && !u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && !u.pagoValidado && (
                     <button onClick={() => handleValidateUser(u)} className="action-btn" title="Validar Pago" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.CheckCircle size={18} /></button>
                   )}
-
-                  {/* Anular Pago - Disponible para colaborador/admin */}
+ 
+                  {/* Anular Pago - Disponible para colaborador y admin si el pago ya fue validado */}
                   {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && u.pagoValidado && (
                     <button onClick={() => handleInvalidatePayment(u)} className="action-btn" title="Anular Pago" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.AlertTriangle size={18} /></button>
                   )}

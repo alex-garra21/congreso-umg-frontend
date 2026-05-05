@@ -22,6 +22,7 @@ const PaymentModule = lazy(() => import('./modules/user/pago/PaymentModule'));
 const ProfileModule = lazy(() => import('./modules/general/perfil/ProfileModule'));
 const WorkshopsModule = lazy(() => import('./modules/user/talleres/WorkshopsModule'));
 const DiplomaModule = lazy(() => import('./modules/user/diploma/DiplomaModule'));
+const RobotsModule = lazy(() => import('./modules/user/robots/RobotsModule'));
 const AdminModule = lazy(() => import('./pages/AdminModule'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const DeactivatedPage = lazy(() => import('./pages/DeactivatedPage'));
@@ -134,6 +135,7 @@ function App() {
             <Route path="perfil" element={<ProfileModule />} />
             <Route path="talleres" element={<WorkshopsModule />} />
             <Route path="diploma" element={<DiplomaModule />} />
+            <Route path="robots" element={<RobotsModule />} />
             <Route path="admin" element={<AdminModule defaultTab="tokens" />} />
             <Route path="admin-tokens" element={<AdminModule defaultTab="tokens" />} />
             <Route path="admin-usuarios" element={<AdminModule defaultTab="users" />} />

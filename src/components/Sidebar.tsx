@@ -32,6 +32,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
   const menuItems: MenuItem[] = [
     { id: 'inicio', label: 'Inicio', Icon: Icons.Home, section: 'GENERAL' },
     { id: 'perfil', label: 'Mi perfil', Icon: Icons.User, section: 'GENERAL' },
+    ...(isOnlyAdmin ? [{ id: 'robots', label: 'Guerra de Robots', Icon: Icons.Zap, section: 'GENERAL' }] : []),
   ];
 
   // Items de Inscripción (Para participantes y colaboradores)
@@ -41,6 +42,10 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
       { id: 'talleres', label: 'Mis talleres', Icon: Icons.Calendar, section: 'INSCRIPCIÓN' },
       { id: 'diploma', label: 'Diploma', Icon: Icons.Award, section: 'INSCRIPCIÓN' }
     );
+
+    if (isPaid) {
+      menuItems.push({ id: 'robots', label: 'Guerra de Robots', Icon: Icons.Zap, section: 'INSCRIPCIÓN' });
+    }
   }
 
   // Items de Administración (Para staff)
