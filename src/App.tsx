@@ -140,6 +140,7 @@ function App() {
             <Route path="admin-asistencia" element={<AdminModule defaultTab="attendance" />} />
             <Route path="admin-reportes" element={<AdminModule defaultTab="reports" />} />
             <Route path="admin-agenda" element={<AdminModule defaultTab="agenda" />} />
+            <Route path="admin-config-agenda" element={<AdminModule defaultTab="agenda-config" />} />
           </Route>
         </Routes>
       </Suspense>

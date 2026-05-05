@@ -5,9 +5,10 @@ const UsersModule = lazy(() => import('../modules/admin/usuarios/UsersModule'));
 const AttendanceModule = lazy(() => import('../modules/admin/asistencia/AttendanceModule'));
 const ReportsModule = lazy(() => import('../modules/admin/reportes/ReportsModule'));
 const AgendaModule = lazy(() => import('../modules/admin/agenda/AgendaModule'));
+const AgendaConfigModule = lazy(() => import('../modules/admin/agenda/AgendaConfigModule'));
 
 interface AdminModuleProps {
-  defaultTab: 'tokens' | 'users' | 'reports' | 'agenda' | 'attendance';
+  defaultTab: 'tokens' | 'users' | 'reports' | 'agenda' | 'attendance' | 'agenda-config';
 }
 
 export default function AdminModule({ defaultTab }: AdminModuleProps) {
@@ -23,6 +24,7 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
         {defaultTab === 'attendance' && <AttendanceModule />}
         {defaultTab === 'reports' && <ReportsModule />}
         {defaultTab === 'agenda' && <AgendaModule />}
+        {defaultTab === 'agenda-config' && <AgendaConfigModule />}
       </Suspense>
     </div>
   );

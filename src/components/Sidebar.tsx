@@ -54,6 +54,13 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
     );
   }
 
+  // Items de Personalización (Solo Admins)
+  if (isOnlyAdmin) {
+    menuItems.push(
+      { id: 'admin-config-agenda', label: 'Contenedor Agenda', Icon: Icons.Calendar, section: 'PERSONALIZACIÓN' }
+    );
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
@@ -116,10 +123,11 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
       </div>
 
       <nav className="sidebar-nav">
-        {['GENERAL', 'INSCRIPCIÓN', 'ADMINISTRACIÓN']
+        {['GENERAL', 'INSCRIPCIÓN', 'ADMINISTRACIÓN', 'PERSONALIZACIÓN']
           .filter(section => {
             if (section === 'INSCRIPCIÓN' && isOnlyAdmin) return false;
             if (section === 'ADMINISTRACIÓN' && !isStaffMember) return false;
+            if (section === 'PERSONALIZACIÓN' && !isOnlyAdmin) return false;
             return true;
           })
           .map(section => (

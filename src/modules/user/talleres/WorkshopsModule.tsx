@@ -14,12 +14,14 @@ import BackButton from '../../../components/ui/BackButton';
 import AdminButton from '../../../components/ui/AdminButton';
 
 import { CalendarGrid } from './components/CalendarGrid';
+import { useAgendaConfig } from '../../../api/hooks/useAgendaConfig';
 
 export default function WorkshopsModule() {
   const navigate = useNavigate();
   const { user, refetchProfile } = useAuth();
   const { data: charlas } = useCharlas();
   const { data: salas } = useSalas();
+  const { config: visualConfig } = useAgendaConfig();
   
   const agenda = charlas || [];
   const rooms = salas || [];
@@ -209,7 +211,15 @@ export default function WorkshopsModule() {
 
 
   return (
-    <div className="workshops-module" style={{ padding: '0' }}>
+    <div className="workshops-module" style={{ 
+      padding: '0',
+      '--agenda-row-height': `${visualConfig.row_height}px`,
+      '--agenda-font-title': `${visualConfig.font_size_title}px`,
+      '--agenda-font-time': `${visualConfig.font_size_time}px`,
+      '--agenda-font-speaker': `${visualConfig.font_size_speaker}px`,
+      '--agenda-card-padding': `${visualConfig.card_padding}px`,
+      '--agenda-card-radius': `${visualConfig.card_border_radius}px`
+    } as any}>
       <div style={{ padding: '2rem 2.5rem 0' }}>
         <ModuleTitle title="Inscripción de Talleres" />
       </div>
@@ -561,7 +571,7 @@ export default function WorkshopsModule() {
           border-radius: 16px;
           overflow: hidden;
           background: #f8fafc;
-          grid-template-rows: 60px repeat(${HOURS.length * 12}, 6px);
+          grid-template-rows: 60px repeat(${HOURS.length * 12}, var(--agenda-row-height));
         }
         .grid-header { 
           font-family: 'Source Sans 3', sans-serif; 
@@ -603,8 +613,8 @@ export default function WorkshopsModule() {
         }
         .calendar-workshop { 
           margin: 4px; 
-          padding: 14px; 
-          border-radius: 18px; 
+          padding: var(--agenda-card-padding); 
+          border-radius: var(--agenda-card-radius); 
           cursor: pointer; 
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
           display: flex; 
@@ -641,7 +651,7 @@ export default function WorkshopsModule() {
           border-color: #000;
         }
         .w-title { 
-          font-size: 13px; 
+          font-size: var(--agenda-font-title); 
           font-weight: 800; 
           font-family: 'Source Sans 3', sans-serif; 
           line-height: 1.25; 
@@ -652,7 +662,7 @@ export default function WorkshopsModule() {
           flex: 1;
         }
         .w-time { 
-          font-size: 10px; 
+          font-size: var(--agenda-font-time); 
           font-weight: 700; 
           background: rgba(0,0,0,0.05);
           padding: 3px 8px;
@@ -666,7 +676,7 @@ export default function WorkshopsModule() {
           background: rgba(255,255,255,0.2);
         }
         .w-speaker { 
-          font-size: 10px; 
+          font-size: var(--agenda-font-speaker); 
           font-weight: 600; 
           opacity: 0.85; 
           display: flex; 
