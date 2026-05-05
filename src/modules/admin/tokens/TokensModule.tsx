@@ -149,11 +149,13 @@ export default function TokensModule() {
       worksheet.columns = [
         { header: 'NO.', key: 'controlCode', width: 10 },
         { header: 'CÓDIGO DE ACTIVACIÓN', key: 'code', width: 35 },
+        { header: 'CREADO POR', key: 'createdBy', width: 25 },
         { header: 'FECHA DE CREACIÓN', key: 'createdAt', width: 25 }
       ];
       filteredTokens.forEach(t => worksheet.addRow({
         controlCode: t.controlCode,
         code: t.code,
+        createdBy: t.createdByName || 'Sistema',
         createdAt: formatFullDate(t.createdAt)
       }));
     } else {
