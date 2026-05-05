@@ -44,6 +44,7 @@ export function validatePasswordStrength(password: string): { isValid: boolean; 
 
 export interface TokenData {
   code: string;
+  controlCode?: string;
   used: boolean;
   usedBy?: string;
   usedByName?: string;

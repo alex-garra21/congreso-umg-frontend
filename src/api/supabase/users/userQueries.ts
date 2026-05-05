@@ -49,6 +49,7 @@ export async function getTokensQuery(): Promise<TokenData[]> {
     .from('tokens_pago')
     .select(`
       codigo, 
+      correlativo_control,
       usado, 
       usado_por,
       creado_por,
@@ -73,6 +74,7 @@ export async function getTokensQuery(): Promise<TokenData[]> {
 
     return {
       code: d.codigo,
+      controlCode: d.correlativo_control,
       used: d.usado,
       usedBy: u ? (u as any).correo : undefined,
       usedByName: name || undefined,

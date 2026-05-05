@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTokens, useGenerateToken, useDeleteToken } from '../../../api/hooks/useUsers';
 import { useAuth } from '../../../api/hooks/useAuth';
 import ModuleTitle from '../../../components/ModuleTitle';
@@ -147,15 +147,18 @@ export default function TokensModule() {
 
     if (forUse) {
       worksheet.columns = [
+        { header: 'NO.', key: 'controlCode', width: 10 },
         { header: 'CÓDIGO DE ACTIVACIÓN', key: 'code', width: 35 },
         { header: 'FECHA DE CREACIÓN', key: 'createdAt', width: 25 }
       ];
       filteredTokens.forEach(t => worksheet.addRow({
+        controlCode: t.controlCode,
         code: t.code,
         createdAt: formatFullDate(t.createdAt)
       }));
     } else {
       worksheet.columns = [
+        { header: 'No.', key: 'controlCode', width: 10 },
         { header: 'Token', key: 'code', width: 25 },
         { header: 'Estado', key: 'status', width: 20 },
         { header: 'Nombre', key: 'name', width: 30 },
@@ -165,6 +168,7 @@ export default function TokensModule() {
         { header: 'Fecha Creación', key: 'createdAt', width: 25 }
       ];
       filteredTokens.forEach(t => worksheet.addRow({
+        controlCode: t.controlCode,
         code: t.code, status: t.used ? 'Utilizado' : 'Disponible',
         name: t.usedByName || '-', email: t.usedBy || '-',
         type: t.usedByType || '-', createdBy: t.createdByName || 'Sistema',
@@ -275,12 +279,13 @@ export default function TokensModule() {
           isLoading={isLoading}
           headers={[
             isOnlyAdmin ? <input type="checkbox" checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))} onChange={handleSelectAllTokens} /> : null,
-            "Token", "Estado", "Asignado a", "Tipo", "Creado por", "Creación", isOnlyAdmin ? "Opciones" : null
+            "No.", "Token", "Estado", "Asignado a", "Tipo", "Creado por", "Creación", isOnlyAdmin ? "Opciones" : null
           ].filter(h => h !== null)}
         >
           {currentTokensOnPage.map(t => (
             <tr key={t.code}>
               {isOnlyAdmin && <td><input type="checkbox" checked={selectedTokens.includes(t.code)} onChange={() => handleSelectToken(t.code)} /></td>}
+              <td style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>{t.controlCode || '-'}</td>
               <td style={{ fontWeight: 800, color: 'var(--accent-primary)', fontFamily: 'Source Sans 3' }}>{t.code}</td>
               <td><AdminBadge variant={t.used ? "danger" : "success"} dot>{t.used ? "Utilizado" : "Disponible"}</AdminBadge></td>
               <td>
