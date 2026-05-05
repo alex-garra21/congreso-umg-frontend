@@ -20,7 +20,7 @@ export default function UsersModule() {
   const invalidatePaymentMutation = useInvalidatePayment();
   const adminValidateMutation = useAdminValidateUser();
   const { user: currentAdmin } = useAuth();
-  
+
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -46,22 +46,22 @@ export default function UsersModule() {
 
   const handleToggleActivation = async (user: UserData, activate: boolean) => {
     const title = activate ? 'Activar' : 'Desactivar';
-    const confirmed = await showConfirm(`${title} Usuario`, `¿Estás seguro de ${title.toLowerCase()} a ${user.nombres}?`, title, !activate);
+    const confirmed = await showConfirm(`${title} Colaborador`, `¿Estás seguro de ${title.toLowerCase()} a ${user.nombres}?`, title, !activate);
     if (confirmed) {
       await updateUserDataMutation.mutateAsync({ ...user, desactivado: !activate });
-      showToast(`Usuario ${activate ? 'activado' : 'desactivado'}`, 'success');
+      showToast(`Colaborador ${activate ? 'activado' : 'desactivado'}`, 'success');
     }
   };
 
   const handleRoleChange = async (user: UserData, newRole: 'admin' | 'colaborador' | 'participante') => {
     const roleLabels = { admin: 'Administrador', colaborador: 'Colaborador', participante: 'Participante' };
     const confirmed = await showConfirm(
-      `Cambiar a ${roleLabels[newRole]}`, 
-      `¿Confirmar cambio de rol para ${user.nombres}?`, 
-      'Cambiar', 
+      `Cambiar a ${roleLabels[newRole]}`,
+      `¿Confirmar cambio de rol para ${user.nombres}?`,
+      'Cambiar',
       newRole !== 'admin'
     );
-    
+
     if (confirmed) {
       await updateUserDataMutation.mutateAsync({ ...user, rol: newRole });
       showToast('Rol actualizado correctamente', 'success');
@@ -74,10 +74,10 @@ export default function UsersModule() {
   const filteredUsers = users.filter((u: UserData) => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado && !u.desactivado) || (paymentFilter === 'pending' && !u.pagoValidado && !u.desactivado) || (paymentFilter === 'deactivated' && u.desactivado);
-    
+
     // Lógica de rol exacta para 3 tipos
     const matchesRole = roleFilter === 'all' || u.rol === roleFilter;
-    
+
     const matchesType = typeFilter.length === PARTICIPANT_TYPES.length ? true : typeFilter.includes(u.tipoParticipante || 'externo');
     return matchesSearch && matchesPayment && matchesRole && matchesType;
   });
@@ -87,18 +87,18 @@ export default function UsersModule() {
   return (
     <section className="dashboard-section" style={{ padding: '0' }}>
       <div style={{ padding: '2rem 2.5rem 0' }}>
-        <ModuleTitle title="Directorio de Usuarios" />
+        <ModuleTitle title="Directorio de Colaborador" />
       </div>
 
       <ModuleCard title="Participantes y Staff" description="Gestiona roles diferenciados, tipos de perfil y estados de cuenta.">
-        <div style={{ 
-          display: 'flex', 
-          gap: '1rem', 
-          alignItems: 'flex-end', 
-          marginBottom: '2.5rem', 
-          background: 'var(--bg-app)', 
-          padding: '1.25rem 1.5rem', 
-          borderRadius: '16px', 
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          alignItems: 'flex-end',
+          marginBottom: '2.5rem',
+          background: 'var(--bg-app)',
+          padding: '1.25rem 1.5rem',
+          borderRadius: '16px',
           border: '1px solid var(--border-soft)',
           flexWrap: 'wrap',
           justifyContent: 'center'
@@ -139,15 +139,15 @@ export default function UsersModule() {
                   {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && u.pagoValidado && (
                     <button onClick={() => handleInvalidatePayment(u)} className="action-btn" title="Anular Pago" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.AlertTriangle size={18} /></button>
                   )}
-                  
-                  {/* Ciclo de Roles: Si es participante -> a Usuario, si es usuario -> a Admin, si es admin -> a Participante */}
-                  <button 
+
+                  {/* Ciclo de Roles: Si es participante -> a Colaborador, si es Colaborador -> a Admin, si es admin -> a Participante */}
+                  <button
                     onClick={() => {
                       const next = u.rol === 'admin' ? 'participante' : u.rol === 'colaborador' ? 'admin' : 'colaborador';
                       handleRoleChange(u, next as any);
-                    }} 
-                    className="action-btn" 
-                    title="Cambiar Rol" 
+                    }}
+                    className="action-btn"
+                    title="Cambiar Rol"
                     style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
                   >
                     <Icons.Shield size={18} />

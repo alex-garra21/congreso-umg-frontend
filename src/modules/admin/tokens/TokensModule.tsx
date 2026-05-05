@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTokens, useGenerateToken, useDeleteToken } from '../../../api/hooks/useUsers';
+import { useAuth } from '../../../api/hooks/useAuth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
@@ -23,6 +24,8 @@ export default function TokensModule() {
   const { data: tokens = [], isLoading } = useTokens();
   const generateTokenMutation = useGenerateToken();
   const deleteTokenMutation = useDeleteToken();
+  const { user: currentAdmin, isLoading: isAuthLoading } = useAuth();
+  const isOnlyAdmin = currentAdmin?.rol === 'admin';
   const [page, setPage] = useState(1);
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [isMassModalOpen, setIsMassModalOpen] = useState(false);
@@ -63,7 +66,7 @@ export default function TokensModule() {
 
   const handleGenerateToken = async () => {
     const code = generateUniqueCode(tokens);
-    await generateTokenMutation.mutateAsync({ code, used: false } as any);
+    await generateTokenMutation.mutateAsync({ code, adminId: currentAdmin?.id });
     setPage(1);
     showToast('Token único generado con éxito', 'success');
   };
@@ -74,7 +77,7 @@ export default function TokensModule() {
     for (let i = 0; i < massQuantity; i++) {
       const code = generateUniqueCode(tempTokens);
       tempTokens.push({ code, used: false } as any);
-      promises.push(generateTokenMutation.mutateAsync({ code, used: false } as any));
+      promises.push(generateTokenMutation.mutateAsync({ code, adminId: currentAdmin?.id }));
     }
     await Promise.all(promises);
     setIsMassModalOpen(false);
@@ -141,10 +144,16 @@ export default function TokensModule() {
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(forUse ? 'Tokens_Uso' : 'Tokens_Reporte');
-    
+
     if (forUse) {
-      worksheet.columns = [{ header: 'CÓDIGO DE ACTIVACIÓN', key: 'code', width: 35 }];
-      filteredTokens.forEach(t => worksheet.addRow({ code: t.code }));
+      worksheet.columns = [
+        { header: 'CÓDIGO DE ACTIVACIÓN', key: 'code', width: 35 },
+        { header: 'FECHA DE CREACIÓN', key: 'createdAt', width: 25 }
+      ];
+      filteredTokens.forEach(t => worksheet.addRow({
+        code: t.code,
+        createdAt: formatFullDate(t.createdAt)
+      }));
     } else {
       worksheet.columns = [
         { header: 'Token', key: 'code', width: 25 },
@@ -152,24 +161,26 @@ export default function TokensModule() {
         { header: 'Nombre', key: 'name', width: 30 },
         { header: 'Correo', key: 'email', width: 30 },
         { header: 'Tipo', key: 'type', width: 20 },
+        { header: 'Creado por', key: 'createdBy', width: 25 },
         { header: 'Fecha Creación', key: 'createdAt', width: 25 }
       ];
       filteredTokens.forEach(t => worksheet.addRow({
         code: t.code, status: t.used ? 'Utilizado' : 'Disponible',
         name: t.usedByName || '-', email: t.usedBy || '-',
-        type: t.usedByType || '-', createdAt: formatFullDate(t.createdAt)
+        type: t.usedByType || '-', createdBy: t.createdByName || 'Sistema',
+        createdAt: formatFullDate(t.createdAt)
       }));
     }
 
     worksheet.getRow(1).font = { bold: true };
-    
+
     // Generar Nombre de Archivo Inteligente
     let fileName = forUse ? 'Tokens_Disponibles' : 'Reporte_Tokens';
-    
+
     if (statusFilter !== 'all') {
       fileName += `_${statusFilter === 'used' ? 'Utilizados' : 'Disponibles'}`;
     }
-    
+
     if (typeFilter !== 'all') {
       fileName += `_${typeFilter === 'alumno' ? 'Estudiantes' : 'Externos'}`;
     }
@@ -197,21 +208,32 @@ export default function TokensModule() {
         description="Gestiona las llaves de acceso para los participantes del congreso."
         headerActions={
           <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            {selectedTokens.length > 0 && (
+            {isOnlyAdmin && selectedTokens.length > 0 && (
               <AdminButton variant="danger" onClick={handleDeleteSelectedTokens} icon={<Icons.Trash size={18} />}>
                 Borrar ({selectedTokens.length})
               </AdminButton>
             )}
-            <AdminButton onClick={handleGenerateToken} icon={<Icons.Plus size={18} />}>
-              Nuevo Token
+            <AdminButton
+              onClick={handleGenerateToken}
+              icon={<Icons.Plus size={18} />}
+              disabled={isAuthLoading || generateTokenMutation.isPending}
+            >
+              {generateTokenMutation.isPending ? 'Generando...' : 'Nuevo Token'}
             </AdminButton>
-            <AdminButton variant="outline" onClick={() => setIsMassModalOpen(true)} icon={<Icons.Users size={18} />}>
+            <AdminButton
+              variant="outline"
+              onClick={() => setIsMassModalOpen(true)}
+              icon={<Icons.Users size={18} />}
+              disabled={isAuthLoading}
+            >
               Masivo
             </AdminButton>
-            <AdminButton variant="success" onClick={() => exportToExcel(false)} icon={<Icons.Download size={18} />}>
-              Reporte
-            </AdminButton>
-            {statusFilter === 'available' && (startDate || endDate) && (
+            {isOnlyAdmin && (
+              <AdminButton variant="success" onClick={() => exportToExcel(false)} icon={<Icons.Download size={18} />}>
+                Reporte
+              </AdminButton>
+            )}
+            {statusFilter === 'available' && (
               <AdminButton variant="primary" onClick={() => exportToExcel(true)} style={{ background: 'var(--accent-primary)' }} icon={<Icons.Clipboard size={18} />}>
                 Solo Códigos
               </AdminButton>
@@ -220,14 +242,14 @@ export default function TokensModule() {
         }
       >
         {/* Filtros Premium Compactos */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1rem', 
-          alignItems: 'flex-end', 
-          marginBottom: '2.5rem', 
-          background: 'var(--bg-app)', 
-          padding: '1.25rem 1.5rem', 
-          borderRadius: '16px', 
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          alignItems: 'flex-end',
+          marginBottom: '2.5rem',
+          background: 'var(--bg-app)',
+          padding: '1.25rem 1.5rem',
+          borderRadius: '16px',
           border: '1px solid var(--border-soft)',
           flexWrap: 'wrap',
           justifyContent: 'center'
@@ -242,23 +264,23 @@ export default function TokensModule() {
             <AdminSelect label="TIPO" value={typeFilter} onChange={e => setTypeFilter(e.target.value)} options={[{ value: 'all', label: 'Todos' }, { value: 'alumno', label: 'Estudiantes' }, { value: 'externo', label: 'Externos' }]} />
           </div>
           <div style={{ width: '130px' }}>
-             <AdminDateInput label="DESDE" value={startDate} onChange={e => setStartDate(e.target.value)} />
+            <AdminDateInput label="DESDE" value={startDate} onChange={e => setStartDate(e.target.value)} />
           </div>
           <div style={{ width: '130px' }}>
-             <AdminDateInput label="HASTA" value={endDate} onChange={e => setEndDate(e.target.value)} />
+            <AdminDateInput label="HASTA" value={endDate} onChange={e => setEndDate(e.target.value)} />
           </div>
         </div>
 
         <AdminTable
           isLoading={isLoading}
           headers={[
-            <input type="checkbox" checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))} onChange={handleSelectAllTokens} />,
-            "Token", "Estado", "Asignado a", "Tipo", "Creación", "Opciones"
-          ]}
+            isOnlyAdmin ? <input type="checkbox" checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))} onChange={handleSelectAllTokens} /> : null,
+            "Token", "Estado", "Asignado a", "Tipo", "Creado por", "Creación", isOnlyAdmin ? "Opciones" : null
+          ].filter(h => h !== null)}
         >
           {currentTokensOnPage.map(t => (
             <tr key={t.code}>
-              <td><input type="checkbox" checked={selectedTokens.includes(t.code)} onChange={() => handleSelectToken(t.code)} /></td>
+              {isOnlyAdmin && <td><input type="checkbox" checked={selectedTokens.includes(t.code)} onChange={() => handleSelectToken(t.code)} /></td>}
               <td style={{ fontWeight: 800, color: 'var(--accent-primary)', fontFamily: 'Source Sans 3' }}>{t.code}</td>
               <td><AdminBadge variant={t.used ? "danger" : "success"} dot>{t.used ? "Utilizado" : "Disponible"}</AdminBadge></td>
               <td>
@@ -268,12 +290,17 @@ export default function TokensModule() {
                 </div>
               </td>
               <td>{t.usedByType ? <AdminBadge variant="neutral">{t.usedByType === 'alumno' ? 'Estudiante' : 'Externo'}</AdminBadge> : '-'}</td>
-              <td><FormattedDate date={t.createdAt} /></td>
-              <td style={{ textAlign: 'right' }}>
-                <button onClick={() => handleDeleteToken(t.code)} className="action-btn-danger" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px', borderRadius: '8px', transition: 'all 0.2s' }}>
-                  <Icons.Trash size={18} />
-                </button>
+              <td>
+                <div style={{ fontSize: '12px', fontWeight: 500 }}>{t.createdByName || 'Sistema'}</div>
               </td>
+              <td><FormattedDate date={t.createdAt} /></td>
+              {isOnlyAdmin && (
+                <td style={{ textAlign: 'right' }}>
+                  <button onClick={() => handleDeleteToken(t.code)} className="action-btn-danger" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px', borderRadius: '8px', transition: 'all 0.2s' }}>
+                    <Icons.Trash size={18} />
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </AdminTable>
@@ -297,7 +324,14 @@ export default function TokensModule() {
         </FormField>
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-          <AdminButton onClick={handleMassGenerate} style={{ flex: 2 }} icon={<Icons.Plus size={18} />}>Generar Tokens</AdminButton>
+          <AdminButton
+            onClick={handleMassGenerate}
+            style={{ flex: 2 }}
+            icon={<Icons.Plus size={18} />}
+            disabled={isAuthLoading || generateTokenMutation.isPending}
+          >
+            {generateTokenMutation.isPending ? 'Generando...' : 'Generar Tokens'}
+          </AdminButton>
           <AdminButton variant="secondary" onClick={() => setIsMassModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
         </div>
       </Modal>

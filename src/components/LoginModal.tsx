@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../utils/auth';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import PasswordField from './PasswordField';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
 import Alert from './ui/Alert';
 import LoadingButton from './ui/LoadingButton';
+import { loginUser } from '../utils/auth';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -52,6 +52,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
       if (result.user?.rol === 'admin') {
         navigate('/dashboard/admin');
       } else {
+        // Colaboradores y Participantes van al inicio
         navigate('/dashboard/inicio');
       }
     } else {

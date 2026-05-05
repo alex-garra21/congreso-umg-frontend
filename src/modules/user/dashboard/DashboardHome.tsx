@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { getAllUsersQuery } from '../../../api/supabase/users/userQueries';
 import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
-import type { UserData } from '../../../utils/auth';
+import { type UserData, isStaff } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import LocationLink from '../../../components/LocationLink';
 import StatusCard from '../../../components/ui/StatusCard';
@@ -20,13 +20,13 @@ export default function DashboardHome() {
   useEffect(() => {
     // AUTOLIMPIEZA (Parche para RLS): Si el pago fue anulado pero aún tiene talleres en BD,
     // usamos la sesión del propio usuario para borrarlos y liberar el cupo.
-    if (user && user.rol !== 'admin' && !user.pagoValidado && user.talleres && user.talleres.length > 0) {
+    if (user && !isStaff(user.rol) && !user.pagoValidado && user.talleres && user.talleres.length > 0) {
       syncUserEnrollmentsMutation(user.id!, []).then(() => {
         refetchProfile();
       });
     }
 
-    if (user?.rol !== 'admin' && user?.correo) {
+    if (!isStaff(user?.rol) && user?.correo) {
       const saved = localStorage.getItem(`workshops_${user.correo}`);
       if (saved) {
         // En el localStorage guardamos la lista completa (agenda)
@@ -42,7 +42,7 @@ export default function DashboardHome() {
       }
     }
 
-    if (user?.rol === 'admin') {
+    if (isStaff(user?.rol)) {
       setLoadingAdmin(true);
       getAllUsersQuery().then(data => {
         setAllUsers(data);
@@ -55,23 +55,27 @@ export default function DashboardHome() {
   const isPaid = user?.pagoValidado;
   const isSent = user?.pagoEnviado;
 
-  // Vista Administrador
-  if (user?.rol === 'admin') {
-    const participants = allUsers.filter(u => u.rol !== 'admin');
-    const totalUsers = participants.length;
-    const paidUsers = participants.filter(u => u.pagoValidado).length;
-    const studentUsers = participants.filter(u => u.tipoParticipante === 'alumno').length;
-    const externalUsers = participants.filter(u => u.tipoParticipante === 'externo').length;
-    const adminsCount = allUsers.filter(u => u.rol === 'admin').length;
-    const deactivatedUsers = participants.filter(u => u.desactivado).length;
+  const isOnlyAdmin = user?.rol === 'admin';
+  const isColaborador = user?.rol === 'colaborador';
 
+  // Procesar datos de admin si es staff
+  const participants = allUsers.filter(u => !isStaff(u.rol));
+  const totalUsers = participants.length;
+  const paidUsersCount = participants.filter(u => u.pagoValidado).length;
+  const studentUsers = participants.filter(u => u.tipoParticipante === 'alumno').length;
+  const externalUsers = participants.filter(u => u.tipoParticipante === 'externo').length;
+  const adminsCount = allUsers.filter(u => u.rol === 'admin').length;
+  const deactivatedUsers = participants.filter(u => u.desactivado).length;
+
+  // Vista Administrador PURO (No ve inscripción personal)
+  if (isOnlyAdmin) {
     return (
       <div className="dashboard-home">
         <ModuleTitle title="Inicio (Panel Administrativo)" />
 
         <div className="status-grid-container">
           <StatusCard label="TOTAL PARTICIPANTES" value={loadingAdmin ? '...' : totalUsers} sub="Excluye administradores" accentColor="var(--accent-primary)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsers} sub="Inscripciones completadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsersCount} sub="Inscripciones completadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
           <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos universitarios" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} navigateTo="/dashboard/admin-usuarios" />
           <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Profesionales y público" accentColor="var(--status-pending)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
           <StatusCard label="ADMINISTRADORES" value={loadingAdmin ? '...' : adminsCount} sub="Personal del evento" accentColor="var(--accent-dark)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
@@ -91,7 +95,7 @@ export default function DashboardHome() {
             />
             <EnrollmentStep
               status="in-progress" icon={<Icons.CreditCard />} title="Estado Financiero General"
-              description={`${paidUsers} usuarios han completado el proceso de pago. Aún faltan ${totalUsers - paidUsers} cuentas por validar.`}
+              description={`${paidUsersCount} usuarios han completado el proceso de pago. Aún faltan ${totalUsers - paidUsersCount} cuentas por validar.`}
               badgeLabel="En Revisión" badgeVariant="warning"
             />
             {deactivatedUsers > 0 && (
@@ -194,6 +198,38 @@ export default function DashboardHome() {
       </section>
 
       <LocationLink variant="banner" />
+
+      {/* SECCIÓN ADICIONAL PARA COLABORADORES: MÓDULOS DE ADMIN */}
+      {isColaborador && (
+        <section className="dashboard-section" style={{ marginTop: '3rem', borderTop: '2px solid var(--border-soft)', paddingTop: '3rem' }}>
+          <div className="section-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
+              <div style={{ background: 'var(--status-success)', width: '10px', height: '10px', borderRadius: '50%' }}></div>
+              <h2 style={{ margin: 0 }}>Panel de Staff (Administración)</h2>
+            </div>
+            <p>Como colaborador, también tienes acceso a las métricas globales del evento.</p>
+          </div>
+
+          <div className="status-grid-container" style={{ marginTop: '1.5rem' }}>
+            <StatusCard label="TOTAL PARTICIPANTES" value={loadingAdmin ? '...' : totalUsers} sub="Excluye staff" accentColor="var(--accent-primary)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
+            <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsersCount} sub="Inscripciones completadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
+            <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos universitarios" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} navigateTo="/dashboard/admin-usuarios" />
+            <StatusCard label="ADMINISTRADORES" value={loadingAdmin ? '...' : adminsCount} sub="Personal del evento" accentColor="var(--accent-dark)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
+          </div>
+
+          <div className="admin-quick-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+            <button className="secondary-btn" onClick={() => navigate('/dashboard/admin-usuarios')} style={{ flex: 1, minWidth: '180px' }}>
+              <Icons.Users size={16} /> Gestionar Usuarios
+            </button>
+            <button className="secondary-btn" onClick={() => navigate('/dashboard/admin-tokens')} style={{ flex: 1, minWidth: '180px' }}>
+              <Icons.Shield size={16} /> Validar Tokens
+            </button>
+            <button className="secondary-btn" onClick={() => navigate('/dashboard/admin-reportes')} style={{ flex: 1, minWidth: '180px' }}>
+              <Icons.BarChart size={16} /> Ver Reportes
+            </button>
+          </div>
+        </section>
+      )}
 
       <style>{`.status-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }`}</style>
     </div>

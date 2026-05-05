@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../../api/hooks/useAuth';
+import { isStaff } from '../../../utils/auth';
 import { validateTokenMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showAlert } from '../../../utils/swal';
@@ -41,7 +42,7 @@ export default function PaymentModule() {
     }
   };
 
-  const dashboardPath = user?.rol === 'admin' ? '/dashboard/admin-tokens' : '/dashboard';
+  const dashboardPath = isStaff(user?.rol) ? '/dashboard/admin-tokens' : '/dashboard/inicio';
 
   if (isPaid) {
     return (

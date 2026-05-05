@@ -24,6 +24,8 @@ export interface UserData {
   avatarUrl?: string;
 }
 
+export const isStaff = (rol?: string) => rol === 'admin' || rol === 'colaborador';
+
 export function validatePasswordStrength(password: string): { isValid: boolean; message: string } {
   if (password.length < 6) {
     return { isValid: false, message: 'La contraseña debe tener al menos 6 caracteres.' };

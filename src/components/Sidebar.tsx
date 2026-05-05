@@ -5,6 +5,7 @@ import { useAuth } from '../api/hooks/useAuth';
 import logoUMG from '../assets/UMG-LOGO.svg';
 import { Icons } from './Icons';
 import { getParticipantLabel } from '../data/userTypes';
+import { isStaff } from '../utils/auth';
 
 interface SidebarProps {
   onModuleChange?: (moduleId: string) => void;
@@ -17,6 +18,8 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
   const location = useLocation();
 
   const isPaid = user?.pagoValidado;
+  const isStaffMember = isStaff(user?.rol);
+  const isOnlyAdmin = user?.rol === 'admin';
 
   interface MenuItem {
     id: string;
@@ -26,25 +29,28 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
     badge?: string;
   }
 
-  const isAdmin = user?.rol === 'admin';
   const menuItems: MenuItem[] = [
     { id: 'inicio', label: 'Inicio', Icon: Icons.Home, section: 'GENERAL' },
     { id: 'perfil', label: 'Mi perfil', Icon: Icons.User, section: 'GENERAL' },
   ];
 
-  if (isAdmin) {
-    menuItems.push(
-      { id: 'admin-tokens', label: 'Tokens de Pago', Icon: Icons.Shield, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-usuarios', label: 'Colaboradores', Icon: Icons.User, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-asistencia', label: 'Control Asistencia', Icon: Icons.CheckCircle, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-reportes', label: 'Reportes', Icon: Icons.BarChart, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-agenda', label: 'Gestión Agenda', Icon: Icons.Clipboard, section: 'ADMINISTRACIÓN' }
-    );
-  } else {
+  // Items de Inscripción (Para participantes y colaboradores)
+  if (!isOnlyAdmin) {
     menuItems.push(
       { id: 'pago', label: 'Pago', Icon: Icons.CreditCard, section: 'INSCRIPCIÓN', badge: isPaid ? 'OK' : 'PEND' },
       { id: 'talleres', label: 'Mis talleres', Icon: Icons.Calendar, section: 'INSCRIPCIÓN' },
       { id: 'diploma', label: 'Diploma', Icon: Icons.Award, section: 'INSCRIPCIÓN' }
+    );
+  }
+
+  // Items de Administración (Para staff)
+  if (isStaffMember) {
+    menuItems.push(
+      { id: 'admin-tokens', label: 'Tokens de Pago', Icon: Icons.Shield, section: 'ADMINISTRACIÓN' },
+      { id: 'admin-usuarios', label: 'Usuarios', Icon: Icons.User, section: 'ADMINISTRACIÓN' },
+      { id: 'admin-asistencia', label: 'Control Asistencia', Icon: Icons.CheckCircle, section: 'ADMINISTRACIÓN' },
+      { id: 'admin-reportes', label: 'Reportes', Icon: Icons.BarChart, section: 'ADMINISTRACIÓN' },
+      { id: 'admin-agenda', label: 'Gestión Agenda', Icon: Icons.Clipboard, section: 'ADMINISTRACIÓN' }
     );
   }
 
@@ -70,7 +76,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
               <span className="logo-sub">SISTEMAS UMG - COBÁN</span>
             </div>
           ) : (
-            <button 
+            <button
               onClick={() => setIsExpanded(true)}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
               title="Expandir"
@@ -86,8 +92,8 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
         )}
       </div>
 
-      <div 
-        className="sidebar-user" 
+      <div
+        className="sidebar-user"
         onClick={() => navigate('/dashboard/perfil')}
       >
         <div className={`user-avatar ${user?.rol || 'participante'}`} style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -112,8 +118,8 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
       <nav className="sidebar-nav">
         {['GENERAL', 'INSCRIPCIÓN', 'ADMINISTRACIÓN']
           .filter(section => {
-            if (section === 'INSCRIPCIÓN' && isAdmin) return false;
-            if (section === 'ADMINISTRACIÓN' && !isAdmin) return false;
+            if (section === 'INSCRIPCIÓN' && isOnlyAdmin) return false;
+            if (section === 'ADMINISTRACIÓN' && !isStaffMember) return false;
             return true;
           })
           .map(section => (

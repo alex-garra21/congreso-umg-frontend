@@ -14,6 +14,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { PARTICIPANT_TYPES, getParticipantLabel } from '../../../data/userTypes';
 import MultiSelectFilter from '../../../components/ui/MultiSelectFilter';
+import { isStaff } from '../../../utils/auth';
 import { Icons } from '../../../components/Icons';
 
 export default function ReportsModule() {
@@ -34,7 +35,7 @@ export default function ReportsModule() {
   const getRealWorkshops = (talleres?: { id: string; category: string }[]) => 
     (talleres || []).filter(t => t.category?.toUpperCase().trim() !== 'GENERAL');
 
-  const filteredUsers = users.filter(u => u.rol !== 'admin' && !u.desactivado).filter(u => {
+  const filteredUsers = users.filter(u => !isStaff(u.rol) && !u.desactivado).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
     
     const realWorkshops = getRealWorkshops(u.talleres);

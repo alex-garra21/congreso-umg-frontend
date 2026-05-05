@@ -11,8 +11,9 @@ export default function Home() {
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
       if (user.rol === 'admin') {
-        navigate('/dashboard/admin');
+        navigate('/dashboard/admin-tokens');
       } else {
+        // Colaboradores y Participantes van al inicio (híbrido para colaboradores)
         navigate('/dashboard/inicio');
       }
     }

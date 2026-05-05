@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import { useAuth } from '../api/hooks/useAuth';
 import { useDashboardTitle } from '../utils/DashboardTitleContext';
 import AdminBadge from './ui/AdminBadge';
+import { isStaff } from '../utils/auth';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export default function DashboardLayout() {
             <h1 className="module-title">{title}</h1>
           </div>
           <div className="header-right">
-           {user.rol !== 'admin' && (
+           {!isStaff(user.rol) && (
              isPaid ? (
                <AdminBadge variant="success" dot>Pago validado</AdminBadge>
              ) : (
