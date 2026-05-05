@@ -19,8 +19,23 @@ export const defaultConfig: AgendaConfig = {
   card_border_radius: 18
 };
 
+const CACHE_KEY = 'agenda_visual_config';
+
+const getInitialConfig = (): AgendaConfig => {
+  if (typeof window === 'undefined') return defaultConfig;
+  const saved = localStorage.getItem(CACHE_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      return defaultConfig;
+    }
+  }
+  return defaultConfig;
+};
+
 export function useAgendaConfig() {
-  const [config, setConfig] = useState<AgendaConfig>(defaultConfig);
+  const [config, setConfig] = useState<AgendaConfig>(getInitialConfig());
   const [loading, setLoading] = useState(true);
 
   const fetchConfig = async () => {
@@ -33,6 +48,7 @@ export function useAgendaConfig() {
 
       if (data) {
         setConfig(data);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
       }
     } catch (err) {
       console.error('Error fetching agenda config:', err);
@@ -53,7 +69,9 @@ export function useAgendaConfig() {
         .eq('id', 'current');
       
       if (!error) {
-        setConfig(prev => ({ ...prev, ...newConfig }));
+        const updated = { ...config, ...newConfig };
+        setConfig(updated);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
         return { success: true };
       }
       return { success: false, error };
