@@ -85,19 +85,18 @@ export default function AttendancePage() {
       user = authUser;
     } else {
       if (!email || !password) {
-        setError('Por favor, ingresa tus credenciales.');
+        setError('El usuario o la contraseña es incorrecto o no está registrado en el sistema.');
         return;
       }
       const loginResult = await loginUser(email, password);
       if (!loginResult.success || !loginResult.user) {
-        setError(loginResult.message);
+        setError('El usuario o la contraseña es incorrecto o no está registrado en el sistema.');
         return;
       }
       user = loginResult.user;
     }
     
     if (!user || !user.id) {
-      setError('Error interno: El usuario no es válido.');
       return;
     }
 
@@ -129,7 +128,7 @@ export default function AttendancePage() {
     try {
       await markAttendanceMutation.mutateAsync({ userId: user.id, workshopId: workshop.id });
     } catch (error) {
-      setError('Ocurrió un error al registrar tu asistencia en la nube. Por favor intenta de nuevo.');
+      // Error silencioso en la nube para no mostrar anuncios adicionales
       return;
     }
 
