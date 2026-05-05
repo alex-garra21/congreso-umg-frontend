@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useAllUsers } from '../../../api/hooks/useUsers';
 import { generateSlug, type AgendaItem } from '../../../utils/agendaStore';
 import { useCharlas, useSaveAgenda } from '../../../api/hooks/useAgenda';
+import { useAuth } from '../../../api/hooks/useAuth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast } from '../../../utils/swal';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
@@ -25,6 +26,8 @@ export default function AttendanceModule() {
   const { data: agenda = [] } = useCharlas();
   const saveAgendaMutation = useSaveAgenda();
   const { timeInterval } = useTimeConfig();
+  const { user: currentUser } = useAuth();
+  const isColaborador = currentUser?.rol === 'colaborador';
   
   const [searchAgenda, setSearchAgenda] = useState('');
   const [startTimeFilter, setStartTimeFilter] = useState('all');
@@ -177,12 +180,16 @@ export default function AttendanceModule() {
               </td>
               <td style={{ textAlign: 'right' }}>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                  <button onClick={() => handleUpdateGracePeriod(item.id)} className="action-btn" title="Configurar Gracia" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
-                    <Icons.Clock size={18} />
-                  </button>
-                  <a href={`${window.location.origin}/asistencia/${generateSlug(item.title)}`} target="_blank" rel="noreferrer" className="action-btn" title="Abrir Enlace" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                    <Icons.Layout size={18} />
-                  </a>
+                  {!isColaborador && (
+                    <>
+                      <button onClick={() => handleUpdateGracePeriod(item.id)} className="action-btn" title="Configurar Gracia" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+                        <Icons.Clock size={18} />
+                      </button>
+                      <a href={`${window.location.origin}/asistencia/${generateSlug(item.title)}`} target="_blank" rel="noreferrer" className="action-btn" title="Abrir Enlace" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        <Icons.Layout size={18} />
+                      </a>
+                    </>
+                  )}
                   <button onClick={() => handleShowQR(item.id)} className="action-btn" title="Ver QR" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
                     <Icons.Camera size={18} />
                   </button>

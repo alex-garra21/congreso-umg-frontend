@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../api/hooks/useAuth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import AdminTabs from '../../../components/ui/AdminTabs';
 import { useTimeConfig } from '../../../context/TimeContext';
@@ -15,9 +17,21 @@ import CategoriesTab from './tabs/CategoriesTab';
 import RoomsTab from './tabs/RoomsTab';
 
 export default function AgendaModule() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [agendaTab, setAgendaTab] = useState<'schedule' | 'speakers' | 'categories' | 'rooms'>('schedule');
   const { timeInterval, setTimeInterval } = useTimeConfig();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+
+  const isOnlyAdmin = user?.rol === 'admin';
+
+  useEffect(() => {
+    if (user && !isOnlyAdmin) {
+      navigate('/dashboard/inicio');
+    }
+  }, [user, isOnlyAdmin, navigate]);
+
+  if (!isOnlyAdmin) return null;
 
   return (
     <section className="dashboard-section">

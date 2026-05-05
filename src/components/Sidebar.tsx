@@ -49,9 +49,15 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
       { id: 'admin-tokens', label: 'Tokens de Pago', Icon: Icons.Shield, section: 'ADMINISTRACIÓN' },
       { id: 'admin-usuarios', label: 'Usuarios', Icon: Icons.User, section: 'ADMINISTRACIÓN' },
       { id: 'admin-asistencia', label: 'Control Asistencia', Icon: Icons.CheckCircle, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-reportes', label: 'Reportes', Icon: Icons.BarChart, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-agenda', label: 'Gestión Agenda', Icon: Icons.Clipboard, section: 'ADMINISTRACIÓN' }
+      { id: 'admin-reportes', label: 'Reportes', Icon: Icons.BarChart, section: 'ADMINISTRACIÓN' }
     );
+
+    // Gestión de Agenda solo para administradores
+    if (isOnlyAdmin) {
+      menuItems.push(
+        { id: 'admin-agenda', label: 'Gestión Agenda', Icon: Icons.Clipboard, section: 'ADMINISTRACIÓN' }
+      );
+    }
   }
 
   // Items de Personalización (Solo Admins)

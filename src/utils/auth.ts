@@ -22,6 +22,7 @@ export interface UserData {
   asistencias?: { workshopId: string; timestamp: string }[];
   dpi?: string;
   avatarUrl?: string;
+  codigoDocente?: string;
 }
 
 export const isStaff = (rol?: string) => rol === 'admin' || rol === 'colaborador';

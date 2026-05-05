@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useAuth } from '../../../api/hooks/useAuth';
 import { useGeneralReport } from '../../../api/hooks/useReports';
 import { useCharlas } from '../../../api/hooks/useAgenda';
 import ModuleTitle from '../../../components/ModuleTitle';
@@ -20,10 +21,18 @@ import { Icons } from '../../../components/Icons';
 export default function ReportsModule() {
   const { data: users = [], isLoading: isLoadingUsers } = useGeneralReport();
   const { data: agenda = [] } = useCharlas();
+  const { user: currentUser } = useAuth();
+  const isColaborador = currentUser?.rol === 'colaborador';
+
+  // Tipos de participante permitidos según rol
+  const allowedParticipantTypes = useMemo(() => {
+    return PARTICIPANT_TYPES.filter(t => !(isColaborador && t.id === 'docente'));
+  }, [isColaborador]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWorkshopFilter, setSelectedWorkshopFilter] = useState('all_records');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
-  const [participantTypeFilter, setParticipantTypeFilter] = useState<string[]>(PARTICIPANT_TYPES.map(t => t.id));
+  const [participantTypeFilter, setParticipantTypeFilter] = useState<string[]>(allowedParticipantTypes.map(t => t.id));
   const [page, setPage] = useState(1);
 
   const getWorkshopTitle = (id: string) => {
@@ -35,7 +44,11 @@ export default function ReportsModule() {
   const getRealWorkshops = (talleres?: { id: string; category: string }[]) => 
     (talleres || []).filter(t => t.category?.toUpperCase().trim() !== 'GENERAL');
 
-  const filteredUsers = users.filter(u => !isStaff(u.rol) && !u.desactivado).filter(u => {
+  const filteredUsers = users.filter(u => 
+    !isStaff(u.rol) && 
+    !u.desactivado && 
+    !(isColaborador && u.tipoParticipante === 'docente')
+  ).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
     
     const realWorkshops = getRealWorkshops(u.talleres);
@@ -83,7 +96,11 @@ export default function ReportsModule() {
       // Columnas Base
       const cols: any[] = [
         { header: 'Participante', key: 'name', width: 30 }, 
-        { header: 'Correo', key: 'email', width: 30 }
+        { header: 'Correo', key: 'email', width: 30 },
+        { header: 'DPI', key: 'dpi', width: 20 },
+        { header: 'Sexo', key: 'sex', width: 15 },
+        { header: 'Teléfono', key: 'phone', width: 15 },
+        { header: 'Carnet/codigo docente', key: 'identifier', width: 25 }
       ];
 
       // Si es un taller específico, solo una columna de Taller
@@ -101,6 +118,10 @@ export default function ReportsModule() {
         const row: any = { 
           name: getDisplayName(u), 
           email: u.correo, 
+          dpi: u.dpi || '-',
+          sex: u.sexo || '-',
+          phone: u.telefono || '-',
+          identifier: u.carnet || u.codigoDocente || '-',
           type: getParticipantLabel(u.tipoParticipante), 
           pay: u.pagoValidado ? 'SÍ' : 'NO' 
         };
@@ -186,7 +207,12 @@ export default function ReportsModule() {
             <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
           </div>
           <div style={{ width: '180px' }}>
-            <MultiSelectFilter label="TIPO PARTICIPANTE" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={participantTypeFilter} onChange={(ids) => setParticipantTypeFilter(ids)} />
+            <MultiSelectFilter 
+              label="TIPO PARTICIPANTE" 
+              options={allowedParticipantTypes.map(t => ({ id: t.id, label: t.label }))} 
+              selectedIds={participantTypeFilter} 
+              onChange={(ids) => setParticipantTypeFilter(ids)} 
+            />
           </div>
         </div>
 

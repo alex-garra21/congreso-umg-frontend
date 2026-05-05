@@ -71,6 +71,8 @@ export default function UsersModule() {
     }
   };
 
+  const isColaborador = currentAdmin?.rol === 'colaborador';
+
   const filteredUsers = users.filter((u: UserData) => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado && !u.desactivado) || (paymentFilter === 'pending' && !u.pagoValidado && !u.desactivado) || (paymentFilter === 'deactivated' && u.desactivado);
@@ -78,16 +80,35 @@ export default function UsersModule() {
     // Lógica de rol exacta para 3 tipos
     const matchesRole = roleFilter === 'all' || u.rol === roleFilter;
 
+    // Si es colaborador, no ve administradores
+    const matchesRoleVisibility = !isColaborador || u.rol !== 'admin';
+
     const matchesType = typeFilter.length === PARTICIPANT_TYPES.length ? true : typeFilter.includes(u.tipoParticipante || 'externo');
-    return matchesSearch && matchesPayment && matchesRole && matchesType;
+    return matchesSearch && matchesPayment && matchesRole && matchesType && matchesRoleVisibility;
   });
 
   const paginatedUsers = filteredUsers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
+  // Opciones de rol filtradas
+  const roleOptions = [
+    { value: 'all', label: 'Todos' },
+    ...(isColaborador ? [] : [{ value: 'admin', label: 'Administradores' }]),
+    { value: 'colaborador', label: 'Colaboradores' },
+    { value: 'participante', label: 'Participantes' }
+  ];
+
+  // Opciones de pago filtradas
+  const paymentOptions = [
+    { value: 'all', label: 'Cualquier estado' },
+    { value: 'paid', label: 'Pagados' },
+    { value: 'pending', label: 'Pendientes' },
+    ...(isColaborador ? [] : [{ value: 'deactivated', label: 'Desactivados' }])
+  ];
+
   return (
     <section className="dashboard-section" style={{ padding: '0' }}>
       <div style={{ padding: '2rem 2.5rem 0' }}>
-        <ModuleTitle title="Directorio de Colaborador" />
+        <ModuleTitle title={isColaborador ? "Directorio de Colaborador" : "Directorio Administrativo"} />
       </div>
 
       <ModuleCard title="Participantes y Staff" description="Gestiona roles diferenciados, tipos de perfil y estados de cuenta.">
@@ -107,13 +128,13 @@ export default function UsersModule() {
             <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo electrónico..." />
           </div>
           <div style={{ width: '160px' }}>
-            <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={[{ value: 'all', label: 'Todos' }, { value: 'admin', label: 'Administradores' }, { value: 'colaborador', label: 'Colaboradores' }, { value: 'participante', label: 'Participantes' }]} />
+            <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={roleOptions} />
           </div>
           <div style={{ width: '180px' }}>
             <MultiSelectFilter label="TIPO DE PERFIL" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={typeFilter} onChange={(ids) => { setTypeFilter(ids); setPage(1); }} />
           </div>
           <div style={{ width: '180px' }}>
-            <AdminSelect label="ESTADO PAGO" value={paymentFilter} onChange={e => { setPage(1); setPaymentFilter(e.target.value); }} options={[{ value: 'all', label: 'Cualquier estado' }, { value: 'paid', label: 'Inscritos (Pagados)' }, { value: 'pending', label: 'Pendientes' }, { value: 'deactivated', label: 'Desactivados' }]} />
+            <AdminSelect label="ESTADO PAGO" value={paymentFilter} onChange={e => { setPage(1); setPaymentFilter(e.target.value); }} options={paymentOptions} />
           </div>
         </div>
 
@@ -131,29 +152,35 @@ export default function UsersModule() {
               <td>{u.desactivado ? <AdminBadge variant="danger">OFF</AdminBadge> : u.pagoValidado ? <AdminBadge variant="success" dot>SÍ</AdminBadge> : <AdminBadge variant="danger" dot>NO</AdminBadge>}</td>
               <td style={{ textAlign: 'right' }}>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                  {/* Validar Pago */}
+                  {/* Validar Pago - Disponible para colaborador/admin */}
                   {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && !u.pagoValidado && (
                     <button onClick={() => handleValidateUser(u)} className="action-btn" title="Validar Pago" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.CheckCircle size={18} /></button>
                   )}
-                  {/* Anular Pago */}
+
+                  {/* Anular Pago - Disponible para colaborador/admin */}
                   {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && u.pagoValidado && (
                     <button onClick={() => handleInvalidatePayment(u)} className="action-btn" title="Anular Pago" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.AlertTriangle size={18} /></button>
                   )}
 
-                  {/* Ciclo de Roles: Si es participante -> a Colaborador, si es Colaborador -> a Admin, si es admin -> a Participante */}
-                  <button
-                    onClick={() => {
-                      const next = u.rol === 'admin' ? 'participante' : u.rol === 'colaborador' ? 'admin' : 'colaborador';
-                      handleRoleChange(u, next as any);
-                    }}
-                    className="action-btn"
-                    title="Cambiar Rol"
-                    style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
-                  >
-                    <Icons.Shield size={18} />
-                  </button>
+                  {!isColaborador && (
+                    <>
+                      {/* Cambiar Rol - Solo Admin */}
+                      <button
+                        onClick={() => {
+                          const next = u.rol === 'admin' ? 'participante' : u.rol === 'colaborador' ? 'admin' : 'colaborador';
+                          handleRoleChange(u, next as any);
+                        }}
+                        className="action-btn"
+                        title="Cambiar Rol"
+                        style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                      >
+                        <Icons.Shield size={18} />
+                      </button>
 
-                  <button onClick={() => handleToggleActivation(u, !!u.desactivado)} className="action-btn" title={u.desactivado ? "Activar" : "Desactivar"} style={{ background: u.desactivado ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)', color: u.desactivado ? '#16a34a' : '#6b7280', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>{u.desactivado ? <Icons.Plus size={18} /> : <Icons.EyeOff size={18} />}</button>
+                      {/* Activar/Desactivar - Solo Admin */}
+                      <button onClick={() => handleToggleActivation(u, !!u.desactivado)} className="action-btn" title={u.desactivado ? "Activar" : "Desactivar"} style={{ background: u.desactivado ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)', color: u.desactivado ? '#16a34a' : '#6b7280', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>{u.desactivado ? <Icons.Plus size={18} /> : <Icons.EyeOff size={18} />}</button>
+                    </>
+                  )}
                 </div>
               </td>
             </tr>

@@ -41,6 +41,7 @@ export async function getGeneralReportQuery(): Promise<UserData[]> {
       correoDiploma: userData.correo_diploma,
       desactivado: userData.desactivado || false,
       dpi: userData.dpi,
+      codigoDocente: userData.codigo_docente,
       talleres,
       asistencias
     };

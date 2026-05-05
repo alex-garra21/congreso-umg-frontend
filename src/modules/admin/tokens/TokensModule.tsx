@@ -93,7 +93,11 @@ export default function TokensModule() {
     const matchesStatus = statusFilter === 'all' || (statusFilter === 'used' ? t.used : !t.used);
     const matchesType = typeFilter === 'all' || t.usedByType === typeFilter;
     const matchesDate = !t.createdAt || isDateInRange(t.createdAt, startDate, endDate);
-    return matchesSearch && matchesStatus && matchesType && matchesDate;
+    
+    // Si es colaborador, solo ve los tokens que él mismo creó
+    const matchesOwnership = isOnlyAdmin || t.createdBy === currentAdmin?.id;
+
+    return matchesSearch && matchesStatus && matchesType && matchesDate && matchesOwnership;
   });
 
   const currentTokensOnPage = filteredTokens.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
