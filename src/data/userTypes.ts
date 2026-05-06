@@ -5,29 +5,29 @@
  */
 
 export const PARTICIPANT_TYPES = [
-  { 
-    id: 'docente', 
-    label: 'Docente UMG', 
-    requiresAcademicInfo: true, 
-    idLabel: 'Código docente', 
+  {
+    id: 'docente',
+    label: 'Docente UMG',
+    requiresAcademicInfo: true,
+    idLabel: 'Código docente',
     requiresCiclo: false,
     idMaxLength: 6,
     showIdHelpText: false
   },
-  { 
-    id: 'alumno', 
-    label: 'Alumno UMG', 
-    requiresAcademicInfo: true, 
-    idLabel: 'Carnet', 
+  {
+    id: 'alumno',
+    label: 'Alumno UMG',
+    requiresAcademicInfo: true,
+    idLabel: 'Carnet',
     requiresCiclo: true,
     idMaxLength: 12, // Suficiente para el formato con guiones
     showIdHelpText: true
   },
-  { 
-    id: 'externo', 
-    label: 'Participante Externo', 
-    requiresAcademicInfo: false, 
-    idLabel: 'ID', 
+  {
+    id: 'externo',
+    label: 'Participante Externo',
+    requiresAcademicInfo: false,
+    idLabel: 'ID',
     requiresCiclo: false,
     idMaxLength: 15,
     showIdHelpText: false
@@ -72,4 +72,4 @@ export const requiresCiclo = (id?: string | null) => {
   return type ? type.requiresCiclo : false;
 };
 
-export const CICLOS = ['I', 'III', 'V', 'VII', 'IX', 'XI'] as const;
+export const CICLOS = ['I', 'III', 'V', 'VII', 'IX', 'Graduado'] as const;
