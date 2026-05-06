@@ -17,7 +17,6 @@ export default function RobotsModule() {
   };
 
   // Solo el Administrador puede ver el módulo sin pagar.
-  // Colaboradores y Participantes deben tener el pago validado.
   if (!isPaid && !isOnlyAdmin) {
     return (
       <section className="dashboard-section" style={{ padding: '2rem 2.5rem' }}>

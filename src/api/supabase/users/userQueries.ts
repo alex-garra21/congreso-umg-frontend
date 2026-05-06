@@ -73,6 +73,7 @@ export async function getAllUsersQuery(): Promise<UserData[]> {
       dpi: userData.dpi,
       avatarUrl: userData.avatar_url,
       tokenCreatedBy: tokenInfo?.creado_por,
+      diplomaEditado: userData.diploma_editado,
       talleres: inscripcionesByUser[userData.id] || [],
       asistencias: asistenciasByUser[userData.id] || []
     };

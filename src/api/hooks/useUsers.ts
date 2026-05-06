@@ -8,8 +8,10 @@ import {
   adminValidateUserMutation,
   deleteTokenMutation,
   generateTokenMutation,
-  validateTokenMutation
+  validateTokenMutation,
+  resetDiplomaStatusMutation
 } from '../supabase/users/userMutations';
+import { resetUserWorkshopsMutation } from '../supabase/enrollment/enrollmentMutations';
 import type { UserData } from '../../utils/auth';
 
 import { getStaleTimeByRole } from '../../utils/queryUtils';
@@ -126,6 +128,32 @@ export function useValidateToken() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['tokens'] });
+    },
+  });
+}
+
+export function useResetDiplomaStatus() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (userId: string) => resetDiplomaStatusMutation(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+    },
+  });
+}
+
+export function useResetUserWorkshops() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (userId: string) => resetUserWorkshopsMutation(userId),
+    onSuccess: (_, userId) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['enrollments', userId] });
+      queryClient.invalidateQueries({ queryKey: ['attendances', userId] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
     },
   });
 }

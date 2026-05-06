@@ -59,7 +59,8 @@ export default function DashboardHome() {
   }, [user]);
 
 
-  const isPaid = user?.pagoValidado;
+  // Solo el Admin tiene acceso completo por defecto sin pago
+  const isPaid = user?.pagoValidado || user?.rol === 'admin';
   const isSent = user?.pagoEnviado;
 
   const isOnlyAdmin = user?.rol === 'admin';
@@ -120,10 +121,12 @@ export default function DashboardHome() {
     );
   }
 
+
+
   // Vista Usuario
   const hasDpi = user?.dpi && user.dpi.trim().length > 0;
   const workshopsReady = workshopsCount > 0 && isPaid;
-  const diplomaReady = user?.diplomaEditado;
+  const diplomaReady = user?.diplomaEditado || user?.rol === 'admin';
 
   return (
     <div className="dashboard-home">
@@ -132,8 +135,8 @@ export default function DashboardHome() {
       <div className="status-grid-container">
         <StatusCard
           label="ESTADO DE PAGO" accentColor={isPaid ? 'var(--status-success)' : isSent ? 'var(--status-pending)' : 'var(--status-error)'}
-          badge={isPaid ? <span className="step-badge-reusable success">Validado</span> : isSent ? <span className="step-badge-reusable warning">En revisión</span> : <span className="step-badge-reusable danger">Pendiente</span>}
-          sub={isPaid ? 'Inscripción activa' : isSent ? 'Validando comprobante' : 'Pago requerido para participar'}
+          badge={isPaid ? <span className="step-badge-reusable success">Staff / Validado</span> : isSent ? <span className="step-badge-reusable warning">En revisión</span> : <span className="step-badge-reusable danger">Pendiente</span>}
+          sub={isPaid ? 'Acceso administrativo total' : isSent ? 'Validando comprobante' : 'Pago requerido para participar'}
           footerLink="Ver detalles de pago →" onClick={() => navigate('/dashboard/pago')}
         />
 
@@ -145,7 +148,7 @@ export default function DashboardHome() {
 
         <StatusCard
           label="DIPLOMA" accentColor={diplomaReady ? 'var(--accent-primary)' : 'var(--text-muted)'}
-          badge={diplomaReady ? <span className="step-badge-reusable success" style={{ background: 'rgba(121, 80, 242, 0.15)', color: '#7950f2' }}>Confirmado</span> : <span className="step-badge-reusable neutral">Pendiente</span>}
+          badge={diplomaReady ? <span className="step-badge-reusable success" style={{ background: 'rgba(121, 80, 242, 0.15)', color: '#7950f2' }}>{isStaff(user?.rol) ? 'Habilitado' : 'Confirmado'}</span> : <span className="step-badge-reusable neutral">Pendiente</span>}
           sub={diplomaReady ? 'Datos listos para impresión' : 'Confirma tus datos aquí'}
           footerLink="Revisar datos →" onClick={() => navigate('/dashboard/diploma')}
         />

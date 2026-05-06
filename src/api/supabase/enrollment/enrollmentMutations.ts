@@ -26,3 +26,20 @@ export async function markAttendanceMutation(userId: string, workshopId: string)
     
   return { success: !error, error };
 }
+
+export async function resetUserWorkshopsMutation(userId: string): Promise<{ success: boolean; error?: any }> {
+  // Borramos inscripciones y asistencias relacionadas
+  const { error: delEnrollError } = await supabase
+    .from('inscripciones_talleres')
+    .delete()
+    .eq('id_usuario', userId);
+
+  if (delEnrollError) return { success: false, error: delEnrollError };
+
+  const { error: delAttendError } = await supabase
+    .from('asistencias')
+    .delete()
+    .eq('id_usuario', userId);
+
+  return { success: !delAttendError, error: delAttendError };
+}

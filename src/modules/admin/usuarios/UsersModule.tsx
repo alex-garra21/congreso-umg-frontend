@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAllUsers, useUpdateUserData, useInvalidatePayment, useAdminValidateUser } from '../../../api/hooks/useUsers';
+import { useAllUsers, useUpdateUserData, useInvalidatePayment, useAdminValidateUser, useResetDiplomaStatus, useResetUserWorkshops } from '../../../api/hooks/useUsers';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { type UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
@@ -19,6 +19,8 @@ export default function UsersModule() {
   const updateUserDataMutation = useUpdateUserData();
   const invalidatePaymentMutation = useInvalidatePayment();
   const adminValidateMutation = useAdminValidateUser();
+  const resetDiplomaStatusMutation = useResetDiplomaStatus();
+  const resetWorkshopsMutation = useResetUserWorkshops();
   const { user: currentAdmin } = useAuth();
   const isColaborador = currentAdmin?.rol === 'colaborador';
   const isOnlyAdmin = currentAdmin?.rol === 'admin';
@@ -52,6 +54,28 @@ export default function UsersModule() {
     if (confirmed) {
       await updateUserDataMutation.mutateAsync({ ...user, desactivado: !activate });
       showToast(`Colaborador ${activate ? 'activado' : 'desactivado'}`, 'success');
+    }
+  };
+
+  const handleResetDiploma = async (user: UserData) => {
+    if (!user.id) return;
+    const confirmed = await showConfirm('Habilitar Edición Diploma', `¿Permitir que ${user.nombres} vuelva a editar sus datos para el diploma?`, 'Sí, habilitar', false);
+    if (confirmed) {
+      const result = await resetDiplomaStatusMutation.mutateAsync(user.id!);
+      showToast(result.message, result.success ? 'success' : 'error');
+    }
+  };
+
+  const handleResetWorkshops = async (user: UserData) => {
+    if (!user.id) return;
+    const confirmed = await showConfirm('Resetear Talleres', `¿Limpiar la selección de talleres de ${user.nombres} y permitirle elegir de nuevo?`, 'Sí, resetear', true);
+    if (confirmed) {
+      const result = await resetWorkshopsMutation.mutateAsync(user.id!);
+      if (result.success) {
+        showToast('Talleres reseteados correctamente', 'success');
+      } else {
+        showToast('Error al resetear talleres', 'error');
+      }
     }
   };
 
@@ -158,10 +182,29 @@ export default function UsersModule() {
                   {!isColaborador && !u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && !u.pagoValidado && (
                     <button onClick={() => handleValidateUser(u)} className="action-btn" title="Validar Pago" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.CheckCircle size={18} /></button>
                   )}
- 
-                  {/* Anular Pago - Disponible para admin siempre, o colaborador si él creó el token */}
-                  {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && u.pagoValidado && (isOnlyAdmin || (isColaborador && u.tokenCreatedBy === currentAdmin?.id)) && (
+
+                  {/* Anular Pago - SOLO disponible para Administrador (se quita para colaborador) */}
+                  {!u.desactivado && u.pagoValidado && isOnlyAdmin && (
                     <button onClick={() => handleInvalidatePayment(u)} className="action-btn" title="Anular Pago" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.AlertTriangle size={18} /></button>
+                  )}
+
+                  {/* Habilitar Edición Diploma - Admin total, Colaborador solo sus tokens */}
+                  {u.diplomaEditado && (isOnlyAdmin || (isColaborador && u.tokenCreatedBy === currentAdmin?.id)) && (
+                    <button onClick={() => handleResetDiploma(u)} className="action-btn" title="Habilitar Edición Diploma" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.Award size={18} /></button>
+                  )}
+
+                  {/* Resetear Talleres - Admin total, Colaborador solo sus tokens. Solo si ya tiene electivos elegidos. */}
+                  {u.pagoValidado && 
+                    (isOnlyAdmin || (isColaborador && u.tokenCreatedBy === currentAdmin?.id)) && 
+                    (u.talleres?.some(t => t.category?.toUpperCase() !== 'GENERAL')) && (
+                    <button 
+                      onClick={() => handleResetWorkshops(u)} 
+                      className="action-btn" 
+                      title="Resetear Talleres" 
+                      style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                    >
+                      <Icons.Calendar size={18} />
+                    </button>
                   )}
 
                   {!isColaborador && (

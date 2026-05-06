@@ -31,19 +31,15 @@ export default function WorkshopsModule() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedWorkshop, setSelectedWorkshop] = useState<AgendaItem | null>(null);
-  const isPaid = user?.pagoValidado;
+  const isPaid = user?.pagoValidado || user?.rol === 'admin';
 
   useEffect(() => {
     if (user?.correo) {
-      if (!user.pagoValidado) {
-        // Modo Preview: No puede elegir, pero debe ver lo que ya tiene asignado (GENERAL)
+      if (!user.pagoValidado && user?.rol !== 'admin') {
+        // Modo Preview: Solo para participantes (o colaboradores) sin pago.
+        // El Admin NO entra aquí aunque no tenga pago validado.
         setIsConfirmed(false);
-        if (user.talleres) {
-          const generalOnly = user.talleres.filter(t => t.category === 'GENERAL').map(t => t.id);
-          setEnrolledIds(generalOnly);
-        } else {
-          setEnrolledIds([]);
-        }
+        setEnrolledIds([]);
         return;
       }
       
@@ -68,7 +64,13 @@ export default function WorkshopsModule() {
         setIsConfirmed(false);
         const saved = localStorage.getItem(`workshops_${user.correo}`);
         if (saved) {
-          setEnrolledIds(JSON.parse(saved));
+          const parsed = JSON.parse(saved) as string[];
+          // Filtrar por si acaso se coló alguna actividad GENERAL en el localStorage
+          const electivesOnly = parsed.filter(id => {
+            const w = agenda.find(a => a.id === id);
+            return w?.tag?.toUpperCase().trim() !== 'GENERAL';
+          });
+          setEnrolledIds(electivesOnly);
         } else if (user.talleres) {
           const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
           setEnrolledIds(onlyWorkshops);
@@ -138,7 +140,8 @@ export default function WorkshopsModule() {
   };
 
   const toggleEnroll = (workshop: AgendaItem) => {
-    if (!isPaid || isConfirmed || workshop.tag === 'GENERAL') return;
+    const isGeneral = workshop.tag?.toUpperCase().trim() === 'GENERAL';
+    if (!isPaid || isConfirmed || isGeneral) return;
     if (enrolledIds.includes(workshop.id)) {
       setEnrolledIds(prev => prev.filter(id => id !== workshop.id));
     } else {
@@ -282,7 +285,7 @@ export default function WorkshopsModule() {
           
           <div className="selection-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Actividades Generales (Obligatorias) */}
-            {agenda.filter(a => a.tag === 'GENERAL').map(workshop => (
+            {agenda.filter(a => a.tag?.toUpperCase().trim() === 'GENERAL').map(workshop => (
               <div key={`summary-${workshop.id}`} className="selection-item mandatory">
                 <div className="selection-item-info">
                   <span className="selection-item-room">{workshop.room}</span>
@@ -293,10 +296,9 @@ export default function WorkshopsModule() {
               </div>
             ))}
 
-            {/* Talleres Elegidos */}
             {enrolledIds.map(id => {
               const workshop = agenda.find(a => a.id === id);
-              if (!workshop || workshop.tag === 'GENERAL') return null;
+              if (!workshop || workshop.tag?.toUpperCase().trim() === 'GENERAL') return null;
               return (
                 <div key={`summary-${id}`} className="selection-item">
                   <div className="selection-item-info">
@@ -434,9 +436,9 @@ export default function WorkshopsModule() {
         maxWidth="550px"
       >
         {selectedWorkshop && (() => {
-          const isSelected = enrolledIds.includes(selectedWorkshop.id) || selectedWorkshop.tag === 'GENERAL';
-          const isCollision = !isSelected && isTimeCollision(selectedWorkshop);
-          const isMandatory = selectedWorkshop.tag === 'GENERAL';
+          const isSelected = enrolledIds.includes(selectedWorkshop.id);
+          const isMandatory = selectedWorkshop.tag?.toUpperCase().trim() === 'GENERAL';
+          const isCollision = !isSelected && !isMandatory && isTimeCollision(selectedWorkshop);
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -721,6 +723,7 @@ export default function WorkshopsModule() {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 24px;
           padding: 1rem 1.5rem;
           background: #ffffff;
           border: 1px solid var(--border-soft);

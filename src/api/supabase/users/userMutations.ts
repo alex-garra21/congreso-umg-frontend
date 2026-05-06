@@ -109,59 +109,59 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
 }
 
 export async function invalidatePaymentMutation(userId: string): Promise<{ success: boolean; message: string }> {
-  // 1. Obtener el token vinculado antes de cualquier acción
-  const { data: tokenData } = await supabase
-    .from('tokens_pago')
-    .select('codigo')
-    .eq('usado_por', userId)
-    .maybeSingle();
+  try {
+    // 1. Obtener el token vinculado antes de cualquier acción
+    const { data: tokenData } = await supabase
+      .from('tokens_pago')
+      .select('codigo')
+      .eq('usado_por', userId)
+      .maybeSingle();
 
-  // 2. Ejecutar borrados y actualizaciones en paralelo para optimizar tiempo de respuesta
-  const promises: any[] = [];
+    // 2. Ejecutar borrados de dependencias primero (Asistencias e Inscripciones)
+    await Promise.all([
+      supabase.from('asistencias').delete().eq('id_usuario', userId),
+      supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId)
+    ]);
 
-  // A. Borrar asistencias (No tienen dependencias hijas)
-  promises.push(supabase.from('asistencias').delete().eq('id_usuario', userId));
-
-  // B. Borrar inscripciones a talleres
-  promises.push(supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId));
-
-  // C. Limpieza del perfil del usuario (Reset de campos de pago)
-  const userPromise = supabase
-    .from('usuarios')
-    .update({
-      pago_validado: false,
-      nombre_diploma: "",
-      correo_diploma: "",
-      dpi: "",
-      diploma_editado: false
-    })
-    .eq('id', userId);
-  promises.push(userPromise);
-
-  // D. Manejar el token de pago (Liberar o eliminar token de auditoría)
-  if (tokenData) {
-    if (tokenData.codigo.startsWith('ADMIN-')) {
-      promises.push(supabase.from('tokens_pago').delete().eq('codigo', tokenData.codigo));
-    } else {
-      promises.push(supabase
-        .from('tokens_pago')
-        .update({
-          usado: false,
-          usado_por: null,
-          fecha_uso: null
-        })
-        .eq('codigo', tokenData.codigo)
-      );
+    // 3. Manejar el token de pago (Liberar o eliminar token de auditoría)
+    if (tokenData) {
+      if (tokenData.codigo.startsWith('ADMIN-')) {
+        await supabase.from('tokens_pago').delete().eq('codigo', tokenData.codigo);
+      } else {
+        await supabase
+          .from('tokens_pago')
+          .update({
+            usado: false,
+            usado_por: null,
+            fecha_uso: null
+          })
+          .eq('codigo', tokenData.codigo);
+      }
     }
+
+    // 4. Limpieza del perfil del usuario (Reset de campos de pago)
+    // Lo hacemos al final para evitar conflictos de triggers si los hubiera
+    const { error: userError } = await supabase
+      .from('usuarios')
+      .update({
+        pago_validado: false,
+        nombre_diploma: null,
+        correo_diploma: null,
+        dpi: null,
+        diploma_editado: false
+      })
+      .eq('id', userId);
+
+    if (userError) {
+      console.error("Error Supabase (usuarios):", userError);
+      return { success: false, message: `Error al invalidar el perfil: ${userError.message}` };
+    }
+
+    return { success: true, message: 'Pago anulado y datos de usuario reseteados completamente.' };
+  } catch (error: any) {
+    console.error("Error crítico en invalidatePaymentMutation:", error);
+    return { success: false, message: 'Error inesperado al procesar la invalidación.' };
   }
-
-  const results = await Promise.all(promises);
-
-  // Revisamos si la promesa del usuario (la que está en la posición 2) falló
-  const userResult = results[2];
-  if (userResult && userResult.error) return { success: false, message: 'Error al invalidar el perfil del usuario.' };
-
-  return { success: true, message: 'Pago anulado y datos de usuario reseteados completamente.' };
 }
 
 export async function adminValidateUserMutation(userId: string, adminId?: string): Promise<{ success: boolean; message: string }> {
@@ -277,4 +277,16 @@ export async function validateTokenMutation(code: string, userId: string): Promi
   await assignGeneralActivities(userId);
 
   return { success: true };
+}
+
+export async function resetDiplomaStatusMutation(userId: string): Promise<{ success: boolean; message: string }> {
+  const { error } = await supabase
+    .from('usuarios')
+    .update({
+      diploma_editado: false
+    })
+    .eq('id', userId);
+
+  if (error) return { success: false, message: 'Error al resetear el estado del diploma.' };
+  return { success: true, message: 'Se ha habilitado de nuevo la edición del diploma para el usuario.' };
 }

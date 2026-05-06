@@ -32,20 +32,18 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
   const menuItems: MenuItem[] = [
     { id: 'inicio', label: 'Inicio', Icon: Icons.Home, section: 'GENERAL' },
     { id: 'perfil', label: 'Mi perfil', Icon: Icons.User, section: 'GENERAL' },
-    ...(isOnlyAdmin ? [{ id: 'robots', label: 'Guerra de Robots', Icon: Icons.Zap, section: 'GENERAL' }] : []),
   ];
 
-  // Items de Inscripción (Para participantes y colaboradores)
-  if (!isOnlyAdmin) {
-    menuItems.push(
-      { id: 'pago', label: 'Pago', Icon: Icons.CreditCard, section: 'INSCRIPCIÓN', badge: isPaid ? 'OK' : 'PEND' },
-      { id: 'talleres', label: 'Mis talleres', Icon: Icons.Calendar, section: 'INSCRIPCIÓN' },
-      { id: 'diploma', label: 'Diploma', Icon: Icons.Award, section: 'INSCRIPCIÓN' }
-    );
+  // Items de Inscripción (Para todos los usuarios excepto si el admin decide ocultarlo, 
+  // pero aquí lo habilitamos para que el admin pruebe el flujo)
+  menuItems.push(
+    { id: 'pago', label: 'Pago', Icon: Icons.CreditCard, section: 'INSCRIPCIÓN', badge: isPaid ? 'OK' : 'PEND' },
+    { id: 'talleres', label: 'Mis talleres', Icon: Icons.Calendar, section: 'INSCRIPCIÓN' },
+    { id: 'diploma', label: 'Diploma', Icon: Icons.Award, section: 'INSCRIPCIÓN' }
+  );
 
-    if (isPaid) {
-      menuItems.push({ id: 'robots', label: 'Guerra de Robots', Icon: Icons.Zap, section: 'INSCRIPCIÓN' });
-    }
+  if (isPaid || isOnlyAdmin) {
+    menuItems.push({ id: 'robots', label: 'Guerra de Robots', Icon: Icons.Zap, section: 'INSCRIPCIÓN' });
   }
 
   // Items de Administración (Para staff)
@@ -136,7 +134,6 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
       <nav className="sidebar-nav">
         {['GENERAL', 'INSCRIPCIÓN', 'ADMINISTRACIÓN', 'PERSONALIZACIÓN']
           .filter(section => {
-            if (section === 'INSCRIPCIÓN' && isOnlyAdmin) return false;
             if (section === 'ADMINISTRACIÓN' && !isStaffMember) return false;
             if (section === 'PERSONALIZACIÓN' && !isOnlyAdmin) return false;
             return true;
