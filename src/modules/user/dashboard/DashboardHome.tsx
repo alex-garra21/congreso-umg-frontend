@@ -18,12 +18,19 @@ export default function DashboardHome() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // AUTOLIMPIEZA (Parche para RLS): Si el pago fue anulado pero aún tiene talleres en BD,
-    // usamos la sesión del propio usuario para borrarlos y liberar el cupo.
+    // AUTOLIMPIEZA (Parche para RLS e integridad de datos): 
+    // 1. Si el pago fue anulado pero aún tiene talleres en BD, usamos la sesión del propio usuario para borrarlos.
     if (user && !isStaff(user.rol) && !user.pagoValidado && user.talleres && user.talleres.length > 0) {
       syncUserEnrollmentsMutation(user.id!, []).then(() => {
         refetchProfile();
       });
+    }
+
+    // 2. Si el pago fue anulado, limpiar el caché local (LocalStorage) para que pueda empezar de cero.
+    if (user?.correo && !user.pagoValidado && localStorage.getItem(`workshops_confirmed_${user.correo}`)) {
+      localStorage.removeItem(`workshops_confirmed_${user.correo}`);
+      localStorage.removeItem(`workshops_${user.correo}`);
+      localStorage.removeItem(`modifications_count_${user.correo}`);
     }
 
     if (!isStaff(user?.rol) && user?.correo) {

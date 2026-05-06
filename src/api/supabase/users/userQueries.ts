@@ -15,7 +15,42 @@ export async function getAllUsersQuery(): Promise<UserData[]> {
   if (error) throw new Error(`Error al obtener usuarios: ${error.message}`);
   if (!data) return [];
 
-  const mappedUsers: UserData[] = data.map(userData => {
+  // Obtener todas las inscripciones y asistencias de una sola vez para evitar N+1 queries
+  const { data: allInscripciones } = await supabase
+    .from('inscripciones_talleres')
+    .select(`
+      id_usuario,
+      id_charla,
+      charlas!id_charla (
+        categoria_id,
+        categorias!categoria_id (nombre)
+      )
+    `);
+
+  const { data: allAsistencias } = await supabase
+    .from('asistencias')
+    .select('id_usuario, id_charla, fecha_hora');
+
+  // Agrupar en memoria
+  const inscripcionesByUser: Record<string, any[]> = {};
+  if (allInscripciones) {
+    for (const row of allInscripciones) {
+      const charla = row.charlas as any;
+      const categoria = charla?.categorias?.nombre || '';
+      if (!inscripcionesByUser[row.id_usuario]) inscripcionesByUser[row.id_usuario] = [];
+      inscripcionesByUser[row.id_usuario].push({ id: row.id_charla, category: categoria });
+    }
+  }
+
+  const asistenciasByUser: Record<string, any[]> = {};
+  if (allAsistencias) {
+    for (const row of allAsistencias) {
+      if (!asistenciasByUser[row.id_usuario]) asistenciasByUser[row.id_usuario] = [];
+      asistenciasByUser[row.id_usuario].push({ workshopId: row.id_charla, timestamp: row.fecha_hora });
+    }
+  }
+
+  return data.map(userData => {
     const tokens = (userData as any).tokens_pago;
     const tokenInfo = Array.isArray(tokens) ? tokens[0] : tokens;
 
@@ -37,17 +72,11 @@ export async function getAllUsersQuery(): Promise<UserData[]> {
       desactivado: userData.desactivado || false,
       dpi: userData.dpi,
       avatarUrl: userData.avatar_url,
-      tokenCreatedBy: tokenInfo?.creado_por
+      tokenCreatedBy: tokenInfo?.creado_por,
+      talleres: inscripcionesByUser[userData.id] || [],
+      asistencias: asistenciasByUser[userData.id] || []
     };
   });
-
-  const finalUsers = await Promise.all(mappedUsers.map(async (u) => {
-    const talleres = await getEnrolledWorkshopsQuery(u.id!);
-    const asistencias = await getAttendancesQuery(u.id!);
-    return { ...u, talleres, asistencias };
-  }));
-
-  return finalUsers;
 }
 
 export async function getTokensQuery(): Promise<TokenData[]> {

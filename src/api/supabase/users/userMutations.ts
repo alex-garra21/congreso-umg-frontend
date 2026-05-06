@@ -116,16 +116,17 @@ export async function invalidatePaymentMutation(userId: string): Promise<{ succe
     .eq('usado_por', userId)
     .maybeSingle();
 
-  // 2. ELIMINACIÓN EN CASCADA (De lo más específico a lo más general)
+  // 2. Ejecutar borrados y actualizaciones en paralelo para optimizar tiempo de respuesta
+  const promises: any[] = [];
 
   // A. Borrar asistencias (No tienen dependencias hijas)
-  await supabase.from('asistencias').delete().eq('id_usuario', userId);
+  promises.push(supabase.from('asistencias').delete().eq('id_usuario', userId));
 
   // B. Borrar inscripciones a talleres
-  await supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId);
+  promises.push(supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId));
 
   // C. Limpieza del perfil del usuario (Reset de campos de pago)
-  const { error: userError } = await supabase
+  const userPromise = supabase
     .from('usuarios')
     .update({
       pago_validado: false,
@@ -135,24 +136,30 @@ export async function invalidatePaymentMutation(userId: string): Promise<{ succe
       diploma_editado: false
     })
     .eq('id', userId);
-
-  if (userError) return { success: false, message: 'Error al invalidar el perfil del usuario.' };
+  promises.push(userPromise);
 
   // D. Manejar el token de pago (Liberar o eliminar token de auditoría)
   if (tokenData) {
     if (tokenData.codigo.startsWith('ADMIN-')) {
-      await supabase.from('tokens_pago').delete().eq('codigo', tokenData.codigo);
+      promises.push(supabase.from('tokens_pago').delete().eq('codigo', tokenData.codigo));
     } else {
-      await supabase
+      promises.push(supabase
         .from('tokens_pago')
         .update({
           usado: false,
           usado_por: null,
           fecha_uso: null
         })
-        .eq('codigo', tokenData.codigo);
+        .eq('codigo', tokenData.codigo)
+      );
     }
   }
+
+  const results = await Promise.all(promises);
+
+  // Revisamos si la promesa del usuario (la que está en la posición 2) falló
+  const userResult = results[2];
+  if (userResult && userResult.error) return { success: false, message: 'Error al invalidar el perfil del usuario.' };
 
   return { success: true, message: 'Pago anulado y datos de usuario reseteados completamente.' };
 }
