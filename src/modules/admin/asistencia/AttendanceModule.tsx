@@ -28,7 +28,7 @@ export default function AttendanceModule() {
   const { timeInterval } = useTimeConfig();
   const { user: currentUser } = useAuth();
   const isColaborador = currentUser?.rol === 'colaborador';
-  
+
   const [searchAgenda, setSearchAgenda] = useState('');
   const [startTimeFilter, setStartTimeFilter] = useState('all');
   const [endTimeFilter, setEndTimeFilter] = useState('all');
@@ -96,7 +96,7 @@ export default function AttendanceModule() {
     if (item.tagId === 1 || item.tag?.toUpperCase().trim() === 'GENERAL') return false;
 
     const matchesSearch = item.title.toLowerCase().includes(searchAgenda.toLowerCase());
-    
+
     let matchesTime = true;
     const hasStart = startTimeFilter !== 'all';
     const hasEnd = endTimeFilter !== 'all';
@@ -127,15 +127,15 @@ export default function AttendanceModule() {
         title="Validación por Actividad"
         description="Genera códigos QR y gestiona los tiempos de tolerancia para la toma de asistencia."
       >
-        <div style={{ 
-          display: 'flex', 
+        <div style={{
+          display: 'flex',
           gap: '1rem',
           alignItems: 'flex-end',
-          justifyContent: 'center', 
-          marginBottom: '2.5rem', 
-          background: 'var(--bg-app)', 
-          padding: '1.25rem 1.5rem', 
-          borderRadius: '16px', 
+          justifyContent: 'center',
+          marginBottom: '2.5rem',
+          background: 'var(--bg-app)',
+          padding: '1.25rem 1.5rem',
+          borderRadius: '16px',
           border: '1px solid var(--border-soft)',
           flexWrap: 'wrap'
         }}>
@@ -205,13 +205,13 @@ export default function AttendanceModule() {
         <Alert variant="info" style={{ marginBottom: '1.5rem' }}>
           Actividad: <strong>{graceWorkshop?.title}</strong>
         </Alert>
-        
+
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
           <FormField label="HORAS" style={{ flex: 1 }}>
-            <AdminSelect value={tempGraceHours.toString()} onChange={e => setTempGraceHours(parseInt(e.target.value))} options={[0,1,2,3].map(h => ({ value: h.toString(), label: `${h} h` }))} />
+            <AdminSelect value={tempGraceHours.toString()} onChange={e => setTempGraceHours(parseInt(e.target.value))} options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(h => ({ value: h.toString(), label: `${h} h` }))} />
           </FormField>
           <FormField label="MINUTOS" style={{ flex: 1 }}>
-            <AdminSelect value={tempGraceMinutes.toString()} onChange={e => setTempGraceMinutes(parseInt(e.target.value))} options={[0,5,10,15,20,25,30,45].map(m => ({ value: m.toString(), label: `${m} min` }))} />
+            <AdminSelect value={tempGraceMinutes.toString()} onChange={e => setTempGraceMinutes(parseInt(e.target.value))} options={[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(m => ({ value: m.toString(), label: `${m} min` }))} />
           </FormField>
         </div>
 

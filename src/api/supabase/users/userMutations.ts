@@ -117,7 +117,7 @@ export async function invalidatePaymentMutation(userId: string): Promise<{ succe
     .maybeSingle();
 
   // 2. ELIMINACIÓN EN CASCADA (De lo más específico a lo más general)
-  
+
   // A. Borrar asistencias (No tienen dependencias hijas)
   await supabase.from('asistencias').delete().eq('id_usuario', userId);
 
@@ -127,8 +127,8 @@ export async function invalidatePaymentMutation(userId: string): Promise<{ succe
   // C. Limpieza del perfil del usuario (Reset de campos de pago)
   const { error: userError } = await supabase
     .from('usuarios')
-    .update({ 
-      pago_validado: false, 
+    .update({
+      pago_validado: false,
       nombre_diploma: null,
       correo_diploma: null,
       diploma_editado: false
@@ -201,10 +201,10 @@ export async function deleteTokenMutation(code: string): Promise<void> {
     // Reset de tabla usuarios
     await supabase
       .from('usuarios')
-      .update({ 
-        pago_validado: false, 
-        nombre_diploma: null,
-        correo_diploma: null,
+      .update({
+        pago_validado: false,
+        nombre_diploma: "",
+        correo_diploma: "",
         diploma_editado: false
       })
       .eq('id', userId);
@@ -219,7 +219,7 @@ export async function deleteTokenMutation(code: string): Promise<void> {
 }
 
 export async function generateTokenMutation(code: string, adminId?: string): Promise<{ success: boolean; error?: any }> {
-  const { error } = await supabase.from('tokens_pago').insert({ 
+  const { error } = await supabase.from('tokens_pago').insert({
     codigo: code,
     creado_por: adminId
   });
