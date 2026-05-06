@@ -129,8 +129,9 @@ export async function invalidatePaymentMutation(userId: string): Promise<{ succe
     .from('usuarios')
     .update({
       pago_validado: false,
-      nombre_diploma: null,
-      correo_diploma: null,
+      nombre_diploma: "",
+      correo_diploma: "",
+      dpi: "",
       diploma_editado: false
     })
     .eq('id', userId);
@@ -205,6 +206,7 @@ export async function deleteTokenMutation(code: string): Promise<void> {
         pago_validado: false,
         nombre_diploma: "",
         correo_diploma: "",
+        dpi: "",
         diploma_editado: false
       })
       .eq('id', userId);

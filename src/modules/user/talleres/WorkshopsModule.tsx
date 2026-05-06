@@ -35,8 +35,6 @@ export default function WorkshopsModule() {
 
   useEffect(() => {
     if (user?.correo) {
-      const confirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`);
-      
       if (!user.pagoValidado) {
         // Modo Preview: No puede elegir, pero debe ver lo que ya tiene asignado (GENERAL)
         setIsConfirmed(false);
@@ -49,6 +47,17 @@ export default function WorkshopsModule() {
         return;
       }
       
+      // Detectar si el backend fue limpiado por un administrador
+      const hasRealWorkshops = user.talleres && user.talleres.some(t => t.category !== 'GENERAL');
+      if (!hasRealWorkshops && localStorage.getItem(`workshops_confirmed_${user.correo}`)) {
+        // El admin anuló el pago o vació las inscripciones, limpiamos el caché local
+        localStorage.removeItem(`workshops_confirmed_${user.correo}`);
+        localStorage.removeItem(`workshops_${user.correo}`);
+        localStorage.removeItem(`modifications_count_${user.correo}`);
+      }
+
+      const confirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`);
+      
       if (confirmed === 'true') {
         setIsConfirmed(true);
         if (user.talleres) {
@@ -56,6 +65,7 @@ export default function WorkshopsModule() {
           setEnrolledIds(onlyWorkshops);
         }
       } else {
+        setIsConfirmed(false);
         const saved = localStorage.getItem(`workshops_${user.correo}`);
         if (saved) {
           setEnrolledIds(JSON.parse(saved));
