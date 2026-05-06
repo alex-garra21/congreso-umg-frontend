@@ -21,6 +21,7 @@ export default function UsersModule() {
   const adminValidateMutation = useAdminValidateUser();
   const { user: currentAdmin } = useAuth();
   const isColaborador = currentAdmin?.rol === 'colaborador';
+  const isOnlyAdmin = currentAdmin?.rol === 'admin';
 
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -158,8 +159,8 @@ export default function UsersModule() {
                     <button onClick={() => handleValidateUser(u)} className="action-btn" title="Validar Pago" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.CheckCircle size={18} /></button>
                   )}
  
-                  {/* Anular Pago - Disponible para colaborador y admin si el pago ya fue validado */}
-                  {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && u.pagoValidado && (
+                  {/* Anular Pago - Disponible para admin siempre, o colaborador si él creó el token */}
+                  {!u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && u.pagoValidado && (isOnlyAdmin || (isColaborador && u.tokenCreatedBy === currentAdmin?.id)) && (
                     <button onClick={() => handleInvalidatePayment(u)} className="action-btn" title="Anular Pago" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.AlertTriangle size={18} /></button>
                   )}
 

@@ -9,31 +9,37 @@ import { getEnrolledWorkshopsQuery, getAttendancesQuery } from '../enrollment/en
 export async function getAllUsersQuery(): Promise<UserData[]> {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('*')
+    .select('*, tokens_pago!usado_por(creado_por)')
     .order('apellidos', { ascending: true });
 
   if (error) throw new Error(`Error al obtener usuarios: ${error.message}`);
   if (!data) return [];
 
-  const mappedUsers: UserData[] = data.map(userData => ({
-    id: userData.id,
-    nombres: userData.nombres,
-    apellidos: userData.apellidos,
-    sexo: userData.sexo || 'M',
-    correo: userData.correo,
-    contrasena: 'auth_managed',
-    rol: userData.rol as any,
-    pagoValidado: userData.pago_validado,
-    nombreDiploma: userData.nombre_diploma,
-    tipoParticipante: userData.tipo_participante,
-    carnet: userData.carnet,
-    ciclo: userData.ciclo,
-    telefono: userData.telefono,
-    correoDiploma: userData.correo_diploma,
-    desactivado: userData.desactivado || false,
-    dpi: userData.dpi,
-    avatarUrl: userData.avatar_url
-  }));
+  const mappedUsers: UserData[] = data.map(userData => {
+    const tokens = (userData as any).tokens_pago;
+    const tokenInfo = Array.isArray(tokens) ? tokens[0] : tokens;
+
+    return {
+      id: userData.id,
+      nombres: userData.nombres,
+      apellidos: userData.apellidos,
+      sexo: userData.sexo || 'M',
+      correo: userData.correo,
+      contrasena: 'auth_managed',
+      rol: userData.rol as any,
+      pagoValidado: userData.pago_validado,
+      nombreDiploma: userData.nombre_diploma,
+      tipoParticipante: userData.tipo_participante,
+      carnet: userData.carnet,
+      ciclo: userData.ciclo,
+      telefono: userData.telefono,
+      correoDiploma: userData.correo_diploma,
+      desactivado: userData.desactivado || false,
+      dpi: userData.dpi,
+      avatarUrl: userData.avatar_url,
+      tokenCreatedBy: tokenInfo?.creado_por
+    };
+  });
 
   const finalUsers = await Promise.all(mappedUsers.map(async (u) => {
     const talleres = await getEnrolledWorkshopsQuery(u.id!);
