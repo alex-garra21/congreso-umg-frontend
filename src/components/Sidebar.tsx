@@ -48,16 +48,15 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
 
   // Items de Administración (Para staff)
   if (isStaffMember) {
-    menuItems.push(
-      { id: 'admin-tokens', label: 'Tokens de Pago', Icon: Icons.Shield, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-usuarios', label: 'Usuarios', Icon: Icons.User, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-asistencia', label: 'Control Asistencia', Icon: Icons.CheckCircle, section: 'ADMINISTRACIÓN' },
-      { id: 'admin-reportes', label: 'Reportes', Icon: Icons.BarChart, section: 'ADMINISTRACIÓN' }
-    );
+    // Ambos (Admin y Colaborador) ven Tokens
+    menuItems.push({ id: 'admin-tokens', label: 'Tokens de Pago', Icon: Icons.Shield, section: 'ADMINISTRACIÓN' });
 
-    // Gestión de Agenda solo para administradores
+    // Solo el Super Admin ve el resto de herramientas por el momento
     if (isOnlyAdmin) {
       menuItems.push(
+        { id: 'admin-usuarios', label: 'Usuarios', Icon: Icons.User, section: 'ADMINISTRACIÓN' },
+        { id: 'admin-asistencia', label: 'Control Asistencia', Icon: Icons.CheckCircle, section: 'ADMINISTRACIÓN' },
+        { id: 'admin-reportes', label: 'Reportes', Icon: Icons.BarChart, section: 'ADMINISTRACIÓN' },
         { id: 'admin-agenda', label: 'Gestión Agenda', Icon: Icons.Clipboard, section: 'ADMINISTRACIÓN' }
       );
     }

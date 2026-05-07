@@ -40,6 +40,8 @@ export interface AgendaItem {
   room: string;          // Nombre de la sala
   date?: string;
   gracePeriod?: number;
+  maxQuotas?: number;
+  occupiedQuotas?: number;
 }
 
 export interface Room {

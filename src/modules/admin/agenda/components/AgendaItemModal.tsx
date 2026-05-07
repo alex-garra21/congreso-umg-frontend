@@ -125,17 +125,28 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, 
           </FormField>
         </div>
 
-        <FormField label="PONENTE (OPCIONAL)">
-          <AdminSelect
-            value={formData.speaker?.id || ''}
-            onChange={(e) => {
-              const spk = speakers.find(s => s.id === parseInt(e.target.value));
-              setFormData({ ...formData, speaker: spk });
-            }}
-            options={speakers.map(s => ({ value: s.id.toString(), label: s.name }))}
-            placeholder="-- Sin Ponente --"
-          />
-        </FormField>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <FormField label="PONENTE (OPCIONAL)">
+            <AdminSelect
+              value={formData.speaker?.id || ''}
+              onChange={(e) => {
+                const spk = speakers.find(s => s.id === parseInt(e.target.value));
+                setFormData({ ...formData, speaker: spk });
+              }}
+              options={speakers.map(s => ({ value: s.id.toString(), label: s.name }))}
+              placeholder="-- Sin Ponente --"
+            />
+          </FormField>
+          <FormField label="CUPO MÁXIMO (0 = SIN LÍMITE)">
+            <input
+              type="number"
+              className="dashboard-input"
+              value={formData.maxQuotas || 0}
+              onChange={(e) => setFormData({ ...formData, maxQuotas: parseInt(e.target.value) || 0 })}
+              min="0"
+            />
+          </FormField>
+        </div>
 
         <FormField label="DESCRIPCIÓN *" required>
           <textarea

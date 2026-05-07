@@ -64,7 +64,6 @@ export default function DashboardHome() {
   const isSent = user?.pagoEnviado;
 
   const isOnlyAdmin = user?.rol === 'admin';
-  const isColaborador = user?.rol === 'colaborador';
 
   // Procesar datos de admin si es staff
   const participants = allUsers.filter(u => !isStaff(u.rol));
@@ -104,7 +103,7 @@ export default function DashboardHome() {
             <EnrollmentStep
               status="in-progress" icon={<Icons.CreditCard />} title="Estado Financiero General"
               description={`${paidUsersCount} usuarios han completado el proceso de pago. Aún faltan ${totalUsers - paidUsersCount} cuentas por validar.`}
-              badgeLabel="En Revisión" badgeVariant="warning"
+              badgeLabel="En Revisión" badgeVariant="danger"
             />
             {deactivatedUsers > 0 && (
               <EnrollmentStep
@@ -141,13 +140,13 @@ export default function DashboardHome() {
         />
 
         <StatusCard
-          label="TALLERES" value={workshopsCount} accentColor="var(--accent-primary)"
+          label="TALLERES" value={workshopsCount} accentColor={workshopsReady ? 'var(--status-success)' : 'var(--status-error)'}
           sub={workshopsCount === 1 ? 'Taller seleccionado' : 'Talleres en tu agenda'}
           footerLink="Gestionar talleres →" onClick={() => navigate('/dashboard/talleres')}
         />
 
         <StatusCard
-          label="DIPLOMA" accentColor={diplomaReady ? 'var(--accent-primary)' : 'var(--text-muted)'}
+          label="DIPLOMA" accentColor={diplomaReady ? 'var(--status-success)' : 'var(--status-error)'}
           badge={diplomaReady ? <span className="step-badge-reusable success" style={{ background: 'rgba(121, 80, 242, 0.15)', color: '#7950f2' }}>{isStaff(user?.rol) ? 'Habilitado' : 'Confirmado'}</span> : <span className="step-badge-reusable neutral">Pendiente</span>}
           sub={diplomaReady ? 'Datos listos para impresión' : 'Confirma tus datos aquí'}
           footerLink="Revisar datos →" onClick={() => navigate('/dashboard/diploma')}
@@ -171,7 +170,7 @@ export default function DashboardHome() {
             status={hasDpi ? "completed" : "pending"} icon={hasDpi ? <Icons.Check /> : <Icons.Users />}
             title={hasDpi ? "Perfil completo" : "Datos de perfil pendientes"}
             description={hasDpi ? "Los datos del perfil han sido registrados y actualizados correctamente" : "Por favor, ingresa tu número de DPI para completar tu perfil"}
-            badgeLabel={hasDpi ? "Completado" : "Pendiente"} badgeVariant={hasDpi ? "success" : "warning"}
+            badgeLabel={hasDpi ? "Completado" : "Pendiente"} badgeVariant={hasDpi ? "success" : "danger"}
             onClick={() => navigate('/dashboard/perfil')}
           />
 
@@ -181,7 +180,7 @@ export default function DashboardHome() {
             title="Validación de Pago"
             description={isPaid ? "Inscripción activada correctamente" : isSent ? "Comprobante recibido, en revisión" : "Pendiente de realizar pago"}
             badgeLabel={isPaid ? "Completado" : isSent ? "En proceso" : "Pendiente"}
-            badgeVariant={isPaid ? "success" : isSent ? "warning" : "danger"}
+            badgeVariant={isPaid ? "success" : isSent ? "danger" : "danger"}
             onClick={() => navigate('/dashboard/pago')}
           />
 
@@ -191,7 +190,7 @@ export default function DashboardHome() {
             title="Selección de Talleres"
             description={workshopsCount > 0 ? `${workshopsCount} talleres en tu agenda` : "Elige los talleres de tu interés"}
             badgeLabel={workshopsReady ? "Completado" : "Pendiente"}
-            badgeVariant={workshopsReady ? "success" : "neutral"}
+            badgeVariant={workshopsReady ? "success" : "danger"}
             onClick={() => navigate('/dashboard/talleres')}
           />
 
@@ -201,7 +200,7 @@ export default function DashboardHome() {
             title="Confirmación de Diploma"
             description={diplomaReady ? "Datos del diploma confirmados" : "Confirma tu nombre y correo para el diploma"}
             badgeLabel={diplomaReady ? "Completado" : "Pendiente"}
-            badgeVariant={diplomaReady ? "success" : "neutral"}
+            badgeVariant={diplomaReady ? "success" : "danger"}
             onClick={() => navigate('/dashboard/diploma')}
           />
         </div>
@@ -209,37 +208,6 @@ export default function DashboardHome() {
 
       <LocationLink variant="banner" />
 
-      {/* SECCIÓN ADICIONAL PARA COLABORADORES: MÓDULOS DE ADMIN */}
-      {isColaborador && (
-        <section className="dashboard-section" style={{ marginTop: '3rem', borderTop: '2px solid var(--border-soft)', paddingTop: '3rem' }}>
-          <div className="section-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
-              <div style={{ background: 'var(--status-success)', width: '10px', height: '10px', borderRadius: '50%' }}></div>
-              <h2 style={{ margin: 0 }}>Panel de Staff (Administración)</h2>
-            </div>
-            <p>Como colaborador, también tienes acceso a las métricas globales del evento.</p>
-          </div>
-
-          <div className="status-grid-container" style={{ marginTop: '1.5rem' }}>
-            <StatusCard label="TOTAL PARTICIPANTES" value={loadingAdmin ? '...' : totalUsers} sub="Excluye staff" accentColor="var(--accent-primary)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
-            <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsersCount} sub="Inscripciones completadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
-            <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos universitarios" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} navigateTo="/dashboard/admin-usuarios" />
-            <StatusCard label="ADMINISTRADORES" value={loadingAdmin ? '...' : adminsCount} sub="Personal del evento" accentColor="var(--accent-dark)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
-          </div>
-
-          <div className="admin-quick-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-            <button className="secondary-btn" onClick={() => navigate('/dashboard/admin-usuarios')} style={{ flex: 1, minWidth: '180px' }}>
-              <Icons.Users size={16} /> Gestionar Usuarios
-            </button>
-            <button className="secondary-btn" onClick={() => navigate('/dashboard/admin-tokens')} style={{ flex: 1, minWidth: '180px' }}>
-              <Icons.Shield size={16} /> Validar Tokens
-            </button>
-            <button className="secondary-btn" onClick={() => navigate('/dashboard/admin-reportes')} style={{ flex: 1, minWidth: '180px' }}>
-              <Icons.BarChart size={16} /> Ver Reportes
-            </button>
-          </div>
-        </section>
-      )}
 
       <style>{`.status-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }`}</style>
     </div>

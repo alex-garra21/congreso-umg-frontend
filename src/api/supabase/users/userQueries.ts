@@ -9,7 +9,7 @@ import { getEnrolledWorkshopsQuery, getAttendancesQuery } from '../enrollment/en
 export async function getAllUsersQuery(): Promise<UserData[]> {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('*, tokens_pago!usado_por(creado_por)')
+    .select('*, tokens_creados:tokens_pago!creado_por(count)')
     .order('apellidos', { ascending: true });
 
   if (error) throw new Error(`Error al obtener usuarios: ${error.message}`);
@@ -75,7 +75,9 @@ export async function getAllUsersQuery(): Promise<UserData[]> {
       tokenCreatedBy: tokenInfo?.creado_por,
       diplomaEditado: userData.diploma_editado,
       talleres: inscripcionesByUser[userData.id] || [],
-      asistencias: asistenciasByUser[userData.id] || []
+      asistencias: asistenciasByUser[userData.id] || [],
+      limiteTokens: userData.limite_tokens || 0,
+      tokensCreados: (userData as any).tokens_creados?.[0]?.count || 0
     };
   });
 }
@@ -92,7 +94,7 @@ export async function getTokensQuery(): Promise<TokenData[]> {
       fecha_creacion,
       fecha_uso,
       usado_por_user:usuarios!usado_por(nombres, apellidos, correo, tipo_participante),
-      creado_por_user:usuarios!creado_por(nombres, apellidos)
+      creado_por_user:usuarios!creado_por(nombres, apellidos, rol)
     `);
     
   if (error) throw new Error(`Error al obtener tokens: ${error.message}`);
@@ -118,14 +120,15 @@ export async function getTokensQuery(): Promise<TokenData[]> {
       createdAt: d.fecha_creacion,
       usedAt: d.fecha_uso,
       createdBy: d.creado_por,
-      createdByName: creatorName || undefined
+      createdByName: creatorName || undefined,
+      createdByRole: (creator as any)?.rol
     };
   });
 }
 export async function getUserProfileQuery(userId: string): Promise<UserData | null> {
   const { data: userData, error } = await supabase
     .from('usuarios')
-    .select('*')
+    .select('*, tokens_creados:tokens_pago!creado_por(count)')
     .eq('id', userId)
     .single();
 
@@ -156,6 +159,8 @@ export async function getUserProfileQuery(userId: string): Promise<UserData | nu
     talleres,
     asistencias,
     diplomaEditado: userData.diploma_editado,
-    avatarUrl: userData.avatar_url
+    avatarUrl: userData.avatar_url,
+    limiteTokens: userData.limite_tokens || 0,
+    tokensCreados: (userData as any).tokens_creados?.[0]?.count || 0
   };
 }

@@ -101,7 +101,8 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
       telefono: updatedData.telefono,
       correo_diploma: updatedData.correoDiploma,
       diploma_editado: updatedData.diplomaEditado,
-      avatar_url: updatedData.avatarUrl
+      avatar_url: updatedData.avatarUrl,
+      limite_tokens: updatedData.limiteTokens
     })
     .eq('id', updatedData.id);
 
@@ -147,7 +148,6 @@ export async function invalidatePaymentMutation(userId: string): Promise<{ succe
         pago_validado: false,
         nombre_diploma: null,
         correo_diploma: null,
-        dpi: null,
         diploma_editado: false
       })
       .eq('id', userId);
@@ -211,9 +211,8 @@ export async function deleteTokenMutation(code: string): Promise<void> {
       .from('usuarios')
       .update({
         pago_validado: false,
-        nombre_diploma: "",
-        correo_diploma: "",
-        dpi: "",
+        nombre_diploma: null,
+        correo_diploma: null,
         diploma_editado: false
       })
       .eq('id', userId);
@@ -227,12 +226,41 @@ export async function deleteTokenMutation(code: string): Promise<void> {
   await supabase.from('tokens_pago').delete().eq('codigo', code);
 }
 
-export async function generateTokenMutation(code: string, adminId?: string): Promise<{ success: boolean; error?: any }> {
+export async function generateTokenMutation(code: string, adminId?: string): Promise<{ success: boolean; error?: any; message?: string }> {
+  if (adminId) {
+    // 1. Obtener datos del creador
+    const { data: creator } = await supabase
+      .from('usuarios')
+      .select('rol, limite_tokens')
+      .eq('id', adminId)
+      .single();
+
+    if (creator && creator.rol === 'colaborador') {
+      // 2. Contar tokens ya creados por este colaborador
+      const { count, error: countError } = await supabase
+        .from('tokens_pago')
+        .select('*', { count: 'exact', head: true })
+        .eq('creado_por', adminId);
+
+      if (countError) throw countError;
+
+      // 3. Validar contra el límite
+      if (count !== null && count >= (creator.limite_tokens || 0)) {
+        return {
+          success: false,
+          message: `Has alcanzado tu límite de ${creator.limite_tokens} tokens. Contacta a un administrador.`
+        };
+      }
+    }
+  }
+
   const { error } = await supabase.from('tokens_pago').insert({
     codigo: code,
     creado_por: adminId
   });
-  return { success: !error, error };
+
+  if (error) return { success: false, error };
+  return { success: true };
 }
 
 export async function validateTokenMutation(code: string, userId: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'already_paid' | 'error' }> {

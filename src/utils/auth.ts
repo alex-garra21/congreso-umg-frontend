@@ -24,6 +24,8 @@ export interface UserData {
   avatarUrl?: string;
   tokenCreatedBy?: string;
   codigoDocente?: string;
+  limiteTokens?: number;
+  tokensCreados?: number;
 }
 
 export const isStaff = (rol?: string) => rol === 'admin' || rol === 'colaborador';
@@ -55,6 +57,7 @@ export interface TokenData {
   usedAt?: string;
   createdBy?: string;
   createdByName?: string;
+  createdByRole?: 'admin' | 'colaborador' | 'participante';
 }
 
 /**

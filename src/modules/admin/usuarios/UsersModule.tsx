@@ -13,6 +13,9 @@ import AdminTable from '../../../components/ui/AdminTable';
 import { Icons } from '../../../components/Icons';
 import MultiSelectFilter from '../../../components/ui/MultiSelectFilter';
 import { PARTICIPANT_TYPES, getParticipantLabel } from '../../../data/userTypes';
+import Modal from '../../../components/ui/Modal';
+import FormField from '../../../components/ui/FormField';
+import AdminButton from '../../../components/ui/AdminButton';
 
 export default function UsersModule() {
   const { data: users = [], isLoading } = useAllUsers();
@@ -30,6 +33,10 @@ export default function UsersModule() {
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState<string[]>(PARTICIPANT_TYPES.map(t => t.id));
+  
+  const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [tokenLimit, setTokenLimit] = useState(0);
 
   const handleValidateUser = async (user: UserData) => {
     if (!user.id) return;
@@ -79,6 +86,13 @@ export default function UsersModule() {
     }
   };
 
+  const handleSaveTokenLimit = async () => {
+    if (!selectedUser) return;
+    await updateUserDataMutation.mutateAsync({ ...selectedUser, limiteTokens: tokenLimit });
+    showToast('Límite de tokens actualizado', 'success');
+    setIsLimitModalOpen(false);
+  };
+
   const handleRoleChange = async (user: UserData, newRole: 'admin' | 'colaborador' | 'participante') => {
     const roleLabels = { admin: 'Administrador', colaborador: 'Colaborador', participante: 'Participante' };
     const confirmed = await showConfirm(
@@ -101,8 +115,9 @@ export default function UsersModule() {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado && !u.desactivado) || (paymentFilter === 'pending' && !u.pagoValidado && !u.desactivado) || (paymentFilter === 'deactivated' && u.desactivado);
 
-    // Lógica de rol exacta para 3 tipos
-    const matchesRole = roleFilter === 'all' || u.rol === roleFilter;
+    // Lógica de rol exacta para tipos específicos o 'staff' (admin + colaborador)
+    const matchesRole = roleFilter === 'all' || 
+                       (roleFilter === 'staff' ? (u.rol === 'admin' || u.rol === 'colaborador') : u.rol === roleFilter);
 
     // Si es colaborador, no ve administradores
     const matchesRoleVisibility = !isColaborador || u.rol !== 'admin';
@@ -116,6 +131,7 @@ export default function UsersModule() {
   // Opciones de rol filtradas
   const roleOptions = [
     { value: 'all', label: 'Todos' },
+    { value: 'staff', label: 'Personal (Staff)' },
     ...(isColaborador ? [] : [{ value: 'admin', label: 'Administradores' }]),
     { value: 'colaborador', label: 'Colaboradores' },
     { value: 'participante', label: 'Participantes' }
@@ -164,7 +180,7 @@ export default function UsersModule() {
           </div>
         </div>
 
-        <AdminTable isLoading={isLoading} headers={["Nombre Completo", "Tipo", "Contacto", "Rol", "Pago", "Acciones"]} emptyMessage="No se encontraron registros con los filtros seleccionados.">
+        <AdminTable isLoading={isLoading} headers={["Nombre Completo", "Tipo", "Contacto", "Rol", "Pago", "Tokens", "Acciones"]} emptyMessage="No se encontraron registros con los filtros seleccionados.">
           {paginatedUsers.map(u => (
             <tr key={u.correo}>
               <td><div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{u.nombres} {u.apellidos}</div></td>
@@ -176,6 +192,16 @@ export default function UsersModule() {
                 </AdminBadge>
               </td>
               <td>{u.desactivado ? <AdminBadge variant="danger">OFF</AdminBadge> : u.pagoValidado ? <AdminBadge variant="success" dot>SÍ</AdminBadge> : <AdminBadge variant="danger" dot>NO</AdminBadge>}</td>
+              <td>
+                {u.rol === 'colaborador' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', fontSize: '12px' }}>
+                    <span style={{ fontWeight: 700, color: (u.tokensCreados || 0) >= (u.limiteTokens || 0) && (u.limiteTokens || 0) > 0 ? '#ef4444' : 'inherit' }}>
+                      {u.tokensCreados || 0} / {u.limiteTokens || 0}
+                    </span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>tokens creados</span>
+                  </div>
+                ) : '-'}
+              </td>
               <td style={{ textAlign: 'right' }}>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                   {/* Validar Pago - SOLO para Admin (No colaborador) */}
@@ -207,6 +233,22 @@ export default function UsersModule() {
                     </button>
                   )}
 
+                  {/* Límite de Tokens - Solo para colaboradores, solo accesible por Admin */}
+                  {u.rol === 'colaborador' && isOnlyAdmin && (
+                    <button
+                      onClick={() => {
+                        setSelectedUser(u);
+                        setTokenLimit(u.limiteTokens || 0);
+                        setIsLimitModalOpen(true);
+                      }}
+                      className="action-btn"
+                      title="Definir Límite de Tokens"
+                      style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#ca8a04', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                    >
+                      <Icons.Zap size={18} />
+                    </button>
+                  )}
+
                   {!isColaborador && (
                     <>
                       {/* Cambiar Rol - Solo Admin */}
@@ -233,6 +275,25 @@ export default function UsersModule() {
         </AdminTable>
         <Pagination current={page} total={filteredUsers.length} onPageChange={setPage} itemsPerPage={ITEMS_PER_PAGE} />
       </ModuleCard>
+
+      <Modal isOpen={isLimitModalOpen} onClose={() => setIsLimitModalOpen(false)} title="Límite de Tokens" maxWidth="400px">
+        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+          Define cuántos tokens de activación puede generar <strong>{selectedUser?.nombres}</strong>.
+        </p>
+        <FormField label="CANTIDAD MÁXIMA DE TOKENS" required>
+          <input
+            type="number"
+            className="dashboard-input"
+            value={tokenLimit}
+            onChange={(e) => setTokenLimit(parseInt(e.target.value) || 0)}
+            min="0"
+          />
+        </FormField>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+          <AdminButton onClick={handleSaveTokenLimit} style={{ flex: 2 }}>Guardar Límite</AdminButton>
+          <AdminButton variant="secondary" onClick={() => setIsLimitModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
+        </div>
+      </Modal>
     </section>
   );
 }

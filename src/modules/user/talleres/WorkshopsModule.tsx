@@ -165,9 +165,9 @@ export default function WorkshopsModule() {
       const generalIds = generalActivities.map(t => t.id);
       
       const allToSave = Array.from(new Set([...enrolledIds, ...generalIds]));
-      const { success } = await syncUserEnrollmentsMutation(user.id, allToSave);
+      const result = await syncUserEnrollmentsMutation(user.id, allToSave);
       
-      if (success) {
+      if (result.success) {
         // Detectamos si esto fue una modificación (si ya estaba confirmado antes de esta sesión de edición)
         const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`) === 'true';
         if (wasAlreadyConfirmed) {
@@ -187,7 +187,7 @@ export default function WorkshopsModule() {
         setSaveStatus('saved');
         refetchProfile();
       } else {
-        showAlert('Error', 'No se pudo guardar la selección.', 'error');
+        showAlert('Atención', result.message || 'No se pudo guardar la selección.', 'warning');
         setSaveStatus('idle');
       }
     }
@@ -487,6 +487,30 @@ export default function WorkshopsModule() {
                 </div>
               </div>
 
+              {selectedWorkshop.maxQuotas && selectedWorkshop.maxQuotas > 0 ? (
+                <div style={{ padding: '0 0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Disponibilidad de Cupos</span>
+                    <span style={{ color: (selectedWorkshop.occupiedQuotas || 0) >= selectedWorkshop.maxQuotas ? '#ef4444' : 'var(--accent-primary)' }}>
+                      {selectedWorkshop.occupiedQuotas || 0} / {selectedWorkshop.maxQuotas}
+                    </span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
+                    <div style={{ 
+                      width: `${Math.min(((selectedWorkshop.occupiedQuotas || 0) / selectedWorkshop.maxQuotas) * 100, 100)}%`, 
+                      height: '100%', 
+                      background: (selectedWorkshop.occupiedQuotas || 0) >= selectedWorkshop.maxQuotas ? '#ef4444' : 'var(--accent-primary)',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                  {(selectedWorkshop.occupiedQuotas || 0) >= selectedWorkshop.maxQuotas && !isSelected && (
+                    <p style={{ color: '#ef4444', fontSize: '12px', fontWeight: 700, marginTop: '8px', textAlign: 'center' }}>
+                      ¡Cupos agotados para este taller!
+                    </p>
+                  )}
+                </div>
+              ) : null}
+
               <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Información de traslape sobre los botones */}
                 {isCollision && !isSelected && (
@@ -519,7 +543,7 @@ export default function WorkshopsModule() {
                           toggleEnroll(selectedWorkshop);
                           setSelectedWorkshop(null);
                         }}
-                        disabled={isCollision}
+                        disabled={isCollision || (!isSelected && (selectedWorkshop.maxQuotas || 0) > 0 && (selectedWorkshop.occupiedQuotas || 0) >= (selectedWorkshop.maxQuotas || 0))}
                         icon={isSelected ? <Icons.Trash size={18} /> : <Icons.Check size={18} />}
                         style={isSelected ? { borderColor: '#e03131', color: '#e03131' } : {}}
                       >

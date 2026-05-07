@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTokens, useGenerateToken, useDeleteToken } from '../../../api/hooks/useUsers';
+import { useTokens, useGenerateToken, useDeleteToken, useAllUsers } from '../../../api/hooks/useUsers';
 import { useAuth } from '../../../api/hooks/useAuth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
@@ -22,9 +22,10 @@ import { Icons } from '../../../components/Icons';
 
 export default function TokensModule() {
   const { data: tokens = [], isLoading } = useTokens();
+  const { data: allUsers = [] } = useAllUsers();
   const generateTokenMutation = useGenerateToken();
   const deleteTokenMutation = useDeleteToken();
-  const { user: currentAdmin, isLoading: isAuthLoading } = useAuth();
+  const { user: currentAdmin, isLoading: isAuthLoading, refetchProfile } = useAuth();
   const isOnlyAdmin = currentAdmin?.rol === 'admin';
   const [page, setPage] = useState(1);
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
@@ -37,6 +38,7 @@ export default function TokensModule() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [creatorFilter, setCreatorFilter] = useState('all');
 
   // Función para generar un código único
   const generateUniqueCode = (existingTokens: any[]) => {
@@ -66,23 +68,43 @@ export default function TokensModule() {
 
   const handleGenerateToken = async () => {
     const code = generateUniqueCode(tokens);
-    await generateTokenMutation.mutateAsync({ code, adminId: currentAdmin?.id });
+    const result = await generateTokenMutation.mutateAsync({ code, adminId: currentAdmin?.id });
+    
+    if (result && !result.success && (result as any).message) {
+      showToast((result as any).message, 'error');
+      return;
+    }
+
+    refetchProfile();
     setPage(1);
     showToast('Token único generado con éxito', 'success');
   };
 
   const handleMassGenerate = async () => {
-    const promises = [];
     const tempTokens = [...tokens];
+    let createdCount = 0;
+    
     for (let i = 0; i < massQuantity; i++) {
       const code = generateUniqueCode(tempTokens);
-      tempTokens.push({ code, used: false } as any);
-      promises.push(generateTokenMutation.mutateAsync({ code, adminId: currentAdmin?.id }));
+      const result = await generateTokenMutation.mutateAsync({ code, adminId: currentAdmin?.id });
+      
+      if (result && !result.success) {
+        if ((result as any).message) {
+          showToast(`Se crearon ${createdCount} tokens. Error: ${(result as any).message}`, 'error');
+          break;
+        }
+      } else {
+        createdCount++;
+        tempTokens.push({ code, used: false } as any);
+      }
     }
-    await Promise.all(promises);
+    
+    if (createdCount > 0) refetchProfile();
     setIsMassModalOpen(false);
     setPage(1);
-    showToast(`${massQuantity} tokens únicos generados con éxito`, 'success');
+    if (createdCount > 0 && createdCount === massQuantity) {
+      showToast(`${massQuantity} tokens únicos generados con éxito`, 'success');
+    }
   };
 
   const filteredTokens = tokens.filter(t => {
@@ -94,10 +116,14 @@ export default function TokensModule() {
     const matchesType = typeFilter === 'all' || t.usedByType === typeFilter;
     const matchesDate = !t.createdAt || isDateInRange(t.createdAt, startDate, endDate);
     
+    // Filtro por creador (Staff, Todos o Usuario Específico por ID)
+    const matchesCreator = creatorFilter === 'all' || 
+                          (creatorFilter === 'staff' ? (t.createdByRole === 'admin' || t.createdByRole === 'colaborador') : t.createdBy === creatorFilter);
+
     // Si es colaborador, solo ve los tokens que él mismo creó
     const matchesOwnership = isOnlyAdmin || t.createdBy === currentAdmin?.id;
 
-    return matchesSearch && matchesStatus && matchesType && matchesDate && matchesOwnership;
+    return matchesSearch && matchesStatus && matchesType && matchesDate && matchesOwnership && matchesCreator;
   });
 
   const currentTokensOnPage = filteredTokens.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -209,7 +235,7 @@ export default function TokensModule() {
 
   return (
     <section className="dashboard-section" style={{ padding: '0' }}>
-      <div style={{ padding: '2rem 2.5rem 0' }}>
+      <div style={{ padding: '2rem 2.5rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <ModuleTitle title="Control de Acceso" />
       </div>
 
@@ -217,7 +243,27 @@ export default function TokensModule() {
         title="Tokens de Activación"
         description="Gestiona las llaves de acceso para los participantes del congreso."
         headerActions={
-          <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
+            {currentAdmin?.rol === 'colaborador' && (
+              <div style={{ 
+                background: 'var(--bg-app)', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '10px', 
+                border: '1px solid var(--border-soft)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginRight: '0.5rem'
+              }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tu Cuota:</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
+                  <span style={{ fontSize: '18px', fontWeight: 900, color: (currentAdmin.tokensCreados || 0) >= (currentAdmin.limiteTokens || 0) && (currentAdmin.limiteTokens || 0) > 0 ? '#ef4444' : 'var(--accent-primary)' }}>
+                    {currentAdmin.tokensCreados || 0}
+                  </span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>/ {currentAdmin.limiteTokens || 0}</span>
+                </div>
+              </div>
+            )}
             {isOnlyAdmin && selectedTokens.length > 0 && (
               <AdminButton variant="danger" onClick={handleDeleteSelectedTokens} icon={<Icons.Trash size={18} />}>
                 Borrar ({selectedTokens.length})
@@ -226,7 +272,11 @@ export default function TokensModule() {
             <AdminButton
               onClick={handleGenerateToken}
               icon={<Icons.Plus size={18} />}
-              disabled={isAuthLoading || generateTokenMutation.isPending}
+              disabled={
+                isAuthLoading || 
+                generateTokenMutation.isPending || 
+                (currentAdmin?.rol === 'colaborador' && (currentAdmin.tokensCreados || 0) >= (currentAdmin.limiteTokens || 0))
+              }
             >
               {generateTokenMutation.isPending ? 'Generando...' : 'Nuevo Token'}
             </AdminButton>
@@ -234,7 +284,10 @@ export default function TokensModule() {
               variant="outline"
               onClick={() => setIsMassModalOpen(true)}
               icon={<Icons.Users size={18} />}
-              disabled={isAuthLoading}
+              disabled={
+                isAuthLoading || 
+                (currentAdmin?.rol === 'colaborador' && (currentAdmin.tokensCreados || 0) >= (currentAdmin.limiteTokens || 0))
+              }
             >
               Masivo
             </AdminButton>
@@ -279,6 +332,22 @@ export default function TokensModule() {
           <div style={{ width: '130px' }}>
             <AdminDateInput label="HASTA" value={endDate} onChange={e => setEndDate(e.target.value)} />
           </div>
+          {isOnlyAdmin && (
+            <div style={{ width: '220px' }}>
+              <AdminSelect 
+                label="CREADO POR" 
+                value={creatorFilter} 
+                onChange={e => setCreatorFilter(e.target.value)} 
+                options={[
+                  { value: 'all', label: 'Todos' },
+                  { value: 'staff', label: 'Todo el Personal' },
+                  ...allUsers
+                    .filter(u => u.rol === 'admin' || u.rol === 'colaborador')
+                    .map(u => ({ value: u.id!, label: `${u.nombres} ${u.apellidos}` }))
+                ]} 
+              />
+            </div>
+          )}
         </div>
 
         <AdminTable
