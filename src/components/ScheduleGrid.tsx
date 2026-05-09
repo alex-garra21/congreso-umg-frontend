@@ -3,7 +3,7 @@ import { type AgendaItem } from '../data/agendaData';
 import { useCharlas } from '../api/hooks/useAgenda';
 
 // Constantes de configuración
-const START_H = 8, END_H = 21; 
+const START_H = 7, END_H = 24; 
 const SLOT_H = 40; 
 const SALAS = ['Salón A', 'Salón B', 'Salón C', 'Auditorio'];
 

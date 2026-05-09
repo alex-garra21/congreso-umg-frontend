@@ -28,11 +28,13 @@ export const generateTimeOptions = (interval: number = TIME_INTERVAL, includeAll
     options.push({ value: 'all', label: 'Cualquier hora' });
   }
 
-  for (let hour = 7; hour <= 21; hour++) {
-    for (let minute = 0; minute < 60; minute += interval) {
+  const safeInterval = interval <= 0 ? 15 : interval;
+
+  for (let hour = 7; hour <= 23; hour++) {
+    for (let minute = 0; minute < 60; minute += safeInterval) {
       const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
       const ampm = hour >= 12 ? 'PM' : 'AM';
-      const timeStr = `${displayHour < 10 ? '0' : ''}${displayHour}:${minute < 10 ? '0' : ''}${minute} ${ampm}`;
+      const timeStr = `${displayHour}:${minute < 10 ? '0' : ''}${minute} ${ampm}`;
       options.push({ value: timeStr, label: timeStr });
     }
   }
@@ -44,14 +46,27 @@ export const generateTimeOptions = (interval: number = TIME_INTERVAL, includeAll
  */
 export const timeToMinutes = (t: string) => {
   if (!t || t === 'all') return 0;
-  const [time, modifier] = t.split(' ');
-  let [hours, minutes] = time.split(':').map(Number);
-  if (hours === 12) {
-    hours = modifier === 'PM' ? 12 : 0;
-  } else if (modifier === 'PM') {
-    hours += 12;
+  try {
+    const parts = t.trim().split(' ');
+    const timePart = parts[0];
+    const modifier = parts[1] || (timePart.toUpperCase().includes('PM') ? 'PM' : 'AM');
+    
+    const cleanTime = timePart.toUpperCase().replace('AM', '').replace('PM', '');
+    let [hours, minutes] = cleanTime.split(':').map(Number);
+    
+    if (isNaN(hours)) hours = 0;
+    if (isNaN(minutes)) minutes = 0;
+
+    if (hours === 12) {
+      hours = modifier.toUpperCase() === 'PM' ? 12 : 0;
+    } else if (modifier.toUpperCase() === 'PM') {
+      hours += 12;
+    }
+    return hours * 60 + minutes;
+  } catch (e) {
+    console.error('Error parsing time:', t, e);
+    return 0;
   }
-  return hours * 60 + minutes;
 };
 
 /**

@@ -102,8 +102,8 @@ export default function ScheduleTab() {
     setEditingItem({ 
       id: Math.random().toString(36).substr(2, 9), 
       title: '', 
-      time: '08:00 AM', 
-      endTime: '09:00 AM', 
+      time: '8:00 AM', 
+      endTime: '9:00 AM', 
       room: rooms[0]?.name || 'SALA A', 
       locationId: rooms[0]?.id || 0,
       tagId: categories[0]?.id || 0,

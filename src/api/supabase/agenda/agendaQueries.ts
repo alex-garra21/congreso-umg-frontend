@@ -55,7 +55,7 @@ export async function getCharlasQuery(): Promise<AgendaItem[]> {
     .from('charlas')
     .select(`
       id, titulo, descripcion, hora_inicio, hora_fin, periodo, 
-      sala_id, categoria_id, id_ponente, cupo_maximo,
+      sala_id, categoria_id, id_ponente, cupo_maximo, tiempo_gracia,
       sala:sala_id(nombre), 
       categoria:categoria_id(nombre, bg_color, text_color),
       ponente:id_ponente(*),
@@ -83,6 +83,7 @@ export async function getCharlasQuery(): Promise<AgendaItem[]> {
       tagStyle: cat ? { bg: cat.bg_color, text: cat.text_color } : undefined,
       maxQuotas: d.cupo_maximo || 0,
       occupiedQuotas: (d.inscripciones as any)?.[0]?.count || 0,
+      gracePeriod: d.tiempo_gracia,
       speaker: p ? {
         id: p.id,
         name: p.nombre,

@@ -1,32 +1,63 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { getUserProfileQuery } from '../supabase/users/userQueries';
 
 
 export function useAuth() {
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: ['auth_session'],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getSession();
+      return data.session;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutos
+  });
+
+  const userId = session?.user?.id;
+
+  const { data: user, isLoading: isProfileLoading, isError, refetch } = useQuery({
+    queryKey: ['userProfile', userId],
+    queryFn: () => (userId ? getUserProfileQuery(userId) : null),
+    enabled: !!userId,
+    staleTime: 1000 * 10, // 10 segundos
+  });
+
+  return {
+    user,
+    session,
+    isAuthenticated: !!session,
+    isLoading: isSessionLoading || (!!userId && isProfileLoading),
+    isError,
+    refetchProfile: refetch
+  };
+}
+
+/**
+ * Hook para ser usado SOLO UNA VEZ en App.tsx.
+ * Maneja las suscripciones en tiempo real y actualiza el caché global.
+ */
+export function useGlobalAuthListener() {
   const queryClient = useQueryClient();
-  const [session, setSession] = useState<any>(null);
-  const [isSessionLoading, setIsSessionLoading] = useState(true);
+  const { data: session } = useQuery({
+    queryKey: ['auth_session'],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getSession();
+      return data.session;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
   const userId = session?.user?.id;
 
   useEffect(() => {
-    // 1. Obtener sesión inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsSessionLoading(false);
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      queryClient.setQueryData(['auth_session'], newSession);
 
-    // 2. Escuchar cambios en la sesión
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setIsSessionLoading(false);
       if (_event === 'SIGNED_OUT') {
         queryClient.setQueryData(['userProfile'], null);
-        localStorage.removeItem('congreso_current_user'); 
+        localStorage.removeItem('congreso_current_user');
       } else if (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION' || _event === 'USER_UPDATED') {
-        // Al entrar o restaurar sesión, nos aseguramos de limpiar errores previos
         queryClient.invalidateQueries({ queryKey: ['userProfile'] });
         queryClient.invalidateQueries({ queryKey: ['users'] });
         queryClient.invalidateQueries({ queryKey: ['tokens'] });
@@ -35,16 +66,12 @@ export function useAuth() {
       }
     });
 
-    // 3. Escuchar cambios en tiempo real para el perfil del usuario actual
     let userChannel: any = null;
-    
+
     if (userId) {
-      // Nombre único para esta pestaña/sesión
       const channelName = `user_updates_${userId}`;
-      
       userChannel = supabase.channel(channelName);
-      
-      // IMPORTANTE: Solo configurar si no estamos ya suscritos a este canal
+
       if (userChannel.state === 'closed' || userChannel.state === 'joined') {
         userChannel
           .on(
@@ -72,20 +99,4 @@ export function useAuth() {
       if (userChannel) supabase.removeChannel(userChannel);
     };
   }, [queryClient, userId]);
-
-  const { data: user, isLoading: isProfileLoading, isError, refetch } = useQuery({
-    queryKey: ['userProfile', userId],
-    queryFn: () => (userId ? getUserProfileQuery(userId) : null),
-    enabled: !!userId,
-    staleTime: 1000 * 10, // 10 segundos (para detectar cambios de rol rápido)
-  });
-
-  return {
-    user,
-    session,
-    isAuthenticated: !!session,
-    isLoading: isSessionLoading || (!!userId && isProfileLoading),
-    isError,
-    refetchProfile: refetch
-  };
 }

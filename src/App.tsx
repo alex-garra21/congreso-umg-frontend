@@ -27,7 +27,7 @@ const AdminModule = lazy(() => import('./pages/AdminModule'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const DeactivatedPage = lazy(() => import('./pages/DeactivatedPage'));
 import { DashboardTitleProvider } from './utils/DashboardTitleContext';
-import { useAuth } from './api/hooks/useAuth';
+import { useAuth, useGlobalAuthListener } from './api/hooks/useAuth';
 
 // Componente de carga premium
 const PageLoader = () => (
@@ -59,6 +59,7 @@ const PageLoader = () => (
 function AuthHandler() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  useGlobalAuthListener();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {

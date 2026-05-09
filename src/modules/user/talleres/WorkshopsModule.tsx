@@ -85,17 +85,28 @@ export default function WorkshopsModule() {
 
   const parseTime = (timeStr: string) => {
     if (!timeStr) return 8;
-    const [time, modifier] = timeStr.trim().split(' ');
-    let [h, m] = time.split(':').map(Number);
-    if (modifier === 'PM' && h < 12) h += 12;
-    if (modifier === 'AM' && h === 12) h = 0;
-    return h + (m / 60);
+    try {
+      const parts = timeStr.trim().split(' ');
+      const timePart = parts[0];
+      const modifier = parts[1] || (timePart.toUpperCase().includes('PM') ? 'PM' : 'AM');
+      const cleanTime = timePart.toUpperCase().replace('AM', '').replace('PM', '');
+      let [h, m] = cleanTime.split(':').map(Number);
+      if (isNaN(h)) h = 8;
+      if (isNaN(m)) m = 0;
+      if (modifier.toUpperCase() === 'PM' && h < 12) h += 12;
+      if (modifier.toUpperCase() === 'AM' && h === 12) h = 0;
+      return h + (m / 60);
+    } catch (e) {
+      return 8;
+    }
   };
 
-  let minHour = 8, maxHour = 17; 
+  let minHour = 7, maxHour = 23; 
   if (agenda.length > 0) {
-    minHour = Math.min(...agenda.map((w: AgendaItem) => Math.floor(parseTime(w.time))));
-    maxHour = Math.max(...agenda.map((w: AgendaItem) => Math.ceil(parseTime(w.endTime))));
+    const times = agenda.map((w: AgendaItem) => parseTime(w.time)).filter(t => !isNaN(t));
+    const endTimes = agenda.map((w: AgendaItem) => parseTime(w.endTime)).filter(t => !isNaN(t));
+    if (times.length > 0) minHour = Math.min(7, Math.floor(Math.min(...times)));
+    if (endTimes.length > 0) maxHour = Math.max(23, Math.ceil(Math.max(...endTimes)));
   }
   const HOURS = []; for (let i = minHour; i <= maxHour; i++) HOURS.push(i);
 

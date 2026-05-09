@@ -94,7 +94,7 @@ export async function saveAgendaMutation(agenda: AgendaItem[]): Promise<void> {
       sala_id: item.locationId,   // Usamos ID numérico
       hora_inicio: item.time,
       hora_fin: item.endTime,
-      tiempo_gracia: item.gracePeriod || 10,
+      tiempo_gracia: item.gracePeriod ?? 10,
       cupo_maximo: item.maxQuotas || 0
     }));
 
