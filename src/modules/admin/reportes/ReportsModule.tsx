@@ -60,9 +60,11 @@ export default function ReportsModule() {
   const getRealWorkshops = (talleres?: { id: string; category: string }[]) =>
     (talleres || []).filter(t => t.category?.toUpperCase().trim() !== 'GENERAL');
 
+  const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
+
   const filteredUsers = users.filter(u => !u.desactivado).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     // Al filtrar por un taller específico, buscamos en TODOS los talleres del usuario (incluyendo los de staff)
     const realWorkshops = getRealWorkshops(u.talleres);
     const matchesWorkshop = selectedWorkshopFilter === 'all_records'
@@ -74,20 +76,19 @@ export default function ReportsModule() {
           : (realWorkshops.some(tw => tw.id === selectedWorkshopFilter));
 
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
-    
+
     // El staff (admin/colaborador) NO debe ser filtrado por tipo de participante
     const isStaffUser = u.rol?.toLowerCase() === 'admin' || u.rol?.toLowerCase() === 'colaborador';
-    const matchesType = isStaffUser || (participantTypeFilter.length === allowedParticipantTypes.length) 
-      ? true 
+    const matchesType = isStaffUser || (participantTypeFilter.length === allowedParticipantTypes.length)
+      ? true
       : participantTypeFilter.includes(u.tipoParticipante || 'externo');
 
-    const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
 
     const matchesAttendance = attendanceFilter === 'all'
       ? true
       : attendanceFilter === 'attended'
-        ? (u.asistencias || []).some((a: any) => isSpecificWorkshop ? a.workshopId === selectedWorkshopFilter : true)
-        : !(u.asistencias || []).some((a: any) => isSpecificWorkshop ? a.workshopId === selectedWorkshopFilter : true);
+        ? (u.asistencias as any[] || []).some((a: any) => isSpecificWorkshop ? a.workshopId === selectedWorkshopFilter : true)
+        : !(u.asistencias as any[] || []).some((a: any) => isSpecificWorkshop ? a.workshopId === selectedWorkshopFilter : true);
 
     return matchesSearch && matchesWorkshop && matchesPayment && matchesType && matchesAttendance;
   });
@@ -138,7 +139,11 @@ export default function ReportsModule() {
         for (let i = 1; i <= maxWorkshops; i++) cols.push({ header: `Taller ${i}`, key: `w${i}`, width: 35 });
       }
 
-      cols.push({ header: 'Tipo', key: 'type', width: 25 }, { header: 'Pago', key: 'pay', width: 15 });
+      cols.push({ header: 'Tipo', key: 'type', width: 25 });
+      if (isSpecificWorkshop) {
+        cols.push({ header: 'Asistencia', key: 'attendance', width: 15 });
+      }
+      cols.push({ header: 'Pago', key: 'pay', width: 15 });
       worksheet.columns = cols;
 
       filteredUsers.forEach((u, index) => {
@@ -155,6 +160,8 @@ export default function ReportsModule() {
         };
 
         if (isSpecificWorkshop) {
+          const hasAttendance = (u.asistencias as any[] || []).some((a: any) => a.workshopId === selectedWorkshopFilter);
+          row.attendance = hasAttendance ? 'SÍ' : 'NO';
           row.workshop = workshopTitle;
         } else {
           const realW = getRealWorkshops(u.talleres);
@@ -260,7 +267,15 @@ export default function ReportsModule() {
           </div>
         </div>
 
-        <AdminTable isLoading={isLoadingUsers} headers={["Participante", "Talleres Inscritos", "Perfil", "Estado Pago"]}>
+        <AdminTable
+          isLoading={isLoadingUsers}
+          headers={[
+            "Participante",
+            "Talleres Inscritos",
+            "Perfil",
+            ...(isSpecificWorkshop ? ["Asistencia"] : [])
+          ]}
+        >
           {paginatedUsers.map(u => (
             <tr key={u.correo}>
               <td>
@@ -292,7 +307,18 @@ export default function ReportsModule() {
                   <AdminBadge variant="neutral">{getParticipantLabel(u.tipoParticipante)}</AdminBadge>
                 )}
               </td>
-              <td><AdminBadge variant={u.pagoValidado ? "success" : "warning"} dot>{u.pagoValidado ? 'Validado' : 'Pendiente'}</AdminBadge></td>
+                  {isSpecificWorkshop && (
+                    <td>
+                      {(() => {
+                        const hasAttendance = (u.asistencias as any[] || []).some((a: any) => a.workshopId === selectedWorkshopFilter);
+                        return hasAttendance ? (
+                          <AdminBadge variant="success" dot>Asistió</AdminBadge>
+                        ) : (
+                          <AdminBadge variant="danger" dot>No asistió</AdminBadge>
+                        );
+                      })()}
+                    </td>
+                  )}
             </tr>
           ))}
         </AdminTable>

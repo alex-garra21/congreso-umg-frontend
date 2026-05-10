@@ -109,6 +109,17 @@ export default function AttendancePage() {
       return;
     }
 
+    // VALIDACIÓN DE FECHA
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    if (workshop.date && workshop.date !== todayStr) {
+      const workshopDateObj = new Date(`${workshop.date}T12:00:00`);
+      const formattedWorkshopDate = workshopDateObj.toLocaleDateString('es-GT', { day: 'numeric', month: 'long', year: 'numeric' });
+      setError(`Este taller está programado para el día ${formattedWorkshopDate}. Solo puedes confirmar asistencia el mismo día del evento.`);
+      return;
+    }
+
     const startTime = parseTimeStr(workshop.time, workshop.date);
     const endTime = parseTimeStr(workshop.endTime, workshop.date);
 
@@ -155,6 +166,11 @@ export default function AttendancePage() {
 
   const checkIsOutOfTime = () => {
     if (!workshop) return true;
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    if (workshop.date && workshop.date !== todayStr) return true;
+
     const startTime = parseTimeStr(workshop.time, workshop.date);
     const endTime = parseTimeStr(workshop.endTime, workshop.date);
     const graceMinutes = workshop.gracePeriod !== undefined ? workshop.gracePeriod : 10;
@@ -218,6 +234,10 @@ export default function AttendancePage() {
           </h1>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '1.5rem', fontSize: '14px', color: '#e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icons.Calendar size={16} />
+              {workshop.date ? new Date(`${workshop.date}T12:00:00`).toLocaleDateString('es-GT', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Fecha por confirmar'}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Icons.Clock size={16} />
               {workshop.time} – {workshop.endTime}
@@ -461,7 +481,14 @@ export default function AttendancePage() {
           color: '#4a5568'
         }}>
           <p style={{ fontSize: '14px' }}>
-            La confirmación de asistencia se habilitará automáticamente cuando inicie el taller.
+            {(() => {
+              const today = new Date();
+              const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+              if (workshop.date && workshop.date !== todayStr) {
+                return 'Este taller no está programado para hoy.';
+              }
+              return 'La confirmación de asistencia se habilitará automáticamente cuando inicie el taller.';
+            })()}
           </p>
         </div>
       )}

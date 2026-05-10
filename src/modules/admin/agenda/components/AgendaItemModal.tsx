@@ -51,8 +51,8 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, 
       // Omitir el mismo item si estamos editando
       if (a.id === formData.id) return false;
       
-      // Misma sala
-      if (a.locationId === formData.locationId) {
+      // Misma sala y MISMA FECHA
+      if (a.locationId === formData.locationId && a.date === formData.date) {
         const aStart = timeToMinutes(a.time);
         const aEnd = timeToMinutes(a.endTime);
         
@@ -90,6 +90,16 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, 
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             placeholder="Ej: Conferencia de Ciberseguridad"
+          />
+        </FormField>
+
+        <FormField label="FECHA DE LA ACTIVIDAD *" required>
+          <input
+            type="date"
+            required
+            className="dashboard-input"
+            value={formData.date || ''}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
           />
         </FormField>
 

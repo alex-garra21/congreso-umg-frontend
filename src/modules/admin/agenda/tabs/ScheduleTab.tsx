@@ -146,10 +146,13 @@ export default function ScheduleTab() {
         </div>
       </div>
       
-      <AdminTable headers={["Horario", "Actividad", "Ubicación", "Categoría", "Opciones"]} emptyMessage="No hay actividades.">
+      <AdminTable headers={["Horario", "Fecha", "Actividad", "Ubicación", "Categoría", "Opciones"]} emptyMessage="No hay actividades.">
         {currentAgenda.map(item => (
           <tr key={item.id}>
             <td>{item.time} - {item.endTime}</td>
+            <td style={{ fontSize: '13px' }}>
+              {item.date ? new Date(`${item.date}T12:00:00`).toLocaleDateString('es-GT', { day: 'numeric', month: 'short' }) : '---'}
+            </td>
             <td>
               <strong>{item.title}</strong><br/>
               <small style={{color:'var(--text-secondary)'}}>{item.speaker?.name || 'Sin ponente'}</small>

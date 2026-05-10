@@ -32,14 +32,22 @@ export default function DashboardHome() {
     }
 
     if (user?.correo) {
+      const dbWorkshops = (user?.talleres || []).filter(w => w.category !== 'GENERAL');
       const saved = localStorage.getItem(`workshops_${user.correo}`);
-      if (saved) {
+      
+      // Si en la base de datos no hay talleres (fue reseteado), 
+      // limpiamos el localStorage para que la interfaz refleje el estado real (rojo)
+      if (dbWorkshops.length === 0 && saved) {
+        localStorage.removeItem(`workshops_${user.correo}`);
+        localStorage.removeItem(`workshops_confirmed_${user.correo}`);
+        localStorage.removeItem(`modifications_count_${user.correo}`);
+        setWorkshopsCount(0);
+      } else if (saved) {
         const allSaved = JSON.parse(saved);
         const onlyWorkshops = allSaved.filter((w: any) => w.category !== 'GENERAL');
         setWorkshopsCount(onlyWorkshops.length);
       } else {
-        const onlyWorkshops = (user?.talleres || []).filter(w => w.category !== 'GENERAL');
-        setWorkshopsCount(onlyWorkshops.length);
+        setWorkshopsCount(dbWorkshops.length);
       }
     }
 
@@ -52,7 +60,7 @@ export default function DashboardHome() {
     }
   }, [user]);
 
-  const isPaid = user?.pagoValidado || user?.rol === 'admin';
+  const isActualPaid = user?.pagoValidado || false;
   const isSent = user?.pagoEnviado;
   const isOnlyAdmin = user?.rol === 'admin';
 
@@ -66,8 +74,8 @@ export default function DashboardHome() {
   const deactivatedUsers = allUsers.filter(u => u.desactivado).length;
 
   const hasDpi = user?.dpi && user.dpi.trim().length > 0;
-  const workshopsReady = workshopsCount > 0 && isPaid;
-  const diplomaReady = user?.diplomaEditado || user?.rol === 'admin';
+  const workshopsReady = workshopsCount > 0 && isActualPaid;
+  const diplomaReady = user?.diplomaEditado || false;
 
   return (
     <div className="dashboard-home">
@@ -76,9 +84,9 @@ export default function DashboardHome() {
       {/* 1. SECCIÓN PERSONAL (Para todos) */}
       <div className="status-grid-container">
         <StatusCard
-          label="ESTADO DE PAGO" accentColor={isPaid ? 'var(--status-success)' : isSent ? 'var(--status-pending)' : 'var(--status-error)'}
-          badge={isPaid ? <span className="step-badge-reusable success">Staff / Validado</span> : isSent ? <span className="step-badge-reusable warning">En revisión</span> : <span className="step-badge-reusable danger">Pendiente</span>}
-          sub={isPaid ? 'Acceso administrativo total' : isSent ? 'Validando comprobante' : 'Pago requerido para participar'}
+          label="ESTADO DE PAGO" accentColor={isActualPaid ? 'var(--status-success)' : isSent ? 'var(--status-pending)' : 'var(--status-error)'}
+          badge={isActualPaid ? <span className="step-badge-reusable success">{isStaff(user?.rol) ? 'Staff / Validado' : 'Pago Validado'}</span> : isSent ? <span className="step-badge-reusable warning">En revisión</span> : <span className="step-badge-reusable danger">Pendiente</span>}
+          sub={isStaff(user?.rol) ? 'Acceso administrativo total' : isSent ? 'Validando comprobante' : 'Pago requerido para participar'}
           footerLink="Ver detalles de pago →" onClick={() => navigate('/dashboard/pago')}
         />
 
@@ -153,12 +161,12 @@ export default function DashboardHome() {
           />
 
           <EnrollmentStep
-            status={isPaid ? "completed" : isSent ? "in-progress" : "pending"}
-            icon={isPaid ? <Icons.Check /> : <Icons.CreditCard />}
+            status={isActualPaid ? "completed" : isSent ? "in-progress" : "pending"}
+            icon={isActualPaid ? <Icons.Check /> : <Icons.CreditCard />}
             title="Validación de Pago"
-            description={isPaid ? "Inscripción activada correctamente" : isSent ? "Comprobante recibido, en revisión" : "Pendiente de realizar pago"}
-            badgeLabel={isPaid ? "Completado" : isSent ? "En proceso" : "Pendiente"}
-            badgeVariant={isPaid ? "success" : isSent ? "danger" : "danger"}
+            description={isActualPaid ? "Inscripción activada correctamente" : isSent ? "Comprobante recibido, en revisión" : "Pendiente de realizar pago"}
+            badgeLabel={isActualPaid ? "Completado" : isSent ? "En proceso" : "Pendiente"}
+            badgeVariant={isActualPaid ? "success" : isSent ? "danger" : "danger"}
             onClick={() => navigate('/dashboard/pago')}
           />
 
