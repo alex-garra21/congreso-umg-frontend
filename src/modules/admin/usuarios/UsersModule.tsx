@@ -201,7 +201,7 @@ export default function UsersModule() {
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                   {/* Validar Pago - SOLO para Admin (No colaborador) */}
                   {/* 1. VALIDAR PAGO (Si NO está validado) */}
-                  {!u.pagoValidado && !u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && (
+                  {!u.pagoValidado && !u.desactivado && (
                     <button onClick={() => handleValidateUser(u)} className="action-btn" title="Validar Pago" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.CheckCircle size={18} /></button>
                   )}
 

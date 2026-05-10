@@ -31,13 +31,12 @@ export default function WorkshopsModule() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedWorkshop, setSelectedWorkshop] = useState<AgendaItem | null>(null);
-  const isPaid = user?.pagoValidado || user?.rol === 'admin';
+  const isPaid = user?.pagoValidado || false;
 
   useEffect(() => {
     if (user?.correo) {
-      if (!user.pagoValidado && user?.rol !== 'admin') {
-        // Modo Preview: Solo para participantes (o colaboradores) sin pago.
-        // El Admin NO entra aquí aunque no tenga pago validado.
+      if (!user.pagoValidado) {
+        // Modo Preview: Bloqueado para todos si no hay pago validado.
         setIsConfirmed(false);
         setEnrolledIds([]);
         return;

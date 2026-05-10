@@ -66,13 +66,13 @@ export default function DashboardHome() {
   const isOnlyAdmin = user?.rol === 'admin';
 
   // Procesar datos de admin si es staff
-  const participants = allUsers.filter(u => !isStaff(u.rol));
-  const totalUsers = participants.length;
-  const paidUsersCount = participants.filter(u => u.pagoValidado).length;
-  const studentUsers = participants.filter(u => u.tipoParticipante === 'alumno').length;
-  const externalUsers = participants.filter(u => u.tipoParticipante === 'externo').length;
-  const adminsCount = allUsers.filter(u => u.rol === 'admin').length;
-  const deactivatedUsers = participants.filter(u => u.desactivado).length;
+  const activeUsers = allUsers.filter(u => !u.desactivado);
+  const totalUsersCount = activeUsers.length;
+  const paidUsersCount = activeUsers.filter(u => u.pagoValidado).length;
+  const studentUsers = activeUsers.filter(u => u.tipoParticipante === 'alumno').length;
+  const teacherUsers = activeUsers.filter(u => u.tipoParticipante === 'docente').length;
+  const externalUsers = activeUsers.filter(u => u.tipoParticipante === 'externo').length;
+  const deactivatedUsers = allUsers.filter(u => u.desactivado).length;
 
   // Vista Administrador PURO (No ve inscripción personal)
   if (isOnlyAdmin) {
@@ -81,11 +81,11 @@ export default function DashboardHome() {
         <ModuleTitle title="Inicio (Panel Administrativo)" />
 
         <div className="status-grid-container">
-          <StatusCard label="TOTAL PARTICIPANTES" value={loadingAdmin ? '...' : totalUsers} sub="Excluye administradores" accentColor="var(--accent-primary)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsersCount} sub="Inscripciones completadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos universitarios" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Profesionales y público" accentColor="var(--status-pending)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="ADMINISTRADORES" value={loadingAdmin ? '...' : adminsCount} sub="Personal del evento" accentColor="var(--accent-dark)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="TOTAL REGISTRADOS" value={loadingAdmin ? '...' : totalUsersCount} sub="Cuentas activas en total" accentColor="var(--accent-primary)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsersCount} sub="Inscripciones confirmadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos de la universidad" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="DOCENTES UMG" value={loadingAdmin ? '...' : teacherUsers} sub="Catedráticos UMG" accentColor="#8b5cf6" icon={<Icons.Award />} navigateTo="/dashboard/admin-usuarios" />
+          <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Público general" accentColor="var(--status-pending)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
         </div>
 
         <section className="dashboard-section" style={{ marginTop: '2rem' }}>
@@ -97,12 +97,12 @@ export default function DashboardHome() {
           <div className="steps-vertical" style={{ marginTop: '1rem' }}>
             <EnrollmentStep
               status="completed" icon={<Icons.Layout />} title="Tipos de Participantes"
-              description={`Actualmente hay ${studentUsers} alumnos UMG y ${externalUsers} participantes externos registrados.`}
+              description={`Actualmente hay ${studentUsers} alumnos UMG, ${teacherUsers} docentes y ${externalUsers} participantes externos registrados.`}
               badgeLabel="Informativo" badgeVariant="neutral"
             />
             <EnrollmentStep
               status="in-progress" icon={<Icons.CreditCard />} title="Estado Financiero General"
-              description={`${paidUsersCount} usuarios han completado el proceso de pago. Aún faltan ${totalUsers - paidUsersCount} cuentas por validar.`}
+              description={`${paidUsersCount} usuarios han completado el proceso de pago. Aún faltan ${totalUsersCount - paidUsersCount} cuentas por validar.`}
               badgeLabel="En Revisión" badgeVariant="danger"
             />
             {deactivatedUsers > 0 && (

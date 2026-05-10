@@ -79,7 +79,7 @@ export default function DiplomaModule() {
 
   const isDiplomaNameTooLong = formData.nombreDiploma.length > 25;
   const isLocked = user?.diplomaEditado || false;
-  const isPaid = user?.pagoValidado || user?.rol === 'admin' || false;
+  const isPaid = user?.pagoValidado || false;
 
   if (!user) return null;
 

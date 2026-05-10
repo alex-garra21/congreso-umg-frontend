@@ -114,7 +114,8 @@ export default function AttendanceModule() {
     }
 
     return matchesSearch && matchesTime;
-  });
+  }).sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+
   const paginatedAgenda = filteredAgenda.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (

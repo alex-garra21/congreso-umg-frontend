@@ -26,12 +26,13 @@ export default function ReportsModule() {
 
   // Tipos de participante permitidos según rol
   const allowedParticipantTypes = useMemo(() => {
-    return PARTICIPANT_TYPES.filter(t => !(isColaborador && t.id === 'docente'));
-  }, [isColaborador]);
+    return PARTICIPANT_TYPES;
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWorkshopFilter, setSelectedWorkshopFilter] = useState('all_records');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+  const [attendanceFilter, setAttendanceFilter] = useState<'all' | 'attended' | 'not_attended'>('all');
   const [participantTypeFilter, setParticipantTypeFilter] = useState<string[]>(allowedParticipantTypes.map(t => t.id));
   const [page, setPage] = useState(1);
 
@@ -59,11 +60,7 @@ export default function ReportsModule() {
   const getRealWorkshops = (talleres?: { id: string; category: string }[]) => 
     (talleres || []).filter(t => t.category?.toUpperCase().trim() !== 'GENERAL');
 
-  const filteredUsers = users.filter(u => 
-    !isStaff(u.rol) && 
-    !u.desactivado && 
-    !(isColaborador && u.tipoParticipante === 'docente')
-  ).filter(u => {
+  const filteredUsers = users.filter(u => !u.desactivado).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
     
     const realWorkshops = getRealWorkshops(u.talleres);
@@ -78,11 +75,13 @@ export default function ReportsModule() {
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
     const matchesType = participantTypeFilter.length === allowedParticipantTypes.length ? true : participantTypeFilter.includes(u.tipoParticipante || 'externo');
 
-    const matchesAttendance = !isColaborador 
-      ? true 
-      : selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none' && selectedWorkshopFilter !== ''
-        ? (u.asistencias || []).some((a: any) => a.workshopId === selectedWorkshopFilter)
-        : (u.asistencias || []).length > 0;
+    const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
+    
+    const matchesAttendance = attendanceFilter === 'all'
+      ? true
+      : attendanceFilter === 'attended'
+        ? (u.asistencias || []).some((a: any) => isSpecificWorkshop ? a.workshopId === selectedWorkshopFilter : true)
+        : !(u.asistencias || []).some((a: any) => isSpecificWorkshop ? a.workshopId === selectedWorkshopFilter : true);
 
     return matchesSearch && matchesWorkshop && matchesPayment && matchesType && matchesAttendance;
   });
@@ -229,11 +228,21 @@ export default function ReportsModule() {
               ]} 
             />
           </div>
-          {!isColaborador && (
-            <div style={{ width: '150px' }}>
-              <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
-            </div>
-          )}
+          <div style={{ width: '150px' }}>
+            <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
+          </div>
+          <div style={{ width: '180px' }}>
+            <AdminSelect 
+              label="ASISTENCIA" 
+              value={attendanceFilter} 
+              onChange={(e) => { setAttendanceFilter(e.target.value as any); setPage(1); }} 
+              options={[
+                { value: 'all', label: 'Todos' },
+                { value: 'attended', label: 'Con Asistencia' },
+                { value: 'not_attended', label: 'Sin Asistencia' }
+              ]} 
+            />
+          </div>
           <div style={{ width: '180px' }}>
             <MultiSelectFilter 
               label="TIPO PARTICIPANTE" 
