@@ -11,6 +11,7 @@ import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import BackButton from '../../../components/ui/BackButton';
 import AdminButton from '../../../components/ui/AdminButton';
+import { timeToMinutes } from '../../../utils/timeUtils';
 
 import { CalendarGrid } from './components/CalendarGrid';
 import { useAgendaConfig } from '../../../api/hooks/useAgendaConfig';
@@ -82,33 +83,18 @@ export default function WorkshopsModule() {
     if (user?.correo) localStorage.setItem(`workshops_${user.correo}`, JSON.stringify(enrolledIds));
   }, [enrolledIds, user?.correo]);
 
-  const parseTime = (timeStr: string) => {
-    if (!timeStr) return 8;
-    try {
-      const parts = timeStr.trim().split(' ');
-      const timePart = parts[0];
-      const modifier = parts[1] || (timePart.toUpperCase().includes('PM') ? 'PM' : 'AM');
-      const cleanTime = timePart.toUpperCase().replace('AM', '').replace('PM', '');
-      let [h, m] = cleanTime.split(':').map(Number);
-      if (isNaN(h)) h = 8;
-      if (isNaN(m)) m = 0;
-      if (modifier.toUpperCase() === 'PM' && h < 12) h += 12;
-      if (modifier.toUpperCase() === 'AM' && h === 12) h = 0;
-      return h + (m / 60);
-    } catch (e) {
-      return 8;
-    }
-  };
 
-  let minHour = 7, maxHour = 23;
+  let minHour = 8, maxHour = 17;
   if (agenda.length > 0) {
-    const times = agenda.map((w: AgendaItem) => parseTime(w.time)).filter(t => !isNaN(t));
-    const endTimes = agenda.map((w: AgendaItem) => parseTime(w.endTime)).filter(t => !isNaN(t));
-    if (times.length > 0) minHour = Math.min(7, Math.floor(Math.min(...times)));
-    if (endTimes.length > 0) maxHour = Math.max(23, Math.ceil(Math.max(...endTimes)));
+    const times = agenda.map((w: AgendaItem) => timeToMinutes(w.time) / 60).filter(t => !isNaN(t));
+    const endTimes = agenda.map((w: AgendaItem) => timeToMinutes(w.endTime) / 60).filter(t => !isNaN(t));
+    
+    if (times.length > 0) minHour = Math.floor(Math.min(...times));
+    if (endTimes.length > 0) maxHour = Math.ceil(Math.max(...endTimes));
+    
+    if (minHour >= maxHour) maxHour = minHour + 1;
   }
   const HOURS = []; for (let i = minHour; i <= maxHour; i++) HOURS.push(i);
-
 
   const roomColors = [
     { main: '#6366f1', bg: 'rgba(99, 102, 241, 0.05)', card: 'rgba(99, 102, 241, 0.08)', border: 'rgba(99, 102, 241, 0.2)' }, // Indigo
@@ -123,8 +109,8 @@ export default function WorkshopsModule() {
 
   const getWorkshopStyles = (w: AgendaItem, isSelected: boolean) => {
     const rowsPerHour = 12; // Cada fila son 5 minutos
-    const startRow = Math.round((parseTime(w.time) - minHour) * rowsPerHour) + 2;
-    const endRow = Math.round((parseTime(w.endTime) - minHour) * rowsPerHour) + 2;
+    const startRow = Math.round((timeToMinutes(w.time) / 60 - minHour) * rowsPerHour) + 2;
+    const endRow = Math.round((timeToMinutes(w.endTime) / 60 - minHour) * rowsPerHour) + 2;
     const roomIndex = rooms.findIndex(r => r.id === w.locationId || r.name === w.room);
     const colIndex = roomIndex !== -1 ? roomIndex + 2 : 2;
     const colorTheme = roomColors[(colIndex - 2) % roomColors.length];
@@ -140,11 +126,11 @@ export default function WorkshopsModule() {
 
   const isTimeCollision = (workshop: AgendaItem) => {
     if (workshop.tag === 'GENERAL') return false;
-    const start = parseTime(workshop.time), end = parseTime(workshop.endTime);
+    const start = timeToMinutes(workshop.time) / 60, end = timeToMinutes(workshop.endTime) / 60;
     return enrolledIds.some(id => {
       const other = agenda.find((a: AgendaItem) => a.id === id);
       if (!other || other.id === workshop.id || other.tag === 'GENERAL') return false;
-      const oStart = parseTime(other.time), oEnd = parseTime(other.endTime);
+      const oStart = timeToMinutes(other.time) / 60, oEnd = timeToMinutes(other.endTime) / 60;
       return (start < oEnd) && (oStart < end);
     });
   };
