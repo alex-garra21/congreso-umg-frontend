@@ -464,22 +464,26 @@ export default function WorkshopsModule() {
                 </span>
               </div>
 
-              <div style={{ background: 'var(--bg-app)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-soft)' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 800, marginBottom: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Descripción</h4>
-                <p style={{ fontSize: '15px', lineHeight: 1.6, color: 'var(--text-primary)' }}>
-                  {selectedWorkshop.description || 'Sin descripción disponible para esta actividad.'}
-                </p>
-              </div>
+              {selectedWorkshop.description && selectedWorkshop.description.trim() !== '' && (
+                <div style={{ background: 'var(--bg-app)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-soft)' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, marginBottom: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Descripción</h4>
+                  <p style={{ fontSize: '15px', lineHeight: 1.6, color: 'var(--text-primary)' }}>
+                    {selectedWorkshop.description}
+                  </p>
+                </div>
+              )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '0.5rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icons.User size={24} />
+              {selectedWorkshop.speaker && selectedWorkshop.speaker.name && selectedWorkshop.speaker.name !== 'Por definir' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '0.5rem' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icons.User size={24} />
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Ponente</h4>
+                    <p style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>{selectedWorkshop.speaker.name}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Ponente</h4>
-                  <p style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>{selectedWorkshop.speaker?.name || 'Por definir'}</p>
-                </div>
-              </div>
+              )}
 
               {selectedWorkshop.maxQuotas && selectedWorkshop.maxQuotas > 0 ? (
                 <div style={{ padding: '0 0.5rem' }}>
@@ -627,8 +631,9 @@ export default function WorkshopsModule() {
         }
         .hour-row-label {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: center;
+          padding-top: 4px;
           font-size: 12px;
           font-weight: 700;
           color: #94a3b8;
