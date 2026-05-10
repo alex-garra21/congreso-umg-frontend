@@ -6,10 +6,9 @@ import ModuleTitle from '../../../components/ModuleTitle';
 import { useCharlas, useSalas } from '../../../api/hooks/useAgenda';
 import { syncUserEnrollmentsMutation } from '../../../api/supabase/enrollment/enrollmentMutations';
 import type { AgendaItem } from '../../../data/agendaData';
-import { showAlert, showConfirm, showToast } from '../../../utils/swal';
+import { showConfirm, showToast } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
-import Alert from '../../../components/ui/Alert';
 import BackButton from '../../../components/ui/BackButton';
 import AdminButton from '../../../components/ui/AdminButton';
 
