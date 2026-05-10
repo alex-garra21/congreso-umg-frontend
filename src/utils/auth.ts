@@ -129,10 +129,18 @@ export async function verifyAndChangePassword(oldPassword: string, newPassword: 
 }
 
 export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; message: string }> {
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
-  if (error) return { success: false, message: `Error: ${error.message}` };
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // Forzamos a Supabase a usar la URL actual para el enlace de recuperación
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+
+  if (error) {
+    console.error("Detalle técnico:", error);
+    return { success: false, message: `Error: ${error.message}` };
+  }
   return { success: true, message: 'Código enviado a tu correo' };
 }
+
 
 export async function resetPasswordWithOTP(email: string, token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
   const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' });
