@@ -54,13 +54,12 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
             required 
           />
         </FormField>
-        <FormField label="CARGO / ROL" required>
+        <FormField label="CARGO / ROL (Opcional)">
           <input 
             type="text" 
             className="dashboard-input" 
             value={editingSpeaker.role} 
             onChange={e => setEditingSpeaker({ ...editingSpeaker, role: e.target.value })} 
-            required 
           />
         </FormField>
         <FormField label="BIO (Opcional)">

@@ -1,5 +1,6 @@
 import { supabase } from '../../../utils/supabase';
 import type { AgendaItem, Speaker, Category, Room } from '../../../data/agendaData';
+import { getInitials } from '../../../utils/stringUtils';
 
 /**
  * QUERIES - Lectura de datos de Agenda con IDs
@@ -39,7 +40,7 @@ export async function getPonentesQuery(): Promise<Speaker[]> {
   return (data || []).map(d => ({
     id: d.id,
     name: d.nombre,
-    initials: d.nombre.substring(0, 2).toUpperCase(),
+    initials: getInitials(d.nombre),
     role: d.cargo,
     tag: d.tag,
     bio: d.bio,
@@ -91,7 +92,7 @@ export async function getCharlasQuery(): Promise<AgendaItem[]> {
         avatar: p.avatar_url,
         bgColor: p.bg_color,
         textColor: p.text_color,
-        initials: p.nombre ? p.nombre.substring(0, 2).toUpperCase() : '??'
+        initials: getInitials(p.nombre)
       } : undefined
     } as AgendaItem;
   });

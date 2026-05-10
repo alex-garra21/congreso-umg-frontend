@@ -53,7 +53,9 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
             <h3 style={{ fontSize: '24px', margin: 0, fontFamily: 'Source Sans 3', fontWeight: 800 }}>{speaker.name}</h3>
-            <p className="speaker-role" style={{ margin: 0, fontSize: '15px', color: 'var(--text-secondary)' }}>{speaker.role}</p>
+            {speaker.role && speaker.role.trim() !== '' && (
+              <p className="speaker-role" style={{ margin: 0, fontSize: '15px', color: 'var(--text-secondary)' }}>{speaker.role}</p>
+            )}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
               {speaker.socialLinks && Object.entries(speaker.socialLinks).map(([type, url]) => {
@@ -107,10 +109,14 @@ export default function SpeakerModal({ speaker, isOpen, onClose }: SpeakerModalP
 
         <div style={{ height: '1px', background: 'var(--border-soft)', margin: '1.5rem 0' }}></div>
 
-        <h4 style={{ fontSize: '18px', marginBottom: '10px', fontFamily: 'Source Sans 3', fontWeight: 800 }}>Acerca de {speaker.name}</h4>
-        <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '15px', whiteSpace: 'pre-line', marginBottom: '2rem' }}>
-          {speaker.bio}
-        </p>
+        {speaker.bio && speaker.bio.trim() !== '' && (
+          <>
+            <h4 style={{ fontSize: '18px', marginBottom: '10px', fontFamily: 'Source Sans 3', fontWeight: 800 }}>Acerca de {speaker.name}</h4>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '15px', whiteSpace: 'pre-line', marginBottom: '2rem' }}>
+              {speaker.bio}
+            </p>
+          </>
+        )}
 
         {speakerWorkshops.length > 0 && (
           <div className="speaker-workshops-section">

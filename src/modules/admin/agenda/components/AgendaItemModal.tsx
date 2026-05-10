@@ -29,7 +29,11 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     
-    if (!formData.locationId || !formData.tagId) {
+    if (!formData.locationId && formData.locationId !== 0) {
+      showToast('Por favor selecciona una Sala y una Categoría obligatoriamente', 'error');
+      return;
+    }
+    if (!formData.tagId && formData.tagId !== 0) {
       showToast('Por favor selecciona una Sala y una Categoría obligatoriamente', 'error');
       return;
     }
@@ -114,16 +118,34 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <FormField label="SALA / UBICACIÓN *" required>
             <AdminSelect
-              value={formData.locationId || ''}
-              onChange={(e) => setFormData({ ...formData, locationId: Number(e.target.value) })}
+              value={formData.locationId?.toString() || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                const numericVal = Number(val);
+                const selectedRoom = rooms.find(r => r.id.toString() === val);
+                setFormData({ 
+                  ...formData, 
+                  locationId: isNaN(numericVal) ? val as any : numericVal,
+                  room: selectedRoom?.name || ''
+                });
+              }}
               options={rooms.map(r => ({ value: r.id.toString(), label: r.name }))}
               placeholder="-- Seleccionar Sala --"
             />
           </FormField>
           <FormField label="CATEGORÍA *" required>
             <AdminSelect
-              value={formData.tagId || ''}
-              onChange={(e) => setFormData({ ...formData, tagId: Number(e.target.value) })}
+              value={formData.tagId?.toString() || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                const numericVal = Number(val);
+                const selectedCat = categories.find(c => c.id.toString() === val);
+                setFormData({ 
+                  ...formData, 
+                  tagId: isNaN(numericVal) ? val as any : numericVal,
+                  tag: selectedCat?.name || ''
+                });
+              }}
               options={categories.map(cat => ({ value: cat.id.toString(), label: cat.name }))}
               placeholder="-- Seleccionar Categoría --"
             />
@@ -153,9 +175,8 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, 
           </FormField>
         </div>
 
-        <FormField label="DESCRIPCIÓN *" required>
+        <FormField label="DESCRIPCIÓN (Opcional)">
           <textarea
-            required
             className="dashboard-input"
             style={{ minHeight: '100px', paddingTop: '10px' }}
             value={formData.description}

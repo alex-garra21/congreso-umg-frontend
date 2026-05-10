@@ -58,21 +58,23 @@ export default function AgendaModal({ item, isOpen, onClose }: AgendaModalProps)
           </div>
         </div>
 
-        <div>
-          <h4 style={{ 
-            fontSize: '11px', 
-            fontWeight: 800, 
-            textTransform: 'uppercase', 
-            letterSpacing: '1px', 
-            color: 'var(--accent-primary)',
-            marginBottom: '10px' 
-          }}>
-            Descripción
-          </h4>
-          <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '15px', whiteSpace: 'pre-line', margin: 0 }}>
-            {item.description}
-          </p>
-        </div>
+        {item.description && item.description.trim() !== '' && (
+          <div>
+            <h4 style={{ 
+              fontSize: '11px', 
+              fontWeight: 800, 
+              textTransform: 'uppercase', 
+              letterSpacing: '1px', 
+              color: 'var(--accent-primary)',
+              marginBottom: '10px' 
+            }}>
+              Descripción
+            </h4>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '15px', whiteSpace: 'pre-line', margin: 0 }}>
+              {item.description}
+            </p>
+          </div>
+        )}
 
         {item.speaker && (
           <div style={{ 

@@ -6,6 +6,7 @@ import logoUMG from '../assets/UMG-LOGO.svg';
 import { Icons } from './Icons';
 import { getParticipantLabel } from '../data/userTypes';
 import { isStaff } from '../utils/auth';
+import { getInitials as getInitialsUtil } from '../utils/stringUtils';
 
 interface SidebarProps {
   onModuleChange?: (moduleId: string) => void;
@@ -76,9 +77,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
 
   const getInitials = () => {
     if (!user) return '??';
-    const n = user.nombres?.[0] || '';
-    const a = user.apellidos?.[0] || '';
-    return (n + a).toUpperCase() || 'U';
+    return getInitialsUtil(`${user.nombres || ''} ${user.apellidos || ''}`);
   };
 
   return (
