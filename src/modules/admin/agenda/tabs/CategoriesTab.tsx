@@ -25,9 +25,10 @@ export default function CategoriesTab() {
 
   const handleSaveCategory = async (catData: Category) => {
     try {
+      const isExisting = catData.id !== 0 && categories.some(c => c.id === catData.id);
       let updatedCategories = [...categories];
       
-      if (catData.id) {
+      if (isExisting) {
         updatedCategories = categories.map(c => c.id === catData.id ? catData : c);
       } else {
         updatedCategories.push(catData);
