@@ -25,8 +25,6 @@ export default function UsersModule() {
   const resetDiplomaStatusMutation = useResetDiplomaStatus();
   const resetWorkshopsMutation = useResetUserWorkshops();
   const { user: currentAdmin } = useAuth();
-  const isColaborador = currentAdmin?.rol === 'colaborador';
-  const isOnlyAdmin = currentAdmin?.rol === 'admin';
 
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,8 +117,7 @@ export default function UsersModule() {
     const matchesRole = roleFilter === 'all' || 
                        (roleFilter === 'staff' ? (u.rol === 'admin' || u.rol === 'colaborador') : u.rol === roleFilter);
 
-    // Si es colaborador, no ve administradores
-    const matchesRoleVisibility = !isColaborador || u.rol !== 'admin';
+    const matchesRoleVisibility = true; // El admin ve a todos
 
     const matchesType = typeFilter.length === PARTICIPANT_TYPES.length ? true : typeFilter.includes(u.tipoParticipante || 'externo');
     return matchesSearch && matchesPayment && matchesRole && matchesType && matchesRoleVisibility;
@@ -132,7 +129,7 @@ export default function UsersModule() {
   const roleOptions = [
     { value: 'all', label: 'Todos' },
     { value: 'staff', label: 'Personal (Staff)' },
-    ...(isColaborador ? [] : [{ value: 'admin', label: 'Administradores' }]),
+    { value: 'admin', label: 'Administradores' },
     { value: 'colaborador', label: 'Colaboradores' },
     { value: 'participante', label: 'Participantes' }
   ];
@@ -142,13 +139,13 @@ export default function UsersModule() {
     { value: 'all', label: 'Cualquier estado' },
     { value: 'paid', label: 'Pagados' },
     { value: 'pending', label: 'Pendientes' },
-    ...(isColaborador ? [] : [{ value: 'deactivated', label: 'Desactivados' }])
+    { value: 'deactivated', label: 'Desactivados' }
   ];
 
   return (
     <section className="dashboard-section" style={{ padding: '0' }}>
       <div style={{ padding: '2rem 2.5rem 0' }}>
-        <ModuleTitle title={isColaborador ? "Directorio de Colaborador" : "Directorio Administrativo"} />
+        <ModuleTitle title="Directorio Administrativo" />
       </div>
 
       <ModuleCard title="Participantes y Staff" description="Gestiona roles diferenciados, tipos de perfil y estados de cuenta.">
@@ -167,11 +164,9 @@ export default function UsersModule() {
           <div style={{ flex: '1 1 300px' }}>
             <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo electrónico..." />
           </div>
-          {!isColaborador && (
-            <div style={{ width: '160px' }}>
-              <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={roleOptions} />
-            </div>
-          )}
+          <div style={{ width: '160px' }}>
+            <AdminSelect label="FILTRAR POR ROL" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} options={roleOptions} />
+          </div>
           <div style={{ width: '180px' }}>
             <MultiSelectFilter label="TIPO DE PERFIL" options={PARTICIPANT_TYPES.map(t => ({ id: t.id, label: t.label }))} selectedIds={typeFilter} onChange={(ids) => { setTypeFilter(ids); setPage(1); }} />
           </div>
