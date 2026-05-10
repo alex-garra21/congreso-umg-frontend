@@ -3,7 +3,7 @@ import { useAuth } from '../../../api/hooks/useAuth';
 import { isStaff } from '../../../utils/auth';
 import { validateTokenMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
-import { showAlert } from '../../../utils/swal';
+import { showToast } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
 import LoadingButton from '../../../components/ui/LoadingButton';
 import BackButton from '../../../components/ui/BackButton';
@@ -17,7 +17,7 @@ export default function PaymentModule() {
 
   const handleSendPayment = async () => {
     if (!codigo.trim()) {
-      showAlert('Atención', 'Por favor, ingresa el código de pago.', 'warning');
+      showToast('Por favor, ingresa el código de pago.', 'warning');
       return;
     }
 
@@ -27,14 +27,14 @@ export default function PaymentModule() {
       
       if (result.success) {
         refetchProfile();
-        showAlert('¡Éxito!', '¡Código validado exitosamente! Tu inscripción ha sido activada.', 'success');
+        showToast('¡Código validado exitosamente! Tu inscripción ha sido activada.', 'success');
       } else {
         if (result.errorType === 'not_found') {
-          showAlert('Código inválido', 'El código ingresado no existe. Por favor, verifica que lo hayas escrito correctamente.', 'error');
+          showToast('El código ingresado no existe. Por favor, verifica que lo hayas escrito correctamente.', 'error');
         } else if (result.errorType === 'already_used') {
-          showAlert('Código ya utilizado', 'Este código ya ha sido validado por otro usuario. Si crees que esto es un error, contacta al encargado.', 'warning');
+          showToast('Este código ya ha sido validado por otro usuario.', 'warning');
         } else {
-          showAlert('Error de validación', 'Hubo un problema al validar tu código. Por favor, intenta de nuevo más tarde.', 'error');
+          showToast('Hubo un problema al validar tu código. Por favor, intenta de nuevo.', 'error');
         }
       }
     } finally {

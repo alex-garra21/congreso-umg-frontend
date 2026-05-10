@@ -113,7 +113,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
               )}
               {!passwords.newPassword && (
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', fontWeight: 500 }}>
+                <div style={{ fontSize: '15px', color: '#ff0000', marginBottom: '20px', fontWeight: 500 }}>
                   Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
                 </div>
               )}

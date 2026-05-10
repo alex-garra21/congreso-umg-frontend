@@ -4,7 +4,7 @@ import { updateUserDataMutation } from '../../../api/supabase/users/userMutation
 import type { UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import diplomaTemplate from '../../../assets/diploma-template.png';
-import { showAlert } from '../../../utils/swal';
+import { showToast } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import Alert from '../../../components/ui/Alert';
@@ -72,7 +72,7 @@ export default function DiplomaModule() {
       setIsSuccessModalOpen(true);
       refetchProfile();
     } else {
-      showAlert('Error', result.error?.message || 'Error al guardar los datos', 'error');
+      showToast(result.error?.message || 'Error al guardar los datos', 'error');
     }
     setIsSaving(false);
   };

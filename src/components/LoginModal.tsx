@@ -4,7 +4,7 @@ import ForgotPasswordModal from './ForgotPasswordModal';
 import PasswordField from './PasswordField';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
-import Alert from './ui/Alert';
+import { showToast } from '../utils/swal';
 import LoadingButton from './ui/LoadingButton';
 import { loginUser } from '../utils/auth';
 
@@ -18,14 +18,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [isForgotOpen, setIsForgotOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const clearFields = () => {
     setCorreo('');
     setContrasena('');
-    setError(null);
   };
 
   const handleClose = () => {
@@ -40,7 +38,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
 
     const result = await loginUser(correo, contrasena);
@@ -56,7 +53,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
         navigate('/dashboard/inicio');
       }
     } else {
-      setError(result.message);
+      showToast(result.message, 'error');
     }
   };
 
@@ -73,11 +70,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
         Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
       </p>
 
-      {error && (
-        <Alert variant="error" style={{ marginBottom: '1.5rem' }}>
-          {error}
-        </Alert>
-      )}
 
       <form onSubmit={handleSubmit}>
         <FormField label="Correo Electrónico" required>

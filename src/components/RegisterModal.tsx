@@ -4,11 +4,10 @@ import { validatePasswordStrength } from '../utils/auth';
 import PasswordField from './PasswordField';
 import { Icons } from './Icons';
 import PasswordRequirements from './PasswordRequirements';
-import { showToast } from '../utils/swal';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
 import AdminSelect from './ui/AdminSelect';
-import Alert from './ui/Alert';
+import { showToast } from '../utils/swal';
 import LoadingButton from './ui/LoadingButton';
 import { PARTICIPANT_TYPES, requiresAcademicInfo, CICLOS, getParticipantIdLabel, requiresCiclo, getParticipantIdMaxLength, showParticipantIdHelp } from '../data/userTypes';
 
@@ -33,7 +32,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     ciclo: ''
   });
 
-  const [error, setError] = useState<string | null>(null);
 
   // Auto-detección de dominio institucional
   useEffect(() => {
@@ -86,7 +84,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
       nombres: '', apellidos: '', sexo: '', correo: '', contrasena: '', confirmarContrasena: '',
       tipoParticipante: PARTICIPANT_TYPES[0].id, carnet: '', ciclo: ''
     });
-    setError(null);
     setIsRegistered(false);
   };
 
@@ -108,25 +105,24 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     // Validación de dominio de correo
     const emailParts = formData.correo.toLowerCase().split('@');
     if (emailParts.length !== 2) {
-      setError('Por favor ingrese un correo electrónico válido.');
+      showToast('Por favor ingrese un correo electrónico válido.', 'warning');
       return;
     }
 
     const domain = emailParts[1];
     if (!ALLOWED_DOMAINS.includes(domain)) {
-      setError(`Solo se permiten correos de proveedores comunes (@gmail.com, @hotmail.com, @miumg.edu.gt, etc.). Si cree que su dominio debe ser incluido, contacte a soporte.`);
+      showToast(`Solo se permiten correos de proveedores comunes (@gmail.com, @hotmail.com, @miumg.edu.gt, etc.). Si cree que su dominio debe ser incluido, contacte a soporte.`, 'warning');
       return;
     }
 
     // Validación de contraseñas
     const passwordValidation = validatePasswordStrength(formData.contrasena);
     if (!passwordValidation.isValid) {
-      setError(passwordValidation.message);
+      showToast(passwordValidation.message, 'warning');
       return;
     }
 
@@ -153,7 +149,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
         tipoParticipante: PARTICIPANT_TYPES[0].id, carnet: '', ciclo: ''
       });
     } else {
-      setError(result.message);
+      showToast(result.message, 'error');
     }
   };
 
@@ -195,11 +191,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
             Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
           </p>
 
-          {error && (
-            <Alert variant="error" style={{ marginBottom: '1.5rem' }}>
-              {error}
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit}>
             <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
@@ -279,7 +270,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
               )}
               {!formData.contrasena && (
-                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px', fontWeight: 500 }}>
+                <div style={{ fontSize: '15px', color: '#ff0000', marginBottom: '20px', fontWeight: 500 }}>
                   Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
                 </div>
               )}

@@ -4,7 +4,7 @@ import PasswordField from './PasswordField';
 import { Icons } from './Icons';
 import PasswordRequirements from './PasswordRequirements';
 import Modal from './ui/Modal';
-import Alert from './ui/Alert';
+import { showToast } from '../utils/swal';
 import { supabase } from '../utils/supabase';
 
 interface ResetPasswordModalProps {
@@ -19,7 +19,6 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
   });
   const [userProfile, setUserProfile] = useState<{ name: string; email: string; avatar?: string } | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
@@ -57,16 +56,15 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     const passwordValidation = validatePasswordStrength(formData.newPassword);
     if (!passwordValidation.isValid) {
-      setError(passwordValidation.message);
+      showToast(passwordValidation.message, 'warning');
       return;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      showToast('Las contraseñas no coinciden.', 'warning');
       return;
     }
 
@@ -77,13 +75,12 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
     if (result.success) {
       setShowSuccess(true);
     } else {
-      setError(result.message);
+      showToast(result.message, 'error');
     }
   };
 
   const handleClose = () => {
     setFormData({ newPassword: '', confirmPassword: '' });
-    setError(null);
     setShowSuccess(false);
     setUserProfile(null);
     onClose();
@@ -166,11 +163,6 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
             Hola <strong>{userProfile?.name.split(' ')[0]}</strong>, ingresa tu nueva contraseña a continuación.
           </p>
 
-          {error && (
-            <Alert variant="error" style={{ marginBottom: '1.5rem' }}>
-              {error}
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit}>
             <PasswordField
@@ -188,7 +180,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
                 <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
               )}
               {!formData.newPassword && (
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', fontWeight: 500 }}>
+                <div style={{ fontSize: '15px', color: '#ff0000', marginBottom: '20px', fontWeight: 500 }}>
                   Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
                 </div>
               )}

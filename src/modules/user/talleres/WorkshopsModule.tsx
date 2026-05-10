@@ -157,7 +157,7 @@ export default function WorkshopsModule() {
       setEnrolledIds(prev => prev.filter(id => id !== workshop.id));
     } else {
       if (isTimeCollision(workshop)) {
-        showAlert('Traslape detectado', 'Este taller choca con tu selección actual.', 'warning');
+        showToast('Conflicto de horario: Este taller choca con tu selección actual.', 'warning');
         return;
       }
       setEnrolledIds(prev => [...prev, workshop.id]);
@@ -198,7 +198,7 @@ export default function WorkshopsModule() {
         setSaveStatus('saved');
         refetchProfile();
       } else {
-        showAlert('Atención', result.message || 'No se pudo guardar la selección.', 'warning');
+        showToast(result.message || 'No se pudo guardar la selección.', 'error');
         setSaveStatus('idle');
       }
     }
@@ -268,7 +268,6 @@ export default function WorkshopsModule() {
             </div>
           </div>
         )}
-        {isConfirmed && <Alert variant="success" style={{ marginBottom: '1.5rem' }}>Tu selección ha sido guardada exitosamente.</Alert>}
 
         <CalendarGrid
           rooms={rooms} HOURS={HOURS} minHour={minHour}

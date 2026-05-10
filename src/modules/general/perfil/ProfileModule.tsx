@@ -4,7 +4,7 @@ import { useUpdateUserData } from '../../../api/hooks/useUsers';
 import { type UserData } from '../../../utils/auth';
 import ChangePasswordModal from '../../../components/ChangePasswordModal';
 import ModuleTitle from '../../../components/ModuleTitle';
-import { showAlert } from '../../../utils/swal';
+import { showToast } from '../../../utils/swal';
 import { Icons } from '../../../components/Icons';
 import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
@@ -121,7 +121,7 @@ export default function ProfileModule() {
       await updateUserDataMutation.mutateAsync(updatedUser);
       setIsSuccessModalOpen(true);
     } catch (error: any) {
-      showAlert('Error', error?.message || 'Error al actualizar datos', 'error');
+      showToast(error?.message || 'Error al actualizar datos', 'error');
     }
   };
 

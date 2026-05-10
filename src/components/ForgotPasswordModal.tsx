@@ -4,7 +4,7 @@ import { Icons } from './Icons';
 import LoadingButton from './ui/LoadingButton';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
-import Alert from './ui/Alert';
+import { showToast } from '../utils/swal';
 
 interface ForgotPasswordModalProps {
   onClose: () => void;
@@ -12,7 +12,6 @@ interface ForgotPasswordModalProps {
 
 export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProps) {
   const [correo, setCorreo] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [isSent, setIsSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -31,12 +30,11 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
     if (e) e.preventDefault();
     
     if (!correo) {
-      setError('Por favor, ingresa tu correo electrónico.');
+      showToast('Por favor, ingresa tu correo electrónico.', 'warning');
       return;
     }
     
     setIsLoading(true);
-    setError(null);
     
     try {
       const { success, message } = await sendPasswordResetEmail(correo.trim());
@@ -44,10 +42,10 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
         setIsSent(true);
         setCountdown(60);
       } else {
-        setError(message);
+        showToast(message, 'error');
       }
     } catch (err: any) {
-      setError('Error al enviar el correo. Por favor, intenta de nuevo.');
+      showToast('Error al enviar el correo. Por favor, intenta de nuevo.', 'error');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -111,11 +109,6 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
             Ingresa tu correo y te enviaremos un enlace para que puedas asignar una nueva contraseña.
           </p>
 
-          {error && (
-            <Alert variant="error" style={{ marginBottom: '1.5rem' }}>
-              {error}
-            </Alert>
-          )}
 
           <form onSubmit={handleSendCode}>
             <FormField label="Correo Electrónico" required>

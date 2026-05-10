@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { changePassword, validatePasswordStrength } from '../utils/auth';
 import PasswordField from '../components/PasswordField';
 import { Icons } from '../components/Icons';
-import Alert from '../components/ui/Alert';
+import { showToast } from '../utils/swal';
 import PasswordRequirements from '../components/PasswordRequirements';
 import { supabase } from '../utils/supabase';
 import congresoHero from '../assets/congreso-hero.png';
@@ -16,16 +16,15 @@ export default function ResetPasswordPage() {
   });
   const [userProfile, setUserProfile] = useState<{ name: string; email: string; avatar?: string } | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   useEffect(() => {
     // Verificar si venimos de un flujo de recuperación real (URL o Storage)
-    const isRecovery = localStorage.getItem('is_recovering_pw') === 'true' || 
-                       window.location.hash.includes('type=recovery') ||
-                       window.location.hash.includes('access_token=');
-    
+    const isRecovery = localStorage.getItem('is_recovering_pw') === 'true' ||
+      window.location.hash.includes('type=recovery') ||
+      window.location.hash.includes('access_token=');
+
     if (!isRecovery) {
       console.warn("Acceso denegado: No se detectó flujo de recuperación.");
       navigate('/');
@@ -45,7 +44,7 @@ export default function ResetPasswordPage() {
     try {
       // Intentar obtener la sesión (esperando a que Supabase procese el hash)
       let sessionData = await supabase.auth.getSession();
-      
+
       // Si no hay sesión, esperar un poco y reintentar (útil en móviles lentos)
       if (!sessionData.data.session && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -53,7 +52,7 @@ export default function ResetPasswordPage() {
       }
 
       const user = sessionData.data.session?.user;
-      
+
       if (!user) {
         console.warn("No se encontró sesión de usuario tras reintentos.");
         navigate('/');
@@ -83,16 +82,15 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     const passwordValidation = validatePasswordStrength(formData.newPassword);
     if (!passwordValidation.isValid) {
-      setError(passwordValidation.message);
+      showToast(passwordValidation.message, 'warning');
       return;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      showToast('Las contraseñas no coinciden.', 'warning');
       return;
     }
 
@@ -103,7 +101,7 @@ export default function ResetPasswordPage() {
     if (result.success) {
       setShowSuccess(true);
     } else {
-      setError(result.message);
+      showToast(result.message, 'error');
     }
   };
 
@@ -159,11 +157,11 @@ export default function ResetPasswordPage() {
         border: '1px solid var(--border-soft)'
       }}>
         <div style={{ marginBottom: '2rem' }}>
-          <div style={{ 
-            width: '60px', 
-            height: '60px', 
-            background: 'var(--accent-primary)', 
-            borderRadius: '15px', 
+          <div style={{
+            width: '60px',
+            height: '60px',
+            background: 'var(--accent-primary)',
+            borderRadius: '15px',
             margin: '0 auto 1rem',
             display: 'flex',
             alignItems: 'center',
@@ -201,10 +199,10 @@ export default function ResetPasswordPage() {
         ) : (
           <>
             {/* Tarjeta de Identidad */}
-            <div style={{ 
-              background: 'var(--bg-app)', 
-              padding: '1.25rem', 
-              borderRadius: '16px', 
+            <div style={{
+              background: 'var(--bg-app)',
+              padding: '1.25rem',
+              borderRadius: '16px',
               marginBottom: '2rem',
               display: 'flex',
               alignItems: 'center',
@@ -212,13 +210,13 @@ export default function ResetPasswordPage() {
               textAlign: 'left',
               border: '1px solid var(--border-soft)'
             }}>
-              <div style={{ 
-                width: '50px', 
-                height: '50px', 
-                borderRadius: '50%', 
-                background: 'var(--accent-primary)', 
-                display: 'flex', 
-                alignItems: 'center', 
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                background: 'var(--accent-primary)',
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 overflow: 'hidden',
@@ -244,11 +242,6 @@ export default function ResetPasswordPage() {
 
             <h3 style={{ fontSize: '18px', marginBottom: '1.5rem', fontFamily: 'Source Sans 3' }}>Restablecer Contraseña</h3>
 
-            {error && (
-              <Alert variant="error" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-                {error}
-              </Alert>
-            )}
 
             <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
               <PasswordField
@@ -266,7 +259,7 @@ export default function ResetPasswordPage() {
                   <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
                 )}
                 {!formData.newPassword && (
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', fontWeight: 500 }}>
+                  <div style={{ fontSize: '15px', color: '#ff0000', marginBottom: '20px', fontWeight: 500 }}>
                     Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
                   </div>
                 )}
@@ -285,8 +278,8 @@ export default function ResetPasswordPage() {
               />
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="secondary-btn"
                   onClick={async () => {
                     await supabase.auth.signOut();
@@ -297,9 +290,9 @@ export default function ResetPasswordPage() {
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
-                  className="submit-btn" 
+                <button
+                  type="submit"
+                  className="submit-btn"
                   disabled={isSubmitting || isLoadingProfile}
                   style={{ flex: 2, height: '50px', fontSize: '16px', opacity: (isSubmitting || isLoadingProfile) ? 0.7 : 1 }}
                 >
