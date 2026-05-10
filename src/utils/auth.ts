@@ -85,12 +85,7 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
   });
 
   if (authError) {
-    const { data: profile } = await supabase.from('usuarios').select('id').eq('correo', correo).maybeSingle();
-    if (!profile) {
-      return { success: false, message: 'El correo electrónico no se encuentra registrado.' };
-    } else {
-      return { success: false, message: 'Correo o contraseña incorrectos.' };
-    }
+    return { success: false, message: 'Correo o contraseña incorrectos.' };
   }
 
   // Obtener el perfil para saber el rol y otros datos
@@ -99,6 +94,11 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
     .select('*')
     .eq('id', authData.user?.id)
     .single();
+
+  if (profile?.desactivado) {
+    await supabase.auth.signOut();
+    return { success: false, message: 'Tu cuenta ha sido desactivada. Contacta al administrador.' };
+  }
 
   return {
     success: true,
@@ -109,7 +109,8 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
       apellidos: profile.apellidos,
       correo: profile.correo,
       rol: profile.rol,
-      pagoValidado: profile.pago_validado
+      pagoValidado: profile.pago_validado,
+      avatarUrl: profile.avatar_url
     } as UserData : undefined
   };
 }

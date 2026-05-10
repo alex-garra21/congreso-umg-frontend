@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '../api/hooks/useAuth';
 import { useDashboardTitle } from '../utils/DashboardTitleContext';
@@ -11,13 +11,38 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const { user, session, isLoading, isError, refetchProfile } = useAuth();
   const { title } = useDashboardTitle();
+  const location = useLocation();
 
   useEffect(() => {
-    // Solo redirigir si ya terminó de cargar y no hay sesión
+    // 1. Redirigir al login si no hay sesión
     if (!isLoading && !session) {
       navigate('/');
+      return;
     }
-  }, [session, isLoading, navigate]);
+
+    // 2. Protección de rutas por ROL
+    if (!isLoading && user) {
+      const path = location.pathname;
+      const isAdminOnlyPath = 
+        path.includes('admin-usuarios') || 
+        path.includes('admin-asistencia') || 
+        path.includes('admin-reportes') || 
+        path.includes('admin-agenda') || 
+        path.includes('admin-config-agenda');
+      
+      const isStaffPath = path.includes('admin-tokens');
+
+      // Si es ruta de Admin y no es admin -> Fuera
+      if (isAdminOnlyPath && user.rol !== 'admin') {
+        navigate('/dashboard/inicio');
+      }
+
+      // Si es ruta de Tokens y no es staff (admin o colab) -> Fuera
+      if (isStaffPath && user.rol !== 'admin' && user.rol !== 'colaborador') {
+        navigate('/dashboard/inicio');
+      }
+    }
+  }, [session, user, isLoading, navigate, location.pathname]);
 
   // Si hubo un error cargando el perfil (común en conexiones inestables de móvil)
   if (isError) {

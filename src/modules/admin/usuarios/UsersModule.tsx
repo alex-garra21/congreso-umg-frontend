@@ -205,24 +205,23 @@ export default function UsersModule() {
               <td style={{ textAlign: 'right' }}>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                   {/* Validar Pago - SOLO para Admin (No colaborador) */}
-                  {!isColaborador && !u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && !u.pagoValidado && (
+                  {/* 1. VALIDAR PAGO (Si NO está validado) */}
+                  {!u.pagoValidado && !u.desactivado && (u.rol === 'participante' || u.rol === 'colaborador') && (
                     <button onClick={() => handleValidateUser(u)} className="action-btn" title="Validar Pago" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#16a34a', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.CheckCircle size={18} /></button>
                   )}
 
-                  {/* Anular Pago - SOLO disponible para Administrador (se quita para colaborador) */}
-                  {!u.desactivado && u.pagoValidado && isOnlyAdmin && (
+                  {/* 2. ANULAR PAGO (Si YA está validado) */}
+                  {u.pagoValidado && !u.desactivado && (
                     <button onClick={() => handleInvalidatePayment(u)} className="action-btn" title="Anular Pago" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.AlertTriangle size={18} /></button>
                   )}
 
-                  {/* Habilitar Edición Diploma - Admin total, Colaborador solo sus tokens */}
-                  {u.diplomaEditado && (isOnlyAdmin || (isColaborador && u.tokenCreatedBy === currentAdmin?.id)) && (
+                  {/* 3. HABILITAR DIPLOMA (Solo si YA guardó datos) */}
+                  {u.diplomaEditado && (
                     <button onClick={() => handleResetDiploma(u)} className="action-btn" title="Habilitar Edición Diploma" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Icons.Award size={18} /></button>
                   )}
 
-                  {/* Resetear Talleres - Admin total, Colaborador solo sus tokens. Solo si ya tiene electivos elegidos. */}
-                  {u.pagoValidado && 
-                    (isOnlyAdmin || (isColaborador && u.tokenCreatedBy === currentAdmin?.id)) && 
-                    (u.talleres?.some(t => t.category?.toUpperCase() !== 'GENERAL')) && (
+                  {/* 4. RESETEAR TALLERES (Solo si YA tiene talleres elegidos) */}
+                  {u.talleres?.some(t => t.category?.toUpperCase() !== 'GENERAL') && (
                     <button 
                       onClick={() => handleResetWorkshops(u)} 
                       className="action-btn" 
@@ -233,8 +232,8 @@ export default function UsersModule() {
                     </button>
                   )}
 
-                  {/* Límite de Tokens - Solo para colaboradores, solo accesible por Admin */}
-                  {u.rol === 'colaborador' && isOnlyAdmin && (
+                  {/* 5. LÍMITE DE TOKENS (Solo para Colaboradores) */}
+                  {u.rol === 'colaborador' && (
                     <button
                       onClick={() => {
                         setSelectedUser(u);
@@ -249,25 +248,27 @@ export default function UsersModule() {
                     </button>
                   )}
 
-                  {!isColaborador && (
-                    <>
-                      {/* Cambiar Rol - Solo Admin */}
-                      <button
-                        onClick={() => {
-                          const next = u.rol === 'admin' ? 'participante' : u.rol === 'colaborador' ? 'admin' : 'colaborador';
-                          handleRoleChange(u, next as any);
-                        }}
-                        className="action-btn"
-                        title="Cambiar Rol"
-                        style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
-                      >
-                        <Icons.Shield size={18} />
-                      </button>
+                  {/* 6. CAMBIAR ROL Y DESACTIVAR (Siempre visibles para el Admin) */}
+                  <button
+                    onClick={() => {
+                      const next = u.rol === 'admin' ? 'participante' : u.rol === 'colaborador' ? 'admin' : 'colaborador';
+                      handleRoleChange(u, next as any);
+                    }}
+                    className="action-btn"
+                    title="Cambiar Rol"
+                    style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                  >
+                    <Icons.Shield size={18} />
+                  </button>
 
-                      {/* Activar/Desactivar - Solo Admin */}
-                      <button onClick={() => handleToggleActivation(u, !!u.desactivado)} className="action-btn" title={u.desactivado ? "Activar" : "Desactivar"} style={{ background: u.desactivado ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)', color: u.desactivado ? '#16a34a' : '#6b7280', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>{u.desactivado ? <Icons.Plus size={18} /> : <Icons.EyeOff size={18} />}</button>
-                    </>
-                  )}
+                  <button 
+                    onClick={() => handleToggleActivation(u, !!u.desactivado)} 
+                    className="action-btn" 
+                    title={u.desactivado ? "Activar" : "Desactivar"} 
+                    style={{ background: u.desactivado ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)', color: u.desactivado ? '#16a34a' : '#6b7280', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                  >
+                    {u.desactivado ? <Icons.Plus size={18} /> : <Icons.EyeOff size={18} />}
+                  </button>
                 </div>
               </td>
             </tr>
