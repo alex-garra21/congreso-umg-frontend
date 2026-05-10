@@ -76,7 +76,7 @@ export default function WorkshopsModule() {
         }
       }
     }
-  }, [user?.correo, user?.talleres, user?.pagoValidado]);
+  }, [user?.correo, user?.talleres, user?.pagoValidado, agenda]);
 
   useEffect(() => {
     if (user?.correo) localStorage.setItem(`workshops_${user.correo}`, JSON.stringify(enrolledIds));
@@ -372,7 +372,15 @@ export default function WorkshopsModule() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {saveStatus === 'saving' ? 'Guardando...' : wasAlreadyConfirmed ? 'Confirmar Cambio' : `Inscribir ${enrolledIds.length} Talleres`}
+                  {saveStatus === 'saving' 
+                    ? 'Guardando...' 
+                    : wasAlreadyConfirmed 
+                      ? 'Confirmar Cambio' 
+                      : `Inscribir ${enrolledIds.filter(id => {
+                          const w = agenda.find(a => a.id === id);
+                          return w?.tag?.toUpperCase().trim() !== 'GENERAL';
+                        }).length} Talleres`
+                  }
                 </AdminButton>
 
                 {wasAlreadyConfirmed && (

@@ -18,6 +18,7 @@ import AdminTable from '../../../components/ui/AdminTable';
 import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
 import Alert from '../../../components/ui/Alert';
+import BackButton from '../../../components/ui/BackButton';
 import { Icons } from '../../../components/Icons';
 
 export default function TokensModule() {
@@ -415,6 +416,9 @@ export default function TokensModule() {
           <AdminButton variant="secondary" onClick={() => setIsMassModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
         </div>
       </Modal>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', paddingBottom: '2rem' }}>
+        <BackButton />
+      </div>
     </section>
   );
 }

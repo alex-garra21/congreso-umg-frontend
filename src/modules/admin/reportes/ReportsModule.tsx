@@ -16,6 +16,7 @@ import { saveAs } from 'file-saver';
 import { PARTICIPANT_TYPES, getParticipantLabel } from '../../../data/userTypes';
 import MultiSelectFilter from '../../../components/ui/MultiSelectFilter';
 import { Icons } from '../../../components/Icons';
+import BackButton from '../../../components/ui/BackButton';
 
 export default function ReportsModule() {
   const { data: users = [], isLoading: isLoadingUsers } = useGeneralReport();
@@ -61,7 +62,8 @@ export default function ReportsModule() {
 
   const filteredUsers = users.filter(u => !u.desactivado).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-
+    
+    // Al filtrar por un taller específico, buscamos en TODOS los talleres del usuario (incluyendo los de staff)
     const realWorkshops = getRealWorkshops(u.talleres);
     const matchesWorkshop = selectedWorkshopFilter === 'all_records'
       ? true
@@ -72,7 +74,12 @@ export default function ReportsModule() {
           : (realWorkshops.some(tw => tw.id === selectedWorkshopFilter));
 
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
-    const matchesType = participantTypeFilter.length === allowedParticipantTypes.length ? true : participantTypeFilter.includes(u.tipoParticipante || 'externo');
+    
+    // El staff (admin/colaborador) NO debe ser filtrado por tipo de participante
+    const isStaffUser = u.rol?.toLowerCase() === 'admin' || u.rol?.toLowerCase() === 'colaborador';
+    const matchesType = isStaffUser || (participantTypeFilter.length === allowedParticipantTypes.length) 
+      ? true 
+      : participantTypeFilter.includes(u.tipoParticipante || 'externo');
 
     const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
 
@@ -115,6 +122,7 @@ export default function ReportsModule() {
     } else {
       // Columnas Base
       const cols: any[] = [
+        { header: 'No.', key: 'id', width: 8 },
         { header: 'Participante', key: 'name', width: 30 },
         { header: 'Correo', key: 'email', width: 30 },
         { header: 'DPI', key: 'dpi', width: 20 },
@@ -134,8 +142,9 @@ export default function ReportsModule() {
       cols.push({ header: 'Tipo', key: 'type', width: 25 }, { header: 'Pago', key: 'pay', width: 15 });
       worksheet.columns = cols;
 
-      filteredUsers.forEach(u => {
+      filteredUsers.forEach((u, index) => {
         const row: any = {
+          id: index + 1,
           name: getDisplayName(u),
           email: u.correo,
           dpi: u.dpi || '-',
@@ -277,7 +286,13 @@ export default function ReportsModule() {
                   })()}
                 </div>
               </td>
-              <td><AdminBadge variant="neutral">{getParticipantLabel(u.tipoParticipante)}</AdminBadge></td>
+              <td>
+                {u.rol === 'admin' || u.rol === 'colaborador' ? (
+                  <AdminBadge variant="purple" style={{ textTransform: 'capitalize' }}>{u.rol}</AdminBadge>
+                ) : (
+                  <AdminBadge variant="neutral">{getParticipantLabel(u.tipoParticipante)}</AdminBadge>
+                )}
+              </td>
               <td><AdminBadge variant={u.pagoValidado ? "success" : "warning"} dot>{u.pagoValidado ? 'Validado' : 'Pendiente'}</AdminBadge></td>
             </tr>
           ))}
@@ -285,6 +300,9 @@ export default function ReportsModule() {
 
         <Pagination current={page} total={filteredUsers.length} onPageChange={setPage} itemsPerPage={10} />
       </ModuleCard>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', paddingBottom: '2rem' }}>
+        <BackButton />
+      </div>
     </section>
   );
 }

@@ -8,44 +8,53 @@ import { getEnrolledWorkshopsQuery, getAttendancesQuery } from '../enrollment/en
 
 /**
  * Obtiene la lista completa de participantes para generar reportes y listas de diplomas.
- * Excluye a los administradores y usuarios desactivados por defecto para el reporte.
+ * Incluye a todos los usuarios (incluyendo administradores) pero excluye cuentas desactivadas.
  */
 export async function getGeneralReportQuery(): Promise<UserData[]> {
   const { data, error } = await supabase
     .from('usuarios')
     .select('*')
-    .neq('rol', 'admin')
+    .eq('desactivado', false)
     .order('apellidos', { ascending: true });
 
   if (error || !data) return [];
 
   // Mapeamos y cargamos la información extendida (talleres y asistencias)
   const reportData = await Promise.all(data.map(async (userData) => {
-    const talleres = await getEnrolledWorkshopsQuery(userData.id);
-    const asistencias = await getAttendancesQuery(userData.id);
-    
-    return {
-      id: userData.id,
-      nombres: userData.nombres,
-      apellidos: userData.apellidos,
-      sexo: userData.sexo || 'M',
-      correo: userData.correo,
-      contrasena: 'auth_managed',
-      rol: userData.rol as any,
-      pagoValidado: userData.pago_validado,
-      nombreDiploma: userData.nombre_diploma,
-      tipoParticipante: userData.tipo_participante,
-      carnet: userData.carnet,
-      ciclo: userData.ciclo,
-      telefono: userData.telefono,
-      correoDiploma: userData.correo_diploma,
-      desactivado: userData.desactivado || false,
-      dpi: userData.dpi,
-      codigoDocente: userData.codigo_docente,
-      talleres,
-      asistencias
-    };
+    try {
+      const talleres = await getEnrolledWorkshopsQuery(userData.id);
+      const asistencias = await getAttendancesQuery(userData.id);
+      
+      // Si es admin, forzamos pagoValidado a true para evitar filtros accidentales
+      const isActuallyPaid = userData.rol === 'admin' ? true : (userData.pago_validado || false);
+
+      return {
+        id: userData.id,
+        nombres: userData.nombres || 'Usuario',
+        apellidos: userData.apellidos || 'Sin Apellido',
+        sexo: userData.sexo || 'M',
+        correo: userData.correo || '',
+        contrasena: 'auth_managed',
+        rol: userData.rol as any,
+        pagoValidado: isActuallyPaid,
+        nombreDiploma: userData.nombre_diploma,
+        tipoParticipante: userData.tipo_participante,
+        carnet: userData.carnet,
+        ciclo: userData.ciclo,
+        telefono: userData.telefono,
+        correoDiploma: userData.correo_diploma,
+        desactivado: userData.desactivado || false,
+        dpi: userData.dpi,
+        codigoDocente: userData.codigo_docente,
+        talleres,
+        asistencias
+      };
+    } catch (e) {
+      console.error("Error cargando usuario en reporte:", userData.id, e);
+      return null;
+    }
   }));
 
-  return reportData;
+  // Filtramos nulos si hubo algún error catastrófico con un registro individual
+  return reportData.filter(u => u !== null) as UserData[];
 }

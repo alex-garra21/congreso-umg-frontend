@@ -6,27 +6,37 @@ import { supabase } from '../../../utils/supabase';
 
 export async function syncUserEnrollmentsMutation(userId: string, workshopIds: string[]): Promise<{ success: boolean; error?: any; message?: string }> {
   try {
-    const { data, error } = await supabase.rpc('sincronizar_inscripciones', {
-      p_user_id: userId,
-      p_workshop_ids: workshopIds
-    });
+    // 1. Limpiamos las inscripciones actuales del usuario
+    const { error: deleteError } = await supabase
+      .from('inscripciones_talleres')
+      .delete()
+      .eq('id_usuario', userId);
 
-    if (error) {
-      console.error("Error RPC (sincronizar_inscripciones):", error);
-      return { success: false, error };
+    if (deleteError) {
+      console.error("Error al limpiar inscripciones previas:", deleteError);
+      return { success: false, error: deleteError };
     }
 
-    if (data === 'success') {
-      return { success: true };
-    } else if (data.startsWith('full:')) {
-      const workshopTitle = data.split(':')[1];
-      return { 
-        success: false, 
-        message: `El taller "${workshopTitle}" ya no tiene cupos disponibles.` 
-      };
+    // 2. Si no hay talleres que inscribir, terminamos con éxito
+    if (workshopIds.length === 0) return { success: true };
+
+    // 3. Preparamos las nuevas inserciones
+    const newEnrollments = workshopIds.map(id => ({
+      id_usuario: userId,
+      id_charla: id
+    }));
+
+    // 4. Insertamos las nuevas inscripciones
+    const { error: insertError } = await supabase
+      .from('inscripciones_talleres')
+      .insert(newEnrollments);
+
+    if (insertError) {
+      console.error("Error al insertar nuevas inscripciones:", insertError);
+      return { success: false, error: insertError, message: 'No se pudieron registrar los talleres. Verifica la disponibilidad.' };
     }
 
-    return { success: false, message: 'Error desconocido al sincronizar inscripciones.' };
+    return { success: true };
   } catch (err) {
     console.error("Error crítico en syncUserEnrollmentsMutation:", err);
     return { success: false, message: 'Error de red al sincronizar inscripciones.' };

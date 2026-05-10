@@ -4,6 +4,7 @@ import ModuleTitle from '../../../components/ModuleTitle';
 import AdminButton from '../../../components/ui/AdminButton';
 import { Icons } from '../../../components/Icons';
 import { showToast } from '../../../utils/swal';
+import BackButton from '../../../components/ui/BackButton';
 
 export default function AgendaConfigModule() {
   const { config: remoteConfig, updateConfig, loading } = useAgendaConfig();
@@ -157,6 +158,9 @@ export default function AgendaConfigModule() {
       <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', color: 'var(--text-secondary)', fontSize: '13px', alignItems: 'center' }}>
         <Icons.Info size={16} />
         <span>Los cambios se aplicarán automáticamente a todos los usuarios que visualicen la agenda.</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', paddingBottom: '2rem' }}>
+        <BackButton />
       </div>
     </div>
   );

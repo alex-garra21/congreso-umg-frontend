@@ -5,6 +5,7 @@ import ModuleCard from '../../../components/ui/ModuleCard';
 import { Icons } from '../../../components/Icons';
 import AdminButton from '../../../components/ui/AdminButton';
 import Alert from '../../../components/ui/Alert';
+import BackButton from '../../../components/ui/BackButton';
 
 export default function RobotsModule() {
   const { user } = useAuth();
@@ -142,6 +143,10 @@ export default function RobotsModule() {
             </div>
           </div>
         </ModuleCard>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', paddingBottom: '2rem' }}>
+        <BackButton />
       </div>
     </section>
   );

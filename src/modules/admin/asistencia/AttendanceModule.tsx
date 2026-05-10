@@ -18,6 +18,7 @@ import Modal from '../../../components/ui/Modal';
 import AdminTable from '../../../components/ui/AdminTable';
 import FormField from '../../../components/ui/FormField';
 import Alert from '../../../components/ui/Alert';
+import BackButton from '../../../components/ui/BackButton';
 import { timeToMinutes, generateTimeOptions, normalizeTime } from '../../../utils/timeUtils';
 import { useTimeConfig } from '../../../context/TimeContext';
 
@@ -246,6 +247,9 @@ export default function AttendanceModule() {
           <AdminButton variant="secondary" onClick={() => setIsQRModalOpen(false)} style={{ flex: 1 }}>Cerrar</AdminButton>
         </div>
       </Modal>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', paddingBottom: '2rem' }}>
+        <BackButton />
+      </div>
     </section>
   );
 }

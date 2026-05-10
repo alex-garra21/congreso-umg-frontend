@@ -16,6 +16,7 @@ import { PARTICIPANT_TYPES, getParticipantLabel } from '../../../data/userTypes'
 import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
 import AdminButton from '../../../components/ui/AdminButton';
+import BackButton from '../../../components/ui/BackButton';
 
 export default function UsersModule() {
   const { data: users = [], isLoading } = useAllUsers();
@@ -290,6 +291,9 @@ export default function UsersModule() {
           <AdminButton variant="secondary" onClick={() => setIsLimitModalOpen(false)} style={{ flex: 1 }}>Cancelar</AdminButton>
         </div>
       </Modal>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', paddingBottom: '2rem' }}>
+        <BackButton />
+      </div>
     </section>
   );
 }

@@ -9,6 +9,7 @@ import Modal from '../../../components/ui/Modal';
 import AdminSelect from '../../../components/ui/AdminSelect';
 import AdminButton from '../../../components/ui/AdminButton';
 import { AVAILABLE_INTERVALS } from '../../../utils/timeUtils';
+import BackButton from '../../../components/ui/BackButton';
 
 // Importar Tabs
 import ScheduleTab from './tabs/ScheduleTab';
@@ -124,6 +125,9 @@ export default function AgendaModule() {
         {agendaTab === 'speakers' && <SpeakersTab />}
         {agendaTab === 'categories' && <CategoriesTab />}
         {agendaTab === 'rooms' && <RoomsTab />}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', paddingBottom: '2rem' }}>
+        <BackButton />
       </div>
     </section>
   );

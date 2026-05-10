@@ -19,28 +19,22 @@ export default function DashboardHome() {
 
   useEffect(() => {
     // AUTOLIMPIEZA (Parche para RLS e integridad de datos): 
-    // 1. Si el pago fue anulado pero aún tiene talleres en BD, usamos la sesión del propio usuario para borrarlos.
     if (user && !isStaff(user.rol) && !user.pagoValidado && user.talleres && user.talleres.length > 0) {
       syncUserEnrollmentsMutation(user.id!, []).then(() => {
         refetchProfile();
       });
     }
 
-    // 2. Si el pago fue anulado, limpiar el caché local (LocalStorage) para que pueda empezar de cero.
     if (user?.correo && !user.pagoValidado && localStorage.getItem(`workshops_confirmed_${user.correo}`)) {
       localStorage.removeItem(`workshops_confirmed_${user.correo}`);
       localStorage.removeItem(`workshops_${user.correo}`);
       localStorage.removeItem(`modifications_count_${user.correo}`);
     }
 
-    if (!isStaff(user?.rol) && user?.correo) {
+    if (user?.correo) {
       const saved = localStorage.getItem(`workshops_${user.correo}`);
       if (saved) {
-        // En el localStorage guardamos la lista completa (agenda)
         const allSaved = JSON.parse(saved);
-        // Pero para el contador, solo lo que no es GENERAL
-        // Nota: Si el objeto en localStorage no tiene category, asumimos que es un taller 
-        // hasta que el perfil se sincronice desde BD.
         const onlyWorkshops = allSaved.filter((w: any) => w.category !== 'GENERAL');
         setWorkshopsCount(onlyWorkshops.length);
       } else {
@@ -58,14 +52,11 @@ export default function DashboardHome() {
     }
   }, [user]);
 
-
-  // Solo el Admin tiene acceso completo por defecto sin pago
   const isPaid = user?.pagoValidado || user?.rol === 'admin';
   const isSent = user?.pagoEnviado;
-
   const isOnlyAdmin = user?.rol === 'admin';
 
-  // Procesar datos de admin si es staff
+  // Procesar datos de admin
   const activeUsers = allUsers.filter(u => !u.desactivado);
   const totalUsersCount = activeUsers.length;
   const paidUsersCount = activeUsers.filter(u => u.pagoValidado).length;
@@ -74,55 +65,6 @@ export default function DashboardHome() {
   const externalUsers = activeUsers.filter(u => u.tipoParticipante === 'externo').length;
   const deactivatedUsers = allUsers.filter(u => u.desactivado).length;
 
-  // Vista Administrador PURO (No ve inscripción personal)
-  if (isOnlyAdmin) {
-    return (
-      <div className="dashboard-home">
-        <ModuleTitle title="Inicio (Panel Administrativo)" />
-
-        <div className="status-grid-container">
-          <StatusCard label="TOTAL REGISTRADOS" value={loadingAdmin ? '...' : totalUsersCount} sub="Cuentas activas en total" accentColor="var(--accent-primary)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsersCount} sub="Inscripciones confirmadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos de la universidad" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="DOCENTES UMG" value={loadingAdmin ? '...' : teacherUsers} sub="Catedráticos UMG" accentColor="#8b5cf6" icon={<Icons.Award />} navigateTo="/dashboard/admin-usuarios" />
-          <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Público general" accentColor="var(--status-pending)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
-        </div>
-
-        <section className="dashboard-section" style={{ marginTop: '2rem' }}>
-          <div className="section-header">
-            <h2>Resumen del Congreso</h2>
-            <p>Métricas generales sobre el estado de las inscripciones y los participantes.</p>
-          </div>
-
-          <div className="steps-vertical" style={{ marginTop: '1rem' }}>
-            <EnrollmentStep
-              status="completed" icon={<Icons.Layout />} title="Tipos de Participantes"
-              description={`Actualmente hay ${studentUsers} alumnos UMG, ${teacherUsers} docentes y ${externalUsers} participantes externos registrados.`}
-              badgeLabel="Informativo" badgeVariant="neutral"
-            />
-            <EnrollmentStep
-              status="in-progress" icon={<Icons.CreditCard />} title="Estado Financiero General"
-              description={`${paidUsersCount} usuarios han completado el proceso de pago. Aún faltan ${totalUsersCount - paidUsersCount} cuentas por validar.`}
-              badgeLabel="En Revisión" badgeVariant="danger"
-            />
-            {deactivatedUsers > 0 && (
-              <EnrollmentStep
-                status="pending" icon={<Icons.AlertTriangle />} title="Cuentas Inactivas"
-                description={`Existen ${deactivatedUsers} usuario(s) con cuenta desactivada.`}
-                badgeLabel="Atención" badgeVariant="danger"
-              />
-            )}
-          </div>
-        </section>
-
-        <style>{`.status-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }`}</style>
-      </div>
-    );
-  }
-
-
-
-  // Vista Usuario
   const hasDpi = user?.dpi && user.dpi.trim().length > 0;
   const workshopsReady = workshopsCount > 0 && isPaid;
   const diplomaReady = user?.diplomaEditado || user?.rol === 'admin';
@@ -131,6 +73,7 @@ export default function DashboardHome() {
     <div className="dashboard-home">
       <ModuleTitle title="Inicio" />
 
+      {/* 1. SECCIÓN PERSONAL (Para todos) */}
       <div className="status-grid-container">
         <StatusCard
           label="ESTADO DE PAGO" accentColor={isPaid ? 'var(--status-success)' : isSent ? 'var(--status-pending)' : 'var(--status-error)'}
@@ -159,9 +102,44 @@ export default function DashboardHome() {
         />
       </div>
 
-      <section className="dashboard-section">
+      {/* 2. SECCIÓN ADMINISTRATIVA (Solo Admins) */}
+      {isOnlyAdmin && (
+        <section className="dashboard-section" style={{ marginTop: '2rem', borderTop: '1px solid var(--border-soft)', paddingTop: '2.5rem' }}>
+          <div className="section-header">
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Icons.Shield size={24} color="var(--accent-primary)" /> Panel de Control Administrativo
+            </h2>
+            <p>Métricas globales del evento en tiempo real.</p>
+          </div>
+
+          <div className="status-grid-container" style={{ marginTop: '1.5rem' }}>
+            <StatusCard label="TOTAL REGISTRADOS" value={loadingAdmin ? '...' : totalUsersCount} sub="Cuentas activas en total" accentColor="var(--accent-primary)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
+            <StatusCard label="PAGOS VALIDADOS" value={loadingAdmin ? '...' : paidUsersCount} sub="Inscripciones confirmadas" accentColor="var(--status-success)" icon={<Icons.CheckCircle />} navigateTo="/dashboard/admin-usuarios" />
+            <StatusCard label="ESTUDIANTES UMG" value={loadingAdmin ? '...' : studentUsers} sub="Alumnos de la universidad" accentColor="var(--accent-secondary)" icon={<Icons.Layout />} navigateTo="/dashboard/admin-usuarios" />
+            <StatusCard label="DOCENTES UMG" value={loadingAdmin ? '...' : teacherUsers} sub="Catedráticos UMG" accentColor="#8b5cf6" icon={<Icons.Award />} navigateTo="/dashboard/admin-usuarios" />
+            <StatusCard label="PARTICIPANTES EXTERNOS" value={loadingAdmin ? '...' : externalUsers} sub="Público general" accentColor="var(--status-pending)" icon={<Icons.Users />} navigateTo="/dashboard/admin-usuarios" />
+          </div>
+
+          {deactivatedUsers > 0 && (
+            <div style={{ marginTop: '2rem' }}>
+              <EnrollmentStep
+                status="pending"
+                icon={<Icons.AlertTriangle />}
+                title="Cuentas Inactivas"
+                description={`Existen ${deactivatedUsers} usuario(s) con cuenta desactivada que no aparecen en las métricas de participación.`}
+                badgeLabel="Atención"
+                badgeVariant="danger"
+                onClick={() => navigate('/dashboard/admin-usuarios')}
+              />
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 3. RESUMEN DE PASOS / INSCRIPCIÓN (Solo para no-admins o vista completa) */}
+      <section className="dashboard-section" style={{ marginTop: isOnlyAdmin ? '2rem' : '0' }}>
         <div className="section-header">
-          <h2>Resumen de Inscripción</h2>
+          <h2>{isOnlyAdmin ? 'Estado de mi Registro' : 'Resumen de Inscripción'}</h2>
           <p>Haz clic en cualquier paso para ir directamente al módulo correspondiente.</p>
         </div>
 
@@ -207,7 +185,6 @@ export default function DashboardHome() {
       </section>
 
       <LocationLink variant="banner" />
-
 
       <style>{`.status-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }`}</style>
     </div>
