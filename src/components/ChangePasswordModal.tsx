@@ -3,8 +3,9 @@ import { verifyAndChangePassword, validatePasswordStrength } from '../utils/auth
 import PasswordField from './PasswordField';
 import { Icons } from './Icons';
 import Modal from './ui/Modal';
-import Alert from './ui/Alert';
 import LoadingButton from './ui/LoadingButton';
+import { showToast } from '../utils/swal';
+import PasswordRequirements from './PasswordRequirements';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -18,12 +19,10 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     confirmPassword: ''
   });
   const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const clearFields = () => {
     setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
-    setError(null);
     setShowSuccess(false);
     setIsSubmitting(false);
   };
@@ -35,21 +34,26 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     if (!passwords.oldPassword) {
-      setError('Debes ingresar tu contraseña actual.');
+      showToast('Debes ingresar tu contraseña actual.', 'warning');
+      return;
+    }
+
+    if (passwords.newPassword === passwords.oldPassword) {
+      showToast('La nueva contraseña no puede ser igual a la actual.', 'warning');
       return;
     }
 
     const passwordValidation = validatePasswordStrength(passwords.newPassword);
     if (!passwordValidation.isValid) {
-      setError(passwordValidation.message);
+      // Ya mostramos los requisitos de forma reactiva, pero si intenta enviar sin cumplir:
+      showToast(passwordValidation.message, 'warning');
       return;
     }
 
     if (passwords.newPassword !== passwords.confirmPassword) {
-      setError('Las nuevas contraseñas no coinciden.');
+      showToast('Las nuevas contraseñas no coinciden.', 'warning');
       return;
     }
 
@@ -61,7 +65,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
       setShowSuccess(true);
       setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
     } else {
-      setError(result.message);
+      showToast(result.message, 'error');
     }
   };
 
@@ -87,12 +91,6 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         <>
           <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Ingresa tu nueva contraseña a continuación.</p>
 
-          {error && (
-            <Alert variant="error" style={{ marginBottom: '1.5rem' }}>
-              {error}
-            </Alert>
-          )}
-
           <form onSubmit={handleSubmit}>
             <PasswordField
               label="Contraseña Actual"
@@ -110,17 +108,14 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
               required
             />
 
-            <div style={{ fontSize: '14px', color: '#ff0000ff', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
-              La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
-              {currentPasswordStrength && !currentPasswordStrength.isValid && (
-                <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                  * {currentPasswordStrength.message}
-                </span>
+            <div style={{ marginTop: '-10px' }}>
+              {passwords.newPassword.length > 0 && (
+                <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
               )}
-              {currentPasswordStrength && currentPasswordStrength.isValid && (
-                <span style={{ color: '#16a34a', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                  ✓ Contraseña segura
-                </span>
+              {!passwords.newPassword && (
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', fontWeight: 500 }}>
+                  Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
+                </div>
               )}
             </div>
 

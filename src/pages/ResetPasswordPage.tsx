@@ -4,6 +4,7 @@ import { changePassword, validatePasswordStrength } from '../utils/auth';
 import PasswordField from '../components/PasswordField';
 import { Icons } from '../components/Icons';
 import Alert from '../components/ui/Alert';
+import PasswordRequirements from '../components/PasswordRequirements';
 import { supabase } from '../utils/supabase';
 import congresoHero from '../assets/congreso-hero.png';
 
@@ -260,17 +261,14 @@ export default function ResetPasswordPage() {
                 autoComplete="new-password"
               />
 
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
-                Requisitos: <strong>6 caracteres, Mayúscula, Minúscula y Número.</strong>
-                {currentPasswordStrength && !currentPasswordStrength.isValid && (
-                  <span style={{ color: '#ef4444', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                    * {currentPasswordStrength.message}
-                  </span>
+              <div style={{ marginTop: '-10px' }}>
+                {formData.newPassword.length > 0 && (
+                  <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
                 )}
-                {currentPasswordStrength && currentPasswordStrength.isValid && (
-                  <span style={{ color: '#16a34a', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                    ✓ Cumple con los requisitos
-                  </span>
+                {!formData.newPassword && (
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', fontWeight: 500 }}>
+                    Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
+                  </div>
                 )}
               </div>
 

@@ -30,20 +30,33 @@ export interface UserData {
 
 export const isStaff = (rol?: string) => rol === 'admin' || rol === 'colaborador';
 
-export function validatePasswordStrength(password: string): { isValid: boolean; message: string } {
-  if (password.length < 6) {
-    return { isValid: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
+export interface PasswordRequirement {
+  id: string;
+  label: string;
+  met: boolean;
+}
+
+export function validatePasswordStrength(password: string): { 
+  isValid: boolean; 
+  message: string;
+  requirements: PasswordRequirement[];
+} {
+  const requirements: PasswordRequirement[] = [
+    { id: 'length', label: '6 caracteres', met: password.length >= 6 },
+    { id: 'uppercase', label: 'Mayúscula', met: /[A-Z]/.test(password) },
+    { id: 'lowercase', label: 'Minúscula', met: /[a-z]/.test(password) },
+    { id: 'number', label: 'Número', met: /[0-9]/.test(password) }
+  ];
+
+  const isValid = requirements.every(r => r.met);
+  
+  let message = '';
+  if (!isValid) {
+    const missing = requirements.find(r => !r.met);
+    message = `La contraseña debe tener al menos ${missing?.label.toLowerCase()}.`;
   }
-  if (!/[A-Z]/.test(password)) {
-    return { isValid: false, message: 'La contraseña debe contener al menos una letra mayúscula.' };
-  }
-  if (!/[a-z]/.test(password)) {
-    return { isValid: false, message: 'La contraseña debe contener al menos una letra minúscula.' };
-  }
-  if (!/[0-9]/.test(password)) {
-    return { isValid: false, message: 'La contraseña debe contener al menos un número.' };
-  }
-  return { isValid: true, message: '' };
+
+  return { isValid, message, requirements };
 }
 
 export interface TokenData {

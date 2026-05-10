@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { changePassword, validatePasswordStrength } from '../utils/auth';
 import PasswordField from './PasswordField';
 import { Icons } from './Icons';
+import PasswordRequirements from './PasswordRequirements';
 import Modal from './ui/Modal';
 import Alert from './ui/Alert';
 import { supabase } from '../utils/supabase';
@@ -182,17 +183,14 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
               autoComplete="new-password"
             />
 
-            <div style={{ fontSize: '14px', color: '#ff0000ff', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
-              La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
-              {currentPasswordStrength && !currentPasswordStrength.isValid && (
-                <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                  * {currentPasswordStrength.message}
-                </span>
+            <div style={{ marginTop: '-10px' }}>
+              {formData.newPassword.length > 0 && (
+                <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
               )}
-              {currentPasswordStrength && currentPasswordStrength.isValid && (
-                <span style={{ color: '#16a34a', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                  ✓ Contraseña segura
-                </span>
+              {!formData.newPassword && (
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', fontWeight: 500 }}>
+                  Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
+                </div>
               )}
             </div>
 

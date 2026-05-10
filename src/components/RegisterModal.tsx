@@ -3,6 +3,7 @@ import { useRegisterUser } from '../api/hooks/useUsers';
 import { validatePasswordStrength } from '../utils/auth';
 import PasswordField from './PasswordField';
 import { Icons } from './Icons';
+import PasswordRequirements from './PasswordRequirements';
 import { showToast } from '../utils/swal';
 import Modal from './ui/Modal';
 import FormField from './ui/FormField';
@@ -273,17 +274,14 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               autoComplete="new-password"
             />
 
-            <div style={{ fontSize: '14px', color: '#ff0000ff', marginTop: '-10px', marginBottom: '15px', lineHeight: '1.4' }}>
-              La contraseña debe tener al menos: <strong>6 caracteres, una letra mayúscula, una minúscula y un número.</strong>
-              {currentPasswordStrength && !currentPasswordStrength.isValid && (
-                <span style={{ color: '#d32f2f', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                  * {currentPasswordStrength.message}
-                </span>
+            <div style={{ marginTop: '-10px' }}>
+              {formData.contrasena.length > 0 && (
+                <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
               )}
-              {currentPasswordStrength && currentPasswordStrength.isValid && (
-                <span style={{ color: '#16a34a', marginTop: '4px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Icons.Check size={14} /> Contraseña segura
-                </span>
+              {!formData.contrasena && (
+                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px', fontWeight: 500 }}>
+                  Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
+                </div>
               )}
             </div>
 
