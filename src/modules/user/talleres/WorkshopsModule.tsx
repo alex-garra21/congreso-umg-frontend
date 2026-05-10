@@ -21,7 +21,7 @@ export default function WorkshopsModule() {
   const { data: charlas } = useCharlas();
   const { data: salas } = useSalas();
   const { config: visualConfig } = useAgendaConfig();
-  
+
   const agenda = charlas || [];
   const rooms = salas || [];
 
@@ -41,7 +41,7 @@ export default function WorkshopsModule() {
         setEnrolledIds([]);
         return;
       }
-      
+
       // Detectar si el backend fue limpiado por un administrador
       const hasRealWorkshops = user.talleres && user.talleres.some(t => t.category !== 'GENERAL');
       if (!hasRealWorkshops && localStorage.getItem(`workshops_confirmed_${user.correo}`)) {
@@ -52,7 +52,7 @@ export default function WorkshopsModule() {
       }
 
       const confirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`);
-      
+
       if (confirmed === 'true') {
         setIsConfirmed(true);
         if (user.talleres) {
@@ -100,7 +100,7 @@ export default function WorkshopsModule() {
     }
   };
 
-  let minHour = 7, maxHour = 23; 
+  let minHour = 7, maxHour = 23;
   if (agenda.length > 0) {
     const times = agenda.map((w: AgendaItem) => parseTime(w.time)).filter(t => !isNaN(t));
     const endTimes = agenda.map((w: AgendaItem) => parseTime(w.endTime)).filter(t => !isNaN(t));
@@ -123,12 +123,12 @@ export default function WorkshopsModule() {
 
   const getWorkshopStyles = (w: AgendaItem, isSelected: boolean) => {
     const rowsPerHour = 12; // Cada fila son 5 minutos
-    const startRow = Math.round((parseTime(w.time) - minHour) * rowsPerHour) + 2; 
+    const startRow = Math.round((parseTime(w.time) - minHour) * rowsPerHour) + 2;
     const endRow = Math.round((parseTime(w.endTime) - minHour) * rowsPerHour) + 2;
     const roomIndex = rooms.findIndex(r => r.id === w.locationId || r.name === w.room);
-    const colIndex = roomIndex !== -1 ? roomIndex + 2 : 2; 
+    const colIndex = roomIndex !== -1 ? roomIndex + 2 : 2;
     const colorTheme = roomColors[(colIndex - 2) % roomColors.length];
-    
+
     return {
       gridRow: `${startRow} / ${endRow}`,
       gridColumn: colIndex,
@@ -173,10 +173,10 @@ export default function WorkshopsModule() {
       // Importante: No borrar las actividades GENERALES que ya tiene el usuario.
       const generalActivities = (user.talleres || []).filter(t => t.category === 'GENERAL');
       const generalIds = generalActivities.map(t => t.id);
-      
+
       const allToSave = Array.from(new Set([...enrolledIds, ...generalIds]));
       const result = await syncUserEnrollmentsMutation(user.id, allToSave);
-      
+
       if (result.success) {
         // Detectamos si esto fue una modificación (si ya estaba confirmado antes de esta sesión de edición)
         const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`) === 'true';
@@ -206,14 +206,14 @@ export default function WorkshopsModule() {
   const handleEdit = async () => {
     const count = parseInt(localStorage.getItem(`modifications_count_${user?.correo}`) || '0');
     if (count >= 1) { showToast('Ya no tienes más cambios disponibles.', 'error'); return; }
-    
+
     const confirmed = await showConfirm(
-      '¿Modificar selección?', 
-      'Atención: Solo tienes derecho a UN cambio una vez guardes. ¿Deseas proceder?', 
-      'Sí, modificar', 
+      '¿Modificar selección?',
+      'Atención: Solo tienes derecho a UN cambio una vez guardes. ¿Deseas proceder?',
+      'Sí, modificar',
       true
     );
-    
+
     if (confirmed) {
       setIsConfirmed(false);
       setSaveStatus('idle');
@@ -234,7 +234,7 @@ export default function WorkshopsModule() {
 
 
   return (
-    <div className="workshops-module" style={{ 
+    <div className="workshops-module" style={{
       padding: '0',
       '--agenda-row-height': `${visualConfig.row_height}px`,
       '--agenda-font-title': `${visualConfig.font_size_title}px`,
@@ -249,10 +249,10 @@ export default function WorkshopsModule() {
 
       <div style={{ padding: '0 2.5rem' }}>
         {!isPaid && (
-          <div style={{ 
-            marginBottom: '2rem', 
-            borderRadius: '20px', 
-            padding: '1.5rem 2rem', 
+          <div style={{
+            marginBottom: '2rem',
+            borderRadius: '20px',
+            padding: '1.5rem 2rem',
             background: 'linear-gradient(135deg, #fff9db 0%, #fff3bf 100%)',
             border: '1px solid #fab005',
             display: 'flex',
@@ -278,10 +278,10 @@ export default function WorkshopsModule() {
 
         {/* Listado de Talleres Seleccionados */}
         <div className="selection-summary-container" style={{ marginTop: '3rem' }}>
-          <h3 style={{ 
-            fontFamily: 'Source Sans 3', 
-            fontWeight: 800, 
-            fontSize: '18px', 
+          <h3 style={{
+            fontFamily: 'Source Sans 3',
+            fontWeight: 800,
+            fontSize: '18px',
             marginBottom: '1.5rem',
             color: 'var(--text-primary)',
             display: 'flex',
@@ -291,7 +291,7 @@ export default function WorkshopsModule() {
             <Icons.ClipboardList size={22} color="var(--accent-primary)" />
             Talleres Seleccionados
           </h3>
-          
+
           <div className="selection-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Actividades Generales (Obligatorias) */}
             {agenda.filter(a => a.tag?.toUpperCase().trim() === 'GENERAL').map(workshop => (
@@ -316,8 +316,8 @@ export default function WorkshopsModule() {
                     <span className="selection-item-time">{workshop.time} - {workshop.endTime}</span>
                   </div>
                   {!isConfirmed && (
-                    <button 
-                      className="selection-item-remove" 
+                    <button
+                      className="selection-item-remove"
                       onClick={() => toggleEnroll(workshop)}
                       title="Quitar selección"
                     >
@@ -329,10 +329,10 @@ export default function WorkshopsModule() {
             })}
 
             {enrolledIds.length === 0 && (
-              <div style={{ 
-                padding: '2rem', 
-                textAlign: 'center', 
-                background: 'var(--bg-app)', 
+              <div style={{
+                padding: '2rem',
+                textAlign: 'center',
+                background: 'var(--bg-app)',
                 borderRadius: '16px',
                 border: '1px dashed var(--border-soft)',
                 color: 'var(--text-secondary)',
@@ -350,37 +350,37 @@ export default function WorkshopsModule() {
             const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`) === 'true';
 
             if (isConfirmed) {
-              return modCount >= 1 
+              return modCount >= 1
                 ? <div style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '14px', background: 'var(--bg-app)', padding: '1rem 2rem', borderRadius: '12px', border: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Icons.Shield size={16} color="var(--text-secondary)" /> Selección Definitiva Guardada
-                  </div>
-                : <AdminButton 
-                    onClick={handleEdit} 
-                    icon={<Icons.Edit size={18} />}
-                    className="admin-btn-hover"
-                    style={{ 
-                      background: '#10b981', 
-                      color: '#ffffff', 
-                      border: 'none', 
-                      padding: '0.8rem 2rem',
-                      fontWeight: 800,
-                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.25)'
-                    }}
-                  >
-                    Modificar Selección (1 oportunidad)
-                  </AdminButton>;
+                  <Icons.Shield size={16} color="var(--text-secondary)" /> Selección Definitiva Guardada
+                </div>
+                : <AdminButton
+                  onClick={handleEdit}
+                  icon={<Icons.Edit size={18} />}
+                  className="admin-btn-hover"
+                  style={{
+                    background: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '0.8rem 2rem',
+                    fontWeight: 800,
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.25)'
+                  }}
+                >
+                  Modificar Selección (1 oportunidad)
+                </AdminButton>;
             }
             return (
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.5rem', width: '100%' }}>
-                <AdminButton 
-                  size="lg" 
-                  onClick={handleConfirm} 
+                <AdminButton
+                  size="lg"
+                  onClick={handleConfirm}
                   disabled={enrolledIds.length === 0 || saveStatus === 'saving'}
                   icon={saveStatus === 'saving' ? <Icons.Clock size={20} /> : <Icons.Check size={20} />}
                   className="admin-btn-hover"
-                  style={{ 
-                    padding: '1.2rem 4.5rem', 
-                    borderRadius: '100px', 
+                  style={{
+                    padding: '1.2rem 4.5rem',
+                    borderRadius: '100px',
                     background: enrolledIds.length === 0 ? '#e2e8f0' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                     borderColor: 'transparent',
                     boxShadow: enrolledIds.length === 0 ? 'none' : '0 15px 30px -10px rgba(16, 185, 129, 0.4)',
@@ -391,7 +391,7 @@ export default function WorkshopsModule() {
                 </AdminButton>
 
                 {wasAlreadyConfirmed && (
-                  <button 
+                  <button
                     onClick={handleCancelEdit}
                     className="btn-ghost"
                     style={{
@@ -438,9 +438,9 @@ export default function WorkshopsModule() {
       </Modal>
 
       {/* Modal de Detalle de Taller */}
-      <Modal 
-        isOpen={!!selectedWorkshop} 
-        onClose={() => setSelectedWorkshop(null)} 
+      <Modal
+        isOpen={!!selectedWorkshop}
+        onClose={() => setSelectedWorkshop(null)}
         title={selectedWorkshop?.title}
         maxWidth="550px"
       >
@@ -452,12 +452,12 @@ export default function WorkshopsModule() {
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <span style={{ 
-                  background: 'rgba(24, 95, 165, 0.1)', 
-                  color: 'var(--accent-primary)', 
-                  padding: '6px 14px', 
-                  borderRadius: '100px', 
-                  fontSize: '13px', 
+                <span style={{
+                  background: 'rgba(24, 95, 165, 0.1)',
+                  color: 'var(--accent-primary)',
+                  padding: '6px 14px',
+                  borderRadius: '100px',
+                  fontSize: '13px',
                   fontWeight: 700,
                   display: 'flex',
                   alignItems: 'center',
@@ -465,11 +465,11 @@ export default function WorkshopsModule() {
                 }}>
                   <Icons.Map size={14} color="var(--accent-primary)" /> {selectedWorkshop.room}
                 </span>
-                <span style={{ 
-                  background: 'rgba(0, 0, 0, 0.05)', 
-                  padding: '6px 14px', 
-                  borderRadius: '100px', 
-                  fontSize: '13px', 
+                <span style={{
+                  background: 'rgba(0, 0, 0, 0.05)',
+                  padding: '6px 14px',
+                  borderRadius: '100px',
+                  fontSize: '13px',
                   fontWeight: 700,
                   display: 'flex',
                   alignItems: 'center',
@@ -505,9 +505,9 @@ export default function WorkshopsModule() {
                     </span>
                   </div>
                   <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      width: `${Math.min(((selectedWorkshop.occupiedQuotas || 0) / selectedWorkshop.maxQuotas) * 100, 100)}%`, 
-                      height: '100%', 
+                    <div style={{
+                      width: `${Math.min(((selectedWorkshop.occupiedQuotas || 0) / selectedWorkshop.maxQuotas) * 100, 100)}%`,
+                      height: '100%',
                       background: (selectedWorkshop.occupiedQuotas || 0) >= selectedWorkshop.maxQuotas ? '#ef4444' : 'var(--accent-primary)',
                       transition: 'width 0.3s ease'
                     }} />
@@ -523,13 +523,13 @@ export default function WorkshopsModule() {
               <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Información de traslape sobre los botones */}
                 {isCollision && !isSelected && (
-                  <div style={{ 
-                    color: '#862e00', 
-                    fontSize: '12px', 
-                    fontWeight: 700, 
-                    textAlign: 'center', 
-                    background: '#fff3bf', 
-                    padding: '10px', 
+                  <div style={{
+                    color: '#862e00',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    background: '#fff3bf',
+                    padding: '10px',
                     borderRadius: '10px',
                     border: '1px solid #fab005',
                     display: 'flex',
@@ -545,8 +545,8 @@ export default function WorkshopsModule() {
                 <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
                   <div style={{ flex: 1.5 }}>
                     {isPaid && !isConfirmed && !isMandatory ? (
-                      <AdminButton 
-                        fullWidth 
+                      <AdminButton
+                        fullWidth
                         variant={isSelected ? 'outline' : 'primary'}
                         onClick={() => {
                           toggleEnroll(selectedWorkshop);
@@ -574,11 +574,11 @@ export default function WorkshopsModule() {
                   </div>
 
                   <div style={{ flex: 1 }}>
-                    <AdminButton 
+                    <AdminButton
                       fullWidth
-                      variant="ghost" 
+                      variant="ghost"
                       onClick={() => setSelectedWorkshop(null)}
-                      style={{ 
+                      style={{
                         color: '#e03131',
                         background: 'rgba(224, 49, 49, 0.05)'
                       }}

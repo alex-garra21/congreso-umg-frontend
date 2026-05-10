@@ -1,45 +1,6 @@
 import { supabase } from '../../../utils/supabase';
 import type { UserData } from '../../../utils/auth';
 
-/**
- * MUTATIONS - Escritura y acciones de usuarios y tokens
- */
-
-/**
- * Asigna automáticamente las charlas de categoría "GENERAL" a un usuario.
- * Estas actividades son informativas y no cuentan como talleres.
- */
-async function assignGeneralActivities(userId: string): Promise<void> {
-  try {
-    // 1. Buscar el ID de la categoría GENERAL
-    const { data: catData } = await supabase
-      .from('categorias')
-      .select('id')
-      .ilike('nombre', 'GENERAL')
-      .maybeSingle();
-
-    if (!catData) return;
-
-    // 2. Buscar todas las charlas de esa categoría
-    const { data: charlas } = await supabase
-      .from('charlas')
-      .select('id')
-      .eq('categoria_id', catData.id);
-
-    if (!charlas || charlas.length === 0) return;
-
-    // 3. Inscribir al usuario (evitando duplicados)
-    const inscripciones = charlas.map(c => ({
-      id_usuario: userId,
-      id_charla: c.id
-    }));
-
-    await supabase.from('inscripciones_talleres').upsert(inscripciones, { onConflict: 'id_usuario,id_charla' });
-  } catch (error) {
-    console.error("Error auto-asignando actividades generales:", error);
-  }
-}
-
 export async function registerUserMutation(user: UserData): Promise<{ success: boolean; message: string; userId?: string }> {
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: user.correo,
@@ -111,50 +72,13 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
 
 export async function invalidatePaymentMutation(userId: string): Promise<{ success: boolean; message: string }> {
   try {
-    // 1. Obtener el token vinculado antes de cualquier acción
-    const { data: tokenData } = await supabase
-      .from('tokens_pago')
-      .select('codigo')
-      .eq('usado_por', userId)
-      .maybeSingle();
+    const { error } = await supabase.rpc('anular_pago_usuario', {
+      p_user_id: userId
+    });
 
-    // 2. Ejecutar borrados de dependencias primero (Asistencias e Inscripciones)
-    await Promise.all([
-      supabase.from('asistencias').delete().eq('id_usuario', userId),
-      supabase.from('inscripciones_talleres').delete().eq('id_usuario', userId)
-    ]);
-
-    // 3. Manejar el token de pago (Liberar o eliminar token de auditoría)
-    if (tokenData) {
-      if (tokenData.codigo.startsWith('ADMIN-')) {
-        await supabase.from('tokens_pago').delete().eq('codigo', tokenData.codigo);
-      } else {
-        await supabase
-          .from('tokens_pago')
-          .update({
-            usado: false,
-            usado_por: null,
-            fecha_uso: null
-          })
-          .eq('codigo', tokenData.codigo);
-      }
-    }
-
-    // 4. Limpieza del perfil del usuario (Reset de campos de pago)
-    // Lo hacemos al final para evitar conflictos de triggers si los hubiera
-    const { error: userError } = await supabase
-      .from('usuarios')
-      .update({
-        pago_validado: false,
-        nombre_diploma: null,
-        correo_diploma: null,
-        diploma_editado: false
-      })
-      .eq('id', userId);
-
-    if (userError) {
-      console.error("Error Supabase (usuarios):", userError);
-      return { success: false, message: `Error al invalidar el perfil: ${userError.message}` };
+    if (error) {
+      console.error("Error RPC (anular_pago_usuario):", error);
+      return { success: false, message: `Error al invalidar el pago: ${error.message}` };
     }
 
     return { success: true, message: 'Pago anulado y datos de usuario reseteados completamente.' };
@@ -169,29 +93,23 @@ export async function adminValidateUserMutation(userId: string, adminId?: string
   const genPart = () => Math.random().toString(36).substring(2, 6).toUpperCase();
   const adminCode = `ADMIN-${genPart()}-${genPart()}-${genPart()}`;
 
-  // 1. Insertar el token marcado como usado
-  const { error: tokenError } = await supabase.from('tokens_pago').insert({
-    codigo: adminCode,
-    usado: true,
-    usado_por: userId,
-    creado_por: adminId,
-    fecha_uso: new Date().toISOString()
-  });
+  try {
+    const { error } = await supabase.rpc('admin_validar_usuario', {
+      p_user_id: userId,
+      p_admin_id: adminId,
+      p_admin_code: adminCode
+    });
 
-  if (tokenError) return { success: false, message: 'Error al generar el token de auditoría.' };
+    if (error) {
+      console.error("Error RPC (admin_validar_usuario):", error);
+      return { success: false, message: 'Error al procesar la validación administrativa.' };
+    }
 
-  // 2. Validar el pago del usuario
-  const { error: userError } = await supabase
-    .from('usuarios')
-    .update({ pago_validado: true })
-    .eq('id', userId);
-
-  if (userError) return { success: false, message: 'Error al validar el perfil del usuario.' };
-
-  // 3. Asignar actividades generales automáticamente
-  await assignGeneralActivities(userId);
-
-  return { success: true, message: `Pago validado con token: ${adminCode}` };
+    return { success: true, message: `Pago validado con token: ${adminCode}` };
+  } catch (err) {
+    console.error("Error crítico en adminValidateUserMutation:", err);
+    return { success: false, message: 'Error de conexión al validar usuario.' };
+  }
 }
 
 export async function deleteTokenMutation(code: string): Promise<void> {
@@ -264,47 +182,23 @@ export async function generateTokenMutation(code: string, adminId?: string): Pro
 }
 
 export async function validateTokenMutation(code: string, userId: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'already_paid' | 'error' }> {
-  // 1. Verificar si el usuario ya está validado para no quemar tokens innecesarios
-  const { data: userData } = await supabase
-    .from('usuarios')
-    .select('pago_validado')
-    .eq('id', userId)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase.rpc('validar_token_pago', {
+      p_codigo: code.trim(),
+      p_user_id: userId
+    });
 
-  if (userData?.pago_validado) return { success: false, errorType: 'already_paid' };
+    if (error) {
+      console.error("Error RPC (validar_token_pago):", error);
+      return { success: false, errorType: 'error' };
+    }
 
-  // 2. Buscar el token
-  const { data: tokenData, error: fetchError } = await supabase
-    .from('tokens_pago')
-    .select('*')
-    .eq('codigo', code.trim())
-    .maybeSingle();
-
-  if (fetchError) return { success: false, errorType: 'error' };
-  if (!tokenData) return { success: false, errorType: 'not_found' };
-  if (tokenData.usado) return { success: false, errorType: 'already_used' };
-
-  // 3. Intentar usar el token con condición de carrera (Race Condition prevention)
-  const { error: updateError, count } = await supabase
-    .from('tokens_pago')
-    .update({
-      usado: true,
-      usado_por: userId,
-      fecha_uso: new Date().toISOString()
-    })
-    .eq('codigo', tokenData.codigo)
-    .eq('usado', false); // Solo si sigue sin usarse
-
-  // Si no se actualizó ninguna fila, es porque alguien más lo usó justo antes
-  if (updateError || count === 0) return { success: false, errorType: 'already_used' };
-
-  // 4. Activar al usuario
-  await supabase.from('usuarios').update({ pago_validado: true }).eq('id', userId);
-
-  // 5. Asignar actividades generales automáticamente
-  await assignGeneralActivities(userId);
-
-  return { success: true };
+    if (data === 'success') return { success: true };
+    return { success: false, errorType: data as any };
+  } catch (err) {
+    console.error("Error crítico en validateTokenMutation:", err);
+    return { success: false, errorType: 'error' };
+  }
 }
 
 export async function resetDiplomaStatusMutation(userId: string): Promise<{ success: boolean; message: string }> {
