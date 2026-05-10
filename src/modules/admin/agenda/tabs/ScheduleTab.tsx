@@ -88,8 +88,8 @@ export default function ScheduleTab() {
 
       return matchesSearch && matchesTime;
     });
-    // Ordenar por hora
-    const sorted = [...filtered].sort((a, b) => a.time.localeCompare(b.time));
+    // Ordenar por hora real cronológica
+    const sorted = [...filtered].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
     return { 
       filteredAgenda: sorted, 
       currentAgenda: sorted.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE) 

@@ -93,7 +93,12 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, 
           <FormField label="HORA INICIO *" required>
             <AdminSelect
               value={formData.time}
-              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+              onChange={(e) => {
+                const newTime = e.target.value;
+                const minutes = timeToMinutes(newTime);
+                const period = minutes < 13 * 60 ? 'Mañana' : 'Tarde';
+                setFormData({ ...formData, time: newTime, period });
+              }}
               options={generateTimeOptions(timeInterval)}
             />
           </FormField>
@@ -130,7 +135,7 @@ export default function AgendaItemModal({ isOpen, onClose, onSave, item, isNew, 
             <AdminSelect
               value={formData.speaker?.id || ''}
               onChange={(e) => {
-                const spk = speakers.find(s => s.id === parseInt(e.target.value));
+                const spk = speakers.find(s => s.id.toString() === e.target.value);
                 setFormData({ ...formData, speaker: spk });
               }}
               options={speakers.map(s => ({ value: s.id.toString(), label: s.name }))}

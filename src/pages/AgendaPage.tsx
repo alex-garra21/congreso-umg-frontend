@@ -8,29 +8,20 @@ import LocationLink from '../components/LocationLink';
 import { Icons } from '../components/Icons';
 import PublicContainer from '../components/layout/PublicContainer';
 
+import { timeToMinutes } from '../utils/timeUtils';
+
 export default function AgendaPage() {
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<'Mañana' | 'Tarde'>('Mañana');
   const [charlaSeleccionada, setCharlaSeleccionada] = useState<AgendaItem | null>(null);
   const { data: agenda = [], isLoading } = useCharlas();
 
-  // Función para convertir "8:00 AM" en un valor numérico comparable
-  const parseTimeToNumber = (timeStr: string) => {
-    if (!timeStr) return 0;
-    const parts = timeStr.split(' ');
-    if (parts.length < 2) return 0;
-    const [time, modifier] = parts;
-    let [hours, minutes] = time.split(':').map(Number);
-    if (hours === 12) {
-      hours = modifier === 'PM' ? 12 : 0;
-    } else if (modifier === 'PM') {
-      hours += 12;
-    }
-    return hours * 60 + minutes;
-  };
-
   const charlasFiltradas = agenda
-    .filter(item => item.period === periodoSeleccionado)
-    .sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time));
+    .filter(item => {
+      const minutes = timeToMinutes(item.time);
+      const isMorning = minutes < 13 * 60; // Punto de corte: 1:00 PM
+      return periodoSeleccionado === 'Mañana' ? isMorning : !isMorning;
+    })
+    .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
   return (
     <PublicContainer
