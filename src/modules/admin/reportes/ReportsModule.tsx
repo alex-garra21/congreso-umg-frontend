@@ -95,8 +95,7 @@ export default function ReportsModule() {
   const paginatedUsers = filteredUsers.slice((page - 1) * 10, page * 10);
 
   const getDisplayName = (u: any) => {
-    if (u.nombreDiploma && u.nombreDiploma.trim() !== '') return u.nombreDiploma;
-    return `${u.nombres.split(' ')[0]} ${u.apellidos.split(' ')[0]}`.trim();
+    return `${u.nombres} ${u.apellidos}`.trim();
   };
 
   const exportExcel = async (isDiplomaList = false) => {
