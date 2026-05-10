@@ -145,40 +145,29 @@ export async function deleteTokenMutation(code: string): Promise<void> {
 }
 
 export async function generateTokenMutation(code: string, adminId?: string): Promise<{ success: boolean; error?: any; message?: string }> {
-  if (adminId) {
-    // 1. Obtener datos del creador
-    const { data: creator } = await supabase
-      .from('usuarios')
-      .select('rol, limite_tokens')
-      .eq('id', adminId)
-      .single();
+  try {
+    const { data, error } = await supabase.rpc('generar_token_pago', {
+      p_codigo: code,
+      p_admin_id: adminId
+    });
 
-    if (creator && creator.rol === 'colaborador') {
-      // 2. Contar tokens ya creados por este colaborador
-      const { count, error: countError } = await supabase
-        .from('tokens_pago')
-        .select('*', { count: 'exact', head: true })
-        .eq('creado_por', adminId);
+    if (error) return { success: false, error };
 
-      if (countError) throw countError;
+    if (data === 'success') return { success: true };
 
-      // 3. Validar contra el límite
-      if (count !== null && count >= (creator.limite_tokens || 0)) {
-        return {
-          success: false,
-          message: `Has alcanzado tu límite de ${creator.limite_tokens} tokens. Contacta a un administrador.`
-        };
-      }
+    if (data.startsWith('limit_reached:')) {
+      const limit = data.split(':')[1];
+      return {
+        success: false,
+        message: `Has alcanzado tu límite de ${limit} tokens. Contacta a un administrador.`
+      };
     }
+
+    return { success: false, message: 'Error al generar token.' };
+  } catch (err) {
+    console.error("Error en generateTokenMutation:", err);
+    return { success: false, message: 'Error de conexión.' };
   }
-
-  const { error } = await supabase.from('tokens_pago').insert({
-    codigo: code,
-    creado_por: adminId
-  });
-
-  if (error) return { success: false, error };
-  return { success: true };
 }
 
 export async function validateTokenMutation(code: string, userId: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'already_paid' | 'error' }> {
