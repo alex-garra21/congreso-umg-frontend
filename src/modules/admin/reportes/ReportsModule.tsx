@@ -15,7 +15,6 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { PARTICIPANT_TYPES, getParticipantLabel } from '../../../data/userTypes';
 import MultiSelectFilter from '../../../components/ui/MultiSelectFilter';
-import { isStaff } from '../../../utils/auth';
 import { Icons } from '../../../components/Icons';
 
 export default function ReportsModule() {
@@ -57,26 +56,26 @@ export default function ReportsModule() {
   };
 
   // Ayudante para obtener solo talleres reales (excluye GENERAL)
-  const getRealWorkshops = (talleres?: { id: string; category: string }[]) => 
+  const getRealWorkshops = (talleres?: { id: string; category: string }[]) =>
     (talleres || []).filter(t => t.category?.toUpperCase().trim() !== 'GENERAL');
 
   const filteredUsers = users.filter(u => !u.desactivado).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const realWorkshops = getRealWorkshops(u.talleres);
-    const matchesWorkshop = selectedWorkshopFilter === 'all_records' 
-      ? true 
-      : selectedWorkshopFilter === '' 
-        ? (realWorkshops.length > 0) 
-        : selectedWorkshopFilter === 'none' 
-          ? (realWorkshops.length === 0) 
+    const matchesWorkshop = selectedWorkshopFilter === 'all_records'
+      ? true
+      : selectedWorkshopFilter === ''
+        ? (realWorkshops.length > 0)
+        : selectedWorkshopFilter === 'none'
+          ? (realWorkshops.length === 0)
           : (realWorkshops.some(tw => tw.id === selectedWorkshopFilter));
 
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
     const matchesType = participantTypeFilter.length === allowedParticipantTypes.length ? true : participantTypeFilter.includes(u.tipoParticipante || 'externo');
 
     const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
-    
+
     const matchesAttendance = attendanceFilter === 'all'
       ? true
       : attendanceFilter === 'attended'
@@ -95,10 +94,10 @@ export default function ReportsModule() {
 
   const exportExcel = async (isDiplomaList = false) => {
     if (filteredUsers.length === 0) { showToast('No hay datos para exportar.', 'warning'); return; }
-    
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(isDiplomaList ? 'Diplomas' : 'Reporte_General');
-    
+
     // Si hay un taller específico seleccionado
     const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
     const workshopTitle = isSpecificWorkshop ? getWorkshopTitle(selectedWorkshopFilter) : '';
@@ -107,16 +106,16 @@ export default function ReportsModule() {
       worksheet.columns = [{ header: 'Participante', key: 'name', width: 35 }, { header: 'Correo', key: 'email', width: 35 }, { header: 'Taller(es)', key: 'workshops', width: 45 }];
       filteredUsers.forEach(u => {
         const realW = getRealWorkshops(u.talleres);
-        worksheet.addRow({ 
-          name: getDisplayName(u), 
-          email: u.correoDiploma || u.correo, 
-          workshops: isSpecificWorkshop ? workshopTitle : (realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-') 
+        worksheet.addRow({
+          name: getDisplayName(u),
+          email: u.correoDiploma || u.correo,
+          workshops: isSpecificWorkshop ? workshopTitle : (realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-')
         });
       });
     } else {
       // Columnas Base
       const cols: any[] = [
-        { header: 'Participante', key: 'name', width: 30 }, 
+        { header: 'Participante', key: 'name', width: 30 },
         { header: 'Correo', key: 'email', width: 30 },
         { header: 'DPI', key: 'dpi', width: 20 },
         { header: 'Sexo', key: 'sex', width: 15 },
@@ -136,15 +135,15 @@ export default function ReportsModule() {
       worksheet.columns = cols;
 
       filteredUsers.forEach(u => {
-        const row: any = { 
-          name: getDisplayName(u), 
-          email: u.correo, 
+        const row: any = {
+          name: getDisplayName(u),
+          email: u.correo,
           dpi: u.dpi || '-',
           sex: u.sexo || '-',
           phone: u.telefono || '-',
           identifier: u.carnet || u.codigoDocente || '-',
-          type: getParticipantLabel(u.tipoParticipante), 
-          pay: u.pagoValidado ? 'SÍ' : 'NO' 
+          type: getParticipantLabel(u.tipoParticipante),
+          pay: u.pagoValidado ? 'SÍ' : 'NO'
         };
 
         if (isSpecificWorkshop) {
@@ -158,14 +157,14 @@ export default function ReportsModule() {
     }
 
     worksheet.getRow(1).font = { bold: true };
-    
+
     // Generar Nombre de Archivo Inteligente
     let fileName = isDiplomaList ? 'Lista_Diplomas' : 'Reporte';
     if (isSpecificWorkshop) fileName += `_${workshopTitle.replace(/[^a-z0-9]/gi, '_')}`;
     else if (selectedWorkshopFilter === 'none') fileName += '_Sin_Talleres';
-    
+
     if (paymentFilter !== 'all') fileName += `_${paymentFilter === 'paid' ? 'Pagados' : 'Pendientes'}`;
-    
+
     // Si no están todos los tipos seleccionados, agregar al nombre
     if (participantTypeFilter.length < PARTICIPANT_TYPES.length) {
       fileName += `_${participantTypeFilter.join('_')}`;
@@ -195,14 +194,14 @@ export default function ReportsModule() {
           )
         }
       >
-        <div style={{ 
-          display: 'flex', 
-          gap: '1rem', 
-          alignItems: 'flex-end', 
-          marginBottom: '2.5rem', 
-          background: 'var(--bg-app)', 
-          padding: '1.25rem 1.5rem', 
-          borderRadius: '16px', 
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          alignItems: 'flex-end',
+          marginBottom: '2.5rem',
+          background: 'var(--bg-app)',
+          padding: '1.25rem 1.5rem',
+          borderRadius: '16px',
           border: '1px solid var(--border-soft)',
           flexWrap: 'wrap',
           justifyContent: 'center'
@@ -211,44 +210,44 @@ export default function ReportsModule() {
             <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo..." />
           </div>
           <div style={{ width: '220px' }}>
-            <AdminSelect 
-              label="TALLER" 
-              value={selectedWorkshopFilter} 
-              onChange={(e) => setSelectedWorkshopFilter(e.target.value)} 
+            <AdminSelect
+              label="TALLER"
+              value={selectedWorkshopFilter}
+              onChange={(e) => setSelectedWorkshopFilter(e.target.value)}
               options={[
                 ...(!isColaborador ? [
-                  { value: 'all_records', label: 'Todos los registros' }, 
-                  { value: 'none', label: 'Sin talleres' }, 
+                  { value: 'all_records', label: 'Todos los registros' },
+                  { value: 'none', label: 'Sin talleres' },
                   { value: '', label: 'Cualquier taller' }
                 ] : []),
                 ...agenda
                   .filter(a => a.tagId !== 1 && a.tag?.toUpperCase().trim() !== 'GENERAL')
                   .sort((a, b) => a.title.localeCompare(b.title))
                   .map(w => ({ value: w.id, label: w.title }))
-              ]} 
+              ]}
             />
           </div>
           <div style={{ width: '150px' }}>
             <AdminSelect label="PAGO" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} options={[{ value: 'all', label: 'Todos' }, { value: 'paid', label: 'Pagados' }, { value: 'unpaid', label: 'Pendientes' }]} />
           </div>
           <div style={{ width: '180px' }}>
-            <AdminSelect 
-              label="ASISTENCIA" 
-              value={attendanceFilter} 
-              onChange={(e) => { setAttendanceFilter(e.target.value as any); setPage(1); }} 
+            <AdminSelect
+              label="ASISTENCIA"
+              value={attendanceFilter}
+              onChange={(e) => { setAttendanceFilter(e.target.value as any); setPage(1); }}
               options={[
                 { value: 'all', label: 'Todos' },
                 { value: 'attended', label: 'Con Asistencia' },
                 { value: 'not_attended', label: 'Sin Asistencia' }
-              ]} 
+              ]}
             />
           </div>
           <div style={{ width: '180px' }}>
-            <MultiSelectFilter 
-              label="TIPO PARTICIPANTE" 
-              options={allowedParticipantTypes.map(t => ({ id: t.id, label: t.label }))} 
-              selectedIds={participantTypeFilter} 
-              onChange={(ids) => setParticipantTypeFilter(ids)} 
+            <MultiSelectFilter
+              label="TIPO PARTICIPANTE"
+              options={allowedParticipantTypes.map(t => ({ id: t.id, label: t.label }))}
+              selectedIds={participantTypeFilter}
+              onChange={(ids) => setParticipantTypeFilter(ids)}
             />
           </div>
         </div>
@@ -265,12 +264,12 @@ export default function ReportsModule() {
                   {(() => {
                     const realW = getRealWorkshops(u.talleres);
                     if (realW.length === 0) return <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Ninguno</span>;
-                    
+
                     // Si hay un taller específico filtrado, mostrar solo ese
                     if (selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none') {
                       return <AdminBadge variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(selectedWorkshopFilter)}</AdminBadge>;
                     }
-                    
+
                     // Si no, mostrar todos
                     return realW.map(tw => (
                       <AdminBadge key={tw.id} variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(tw.id)}</AdminBadge>
@@ -283,7 +282,7 @@ export default function ReportsModule() {
             </tr>
           ))}
         </AdminTable>
-        
+
         <Pagination current={page} total={filteredUsers.length} onPageChange={setPage} itemsPerPage={10} />
       </ModuleCard>
     </section>

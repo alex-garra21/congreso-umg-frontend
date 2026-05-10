@@ -332,7 +332,7 @@ export default function WorkshopsModule() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '3rem 0' }}>
           {isPaid && (() => {
             const modCount = parseInt(localStorage.getItem(`modifications_count_${user?.correo}`) || '0');
-            const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`) === 'true';
+            const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user?.correo}`) === 'true';
 
             if (isConfirmed) {
               return modCount >= 1
