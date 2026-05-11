@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { getCurrentUser, updateUserData, type UserData } from '../../../utils/auth';
+import { useAuth } from '../../../api/hooks/useAuth';
+import { updateUserDataMutation } from '../../../api/supabase/users/userMutations';
+import type { UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import diplomaTemplate from '../../../assets/diploma-template.png';
 import { showAlert } from '../../../utils/swal';
 
 export default function DiplomaModule() {
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
+  const { user, refetchProfile } = useAuth();
   const [formData, setFormData] = useState({
     nombreDiploma: '',
     correoDiploma: ''
@@ -42,12 +44,12 @@ export default function DiplomaModule() {
       diplomaEditado: true
     };
 
-    const result = await updateUserData(updatedUser);
+    const result = await updateUserDataMutation(updatedUser);
     if (result.success) {
       setIsSuccessModalOpen(true);
-      setUser(getCurrentUser());
+      refetchProfile();
     } else {
-      showAlert('Error', result.message, 'error');
+      showAlert('Error', result.error?.message || 'Error al guardar los datos', 'error');
     }
   };
 
@@ -320,6 +322,13 @@ export default function DiplomaModule() {
           </div>
         </div>
       )}
+
+      {/* Botón regresar al inicio */}
+      <div style={{ display: 'flex', justifySelf: 'center', marginTop: '2rem', marginBottom: '1rem', width: '100%', justifyContent: 'center' }}>
+        <button className="btn-lg btn-lg-primary" style={{ background: 'var(--blue)', border: 'none', padding: '1rem 3rem', borderRadius: '100px', fontSize: '16px', fontWeight: 'bold', color: '#fff', cursor: 'pointer' }} onClick={() => window.location.href = '/dashboard'}>
+          Ir al Inicio
+        </button>
+      </div>
     </div>
   );
 }

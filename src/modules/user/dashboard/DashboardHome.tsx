@@ -1,43 +1,37 @@
 import { useState, useEffect } from 'react';
-import { getCurrentUser, getAllUsersCloud, type UserData } from '../../../utils/auth';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../api/hooks/useAuth';
+import { getAllUsersQuery } from '../../../api/supabase/users/userQueries';
+import type { UserData } from '../../../utils/auth';
 import ModuleTitle from '../../../components/ModuleTitle';
 import LocationLink from '../../../components/LocationLink';
 
 export default function DashboardHome() {
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
+  const { user } = useAuth();
   const [workshopsCount, setWorkshopsCount] = useState(0);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const [loadingAdmin, setLoadingAdmin] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const updateData = () => {
-      const currentUser = getCurrentUser();
-      setUser(currentUser);
-
-      if (currentUser?.rol !== 'admin') {
-        const saved = localStorage.getItem(`workshops_${currentUser?.correo}`);
-        if (saved) {
-          setWorkshopsCount(JSON.parse(saved).length);
-        } else {
-          setWorkshopsCount(0);
-        }
+    if (user?.rol !== 'admin' && user?.correo) {
+      const saved = localStorage.getItem(`workshops_${user.correo}`);
+      if (saved) {
+        setWorkshopsCount(JSON.parse(saved).length);
+      } else {
+        setWorkshopsCount(0);
       }
-    };
-
-    updateData();
-    window.addEventListener('sessionUpdate', updateData);
+    }
 
     // Si es administrador, cargar la lista completa para métricas
-    if (getCurrentUser()?.rol === 'admin') {
+    if (user?.rol === 'admin') {
       setLoadingAdmin(true);
-      getAllUsersCloud().then(data => {
+      getAllUsersQuery().then(data => {
         setAllUsers(data);
         setLoadingAdmin(false);
       });
     }
-
-    return () => window.removeEventListener('sessionUpdate', updateData);
-  }, []);
+  }, [user]);
 
   const Icons = {
     Check: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,
@@ -198,7 +192,11 @@ export default function DashboardHome() {
 
       {/* Top Status Cards */}
       <div className="status-grid">
-        <div className="status-card">
+        <div 
+          className="status-card highlight" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => navigate('/dashboard/pago')}
+        >
           <span className="card-label">ESTADO DE PAGO</span>
           <div className="status-badge-wrapper" style={{ margin: '10px 0' }}>
             {isPaid ? (
@@ -212,7 +210,11 @@ export default function DashboardHome() {
           <span className="card-sub">{isPaid ? 'Inscripción activa' : isSent ? 'Validando comprobante' : 'Pago requerido, ingrese el token para validar su inscripción'}</span>
         </div>
 
-        <div className="status-card">
+        <div 
+          className="status-card highlight" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => navigate('/dashboard/talleres')}
+        >
           <span className="card-label">TALLERES</span>
           <div className="card-value">
             <span className="number">{workshopsCount}</span>
@@ -220,7 +222,11 @@ export default function DashboardHome() {
           <span className="card-sub">{workshopsCount === 1 ? 'Taller seleccionado' : 'Talleres seleccionados'}</span>
         </div>
 
-        <div className="status-card">
+        <div 
+          className="status-card highlight" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => navigate('/dashboard/diploma')}
+        >
           <span className="card-label">DIPLOMA</span>
           {user?.diplomaEditado ? (
             <div className="status-badge-wrapper">

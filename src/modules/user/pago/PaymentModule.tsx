@@ -1,17 +1,12 @@
-import { useState, useEffect } from 'react';
-import { validateToken, validatePaymentInSession, getCurrentUser, type UserData } from '../../../utils/auth';
+import { useState } from 'react';
+import { useAuth } from '../../../api/hooks/useAuth';
+import { validateTokenMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showAlert } from '../../../utils/swal';
 
 export default function PaymentModule() {
   const [codigo, setCodigo] = useState('');
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
-
-  useEffect(() => {
-    const handleUpdate = () => setUser(getCurrentUser());
-    window.addEventListener('sessionUpdate', handleUpdate);
-    return () => window.removeEventListener('sessionUpdate', handleUpdate);
-  }, []);
+  const { user, refetchProfile } = useAuth();
 
   const isPaid = user?.pagoValidado;
 
@@ -21,11 +16,10 @@ export default function PaymentModule() {
       return;
     }
 
-    const result = await validateToken(codigo.trim());
+    const result = await validateTokenMutation(codigo.trim(), user?.id || '');
     
     if (result.success) {
-      validatePaymentInSession();
-      window.dispatchEvent(new Event('sessionUpdate'));
+      refetchProfile();
       showAlert('¡Éxito!', '¡Código validado exitosamente! Tu inscripción ha sido activada.', 'success');
     } else {
       if (result.errorType === 'not_found') {

@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
-  getAgenda, saveAgenda,
-  getSpeakers, saveSpeakers,
-  getCategories, saveCategories,
-  getRooms, saveRooms,
   type AgendaItem, type Speaker, type CategoryStyle
-} from '../../../utils/agendaStore';
+} from '../../../data/agendaData';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
 import SearchBar from '../../../components/ui/SearchBar';
+import {
+  useCharlas, usePonentes, useCategorias, useSalas,
+  useSaveAgenda, useSavePonentes, useSaveCategorias, useSaveSalas
+} from '../../../api/hooks/useAgenda';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast, showConfirm } from '../../../utils/swal';
 import ColorPicker from '../../../components/ColorPicker';
@@ -18,12 +18,15 @@ import AdminSelect from '../../../components/ui/AdminSelect';
 import ModuleCard from '../../../components/ui/ModuleCard';
 
 export default function AgendaModule() {
-  const [agenda, setAgenda] = useState<AgendaItem[]>(getAgenda());
-  const [speakers, setSpeakers] = useState<Speaker[]>(getSpeakers());
-  const [categories, setCategories] = useState<Record<string, CategoryStyle>>(getCategories());
-  const [rooms, setRooms] = useState<string[]>(getRooms());
-  const [searchTerm, setSearchTerm] = useState('');
-const [currentPage, setCurrentPage] = useState(1);
+  const { data: agenda = [] } = useCharlas();
+  const { data: speakers = [] } = usePonentes();
+  const { data: categories = {} } = useCategorias();
+  const { data: rooms = [] } = useSalas();
+
+  const saveAgendaMutation = useSaveAgenda();
+  const savePonentesMutation = useSavePonentes();
+  const saveCategoriasMutation = useSaveCategorias();
+  const saveSalasMutation = useSaveSalas();
 
   const [agendaTab, setAgendaTab] = useState<'schedule' | 'speakers' | 'categories' | 'rooms'>('schedule');
 
@@ -36,6 +39,20 @@ const [currentPage, setCurrentPage] = useState(1);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<{ oldName: string, newName: string } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Utilidad para traducir errores de la base de datos
+  const translateError = (errorMsg: string) => {
+    if (errorMsg.includes('violates foreign key constraint')) {
+      if (errorMsg.includes('id_categoria')) return 'La categoría seleccionada no es válida o debe elegir una.';
+      if (errorMsg.includes('id_ponente')) return 'El ponente seleccionado no existe.';
+      return 'Hay un error de relación con otros datos.';
+    }
+    if (errorMsg.includes('not-null constraint')) return 'Faltan campos obligatorios por llenar.';
+    if (errorMsg.includes('unique constraint')) return 'Ya existe un registro con ese nombre.';
+    return errorMsg;
+  };
 
 
 
@@ -43,20 +60,29 @@ const [currentPage, setCurrentPage] = useState(1);
     e.preventDefault();
     if (!editingItem) return;
     
+    // Validación específica por campo
+    let hasErrors = false;
+    if (!editingItem.title) { showToast('El Título es obligatorio.', 'error'); hasErrors = true; }
+    if (!editingItem.time) { showToast('Debe seleccionar una Hora de Inicio.', 'error'); hasErrors = true; }
+    if (!editingItem.endTime) { showToast('Debe seleccionar una Hora de Fin.', 'error'); hasErrors = true; }
+    if (!editingItem.room) { showToast('Debe seleccionar una Sala / Ubicación.', 'error'); hasErrors = true; }
+    if (!editingItem.tag) { showToast('Debe seleccionar una Categoría.', 'error'); hasErrors = true; }
+
+    if (hasErrors) return;
+
     try {
       const newAgenda = agenda.some(a => a.id === editingItem.id)
         ? currentAgenda.map(a => a.id === editingItem.id ? editingItem : a)
         : [...agenda, editingItem];
-      
+
       // Intentar guardar (esto ahora lanzará error si falla la nube)
-      await saveAgenda(newAgenda);
-      
-      setAgenda(newAgenda);
+      await saveAgendaMutation.mutateAsync(newAgenda);
+
       setIsAgendaModalOpen(false);
       showToast('Cambios guardados correctamente', 'success');
     } catch (error: any) {
       console.error("Error al guardar actividad:", error);
-      showToast(`Error al guardar: ${error.message || 'Error de conexión'}`, 'error');
+      showToast(`Error al guardar: ${translateError(error.message || 'Error de conexión')}`, 'error');
     }
   };
 
@@ -65,8 +91,7 @@ const [currentPage, setCurrentPage] = useState(1);
       if (confirmed) {
         try {
           const newAgenda = agenda.filter(a => a.id !== id);
-          await saveAgenda(newAgenda);
-          setAgenda(newAgenda);
+          await saveAgendaMutation.mutateAsync(newAgenda);
           showToast('Actividad eliminada', 'success');
         } catch (error: any) {
           showToast(`Error al eliminar: ${error.message}`, 'error');
@@ -75,23 +100,43 @@ const [currentPage, setCurrentPage] = useState(1);
     });
   };
 
-  const handleSaveSpeaker = (e: React.FormEvent) => {
+  const handleSaveSpeaker = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSpeaker) return;
-    const newSpeakers = speakers.some(s => s.id === editingSpeaker.id)
-      ? speakers.map(s => s.id === editingSpeaker.id ? editingSpeaker : s)
-      : [...speakers, editingSpeaker];
-    setSpeakers(newSpeakers);
-    saveSpeakers(newSpeakers);
-    setIsSpeakerModalOpen(false);
+
+    let hasErrors = false;
+    if (!editingSpeaker.name) { showToast('El Nombre del ponente es obligatorio.', 'error'); hasErrors = true; }
+    if (!editingSpeaker.role) { showToast('El Cargo / Rol es obligatorio.', 'error'); hasErrors = true; }
+    
+    if (hasErrors) return;
+    try {
+      const speakerWithInitials = {
+        ...editingSpeaker,
+        initials: editingSpeaker.initials || editingSpeaker.name.split(' ').map(n => n[0]).join('').toUpperCase()
+      };
+
+      const newSpeakers = speakers.some(s => s.id === speakerWithInitials.id)
+        ? speakers.map(s => s.id === speakerWithInitials.id ? speakerWithInitials : s)
+        : [...speakers, speakerWithInitials];
+
+      await savePonentesMutation.mutateAsync(newSpeakers);
+      setIsSpeakerModalOpen(false);
+      showToast('Ponente guardado', 'success');
+    } catch (error: any) {
+      showToast(`Error al guardar ponente: ${translateError(error.message)}`, 'error');
+    }
   };
 
   const handleDeleteSpeaker = (id: number) => {
-    showConfirm('Eliminar Ponente', '¿Eliminar ponente?', 'Eliminar', true).then(confirmed => {
+    showConfirm('Eliminar Ponente', '¿Eliminar ponente?', 'Eliminar', true).then(async confirmed => {
       if (confirmed) {
-        const newSpeakers = speakers.filter(s => s.id !== id);
-        setSpeakers(newSpeakers);
-        saveSpeakers(newSpeakers);
+        try {
+          const newSpeakers = speakers.filter(s => s.id !== id);
+          await savePonentesMutation.mutateAsync(newSpeakers);
+          showToast('Ponente eliminado', 'success');
+        } catch (error: any) {
+          showToast(`Error al eliminar: ${error.message}`, 'error');
+        }
       }
     });
   };
@@ -99,36 +144,53 @@ const [currentPage, setCurrentPage] = useState(1);
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCategory) return;
+
+    let hasErrors = false;
+    if (!editingCategory.name) { showToast('El Nombre de la categoría es obligatorio.', 'error'); hasErrors = true; }
+    if (!editingCategory.style.bg || !editingCategory.style.text) { 
+      showToast('Debe seleccionar colores para la categoría.', 'error'); 
+      hasErrors = true; 
+    }
+
+    if (hasErrors) return;
     try {
       const newCategories = { ...categories, [editingCategory.name]: editingCategory.style };
-      await saveCategories(newCategories);
-      setCategories(newCategories);
+      await saveCategoriasMutation.mutateAsync(newCategories);
       setIsCategoryModalOpen(false);
       showToast('Categoría guardada', 'success');
     } catch (error: any) {
-      showToast(`Error: ${error.message}`, 'error');
+      showToast(`Error al guardar categoría: ${translateError(error.message)}`, 'error');
     }
   };
 
   const handleDeleteCategory = (name: string) => {
-    showConfirm('Eliminar Categoría', '¿Eliminar categoría?', 'Eliminar', true).then(confirmed => {
+    showConfirm('Eliminar Categoría', '¿Eliminar categoría?', 'Eliminar', true).then(async confirmed => {
       if (confirmed) {
-        const newCategories = { ...categories };
-        delete newCategories[name];
-        setCategories(newCategories);
-        saveCategories(newCategories);
+        try {
+          const newCategories = { ...categories };
+          delete newCategories[name];
+          await saveCategoriasMutation.mutateAsync(newCategories);
+          showToast('Categoría eliminada', 'success');
+        } catch (error: any) {
+          showToast(`Error al eliminar: ${error.message}`, 'error');
+        }
       }
     });
   };
 
   const handleSaveRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingRoom || !editingRoom.newName.trim()) return;
+    if (!editingRoom) return;
+
+    if (!editingRoom.newName.trim()) {
+      showToast('Por favor, ingrese el nombre de la sala.', 'error');
+      return;
+    }
 
     try {
       let newRooms = [...rooms];
       let newAgenda = [...agenda];
-      
+
       if (editingRoom.oldName && rooms.includes(editingRoom.oldName)) {
         newRooms = newRooms.map(r => r === editingRoom.oldName ? editingRoom.newName : r);
         newAgenda = agenda.map(a => a.room === editingRoom.oldName ? { ...a, room: editingRoom.newName, location: editingRoom.newName } : a);
@@ -138,25 +200,27 @@ const [currentPage, setCurrentPage] = useState(1);
 
       // Guardar ambos en la nube
       await Promise.all([
-        saveRooms(newRooms),
-        saveAgenda(newAgenda)
+        saveSalasMutation.mutateAsync(newRooms),
+        saveAgendaMutation.mutateAsync(newAgenda)
       ]);
 
-      setRooms(newRooms);
-      setAgenda(newAgenda);
       setIsRoomModalOpen(false);
       showToast('Sala actualizada correctamente', 'success');
     } catch (error: any) {
-      showToast(`Error al guardar sala: ${error.message}`, 'error');
+      showToast(`Error al guardar sala: ${translateError(error.message)}`, 'error');
     }
   };
 
   const handleDeleteRoom = (roomName: string) => {
-    showConfirm('Eliminar Sala', `¿Eliminar la sala "${roomName}"?`, 'Eliminar', true).then(confirmed => {
+    showConfirm('Eliminar Sala', `¿Eliminar la sala "${roomName}"?`, 'Eliminar', true).then(async confirmed => {
       if (confirmed) {
-        const newRooms = rooms.filter(r => r !== roomName);
-        setRooms(newRooms);
-        saveRooms(newRooms);
+        try {
+          const newRooms = rooms.filter(r => r !== roomName);
+          await saveSalasMutation.mutateAsync(newRooms);
+          showToast('Sala eliminada', 'success');
+        } catch (error: any) {
+          showToast(`Error al eliminar: ${error.message}`, 'error');
+        }
       }
     });
   };
@@ -175,35 +239,38 @@ const [currentPage, setCurrentPage] = useState(1);
     return hours * 60 + minutes;
   };
 
-  // Filtrado y Paginación para Horario
-const filteredAgenda = agenda.filter(item => 
-  item.title.toLowerCase().includes(searchTerm.toLowerCase())
-);
-const currentAgenda = filteredAgenda
-  .sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time))
-  .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  // Filtrado y Paginación optimizados con useMemo
+  const { filteredAgenda, currentAgenda } = useMemo(() => {
+    const filtered = agenda.filter(item =>
+      item.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const sorted = [...filtered].sort((a, b) => parseTimeToNumber(a.time) - parseTimeToNumber(b.time));
+    const paginated = sorted.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    return { filteredAgenda: filtered, currentAgenda: paginated };
+  }, [agenda, searchTerm, currentPage]);
 
-// Filtrado y Paginación para Ponentes
-const filteredSpeakers = speakers.filter(s => 
-  s.name.toLowerCase().includes(searchTerm.toLowerCase())
-);
-const currentSpeakers = filteredSpeakers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const { filteredSpeakers, currentSpeakers } = useMemo(() => {
+    const filtered = speakers.filter(s =>
+      s.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    return { filteredSpeakers: filtered, currentSpeakers: paginated };
+  }, [speakers, searchTerm, currentPage]);
 
-// Filtrado y Paginación para Categorías
-const filteredCategories = Object.entries(categories).filter(([name]) => 
-  name.toLowerCase().includes(searchTerm.toLowerCase())
-);
-const currentCategories = filteredCategories.slice(
-  (currentPage - 1) * ITEMS_PER_PAGE, 
-  currentPage * ITEMS_PER_PAGE
-);
+  const { filteredCategories, currentCategories } = useMemo(() => {
+    const filtered = Object.entries(categories).filter(([name]) =>
+      name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    return { filteredCategories: filtered, currentCategories: paginated };
+  }, [categories, searchTerm, currentPage]);
 
 
   return (
     <section className="dashboard-section">
       <div className="section-header" style={{ marginBottom: '2rem' }}>
         <ModuleTitle title="Gestión de Agenda" />
-        <AdminTabs 
+        <AdminTabs
           tabs={[
             { id: 'schedule', label: 'Horario' },
             { id: 'speakers', label: 'Ponentes' },
@@ -216,7 +283,7 @@ const currentCategories = filteredCategories.slice(
       </div>
 
       {agendaTab === 'schedule' && (
-        <ModuleCard 
+        <ModuleCard
           title="Cronograma de Actividades"
           description="Gestiona las charlas y talleres del congreso."
           headerActions={
@@ -227,11 +294,11 @@ const currentCategories = filteredCategories.slice(
 
           }
         >
-                    <div style={{ marginBottom: '1.5rem' }}>
-            <SearchBar 
-              value={searchTerm} 
-              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }} 
-              placeholder="Buscar..." 
+          <div style={{ marginBottom: '1.5rem' }}>
+            <SearchBar
+              value={searchTerm}
+              onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
+              placeholder="Buscar..."
             />
           </div>
           <div className="table-responsive">
@@ -271,32 +338,33 @@ const currentCategories = filteredCategories.slice(
               </tbody>
             </table>
           </div>
-                <Pagination 
-        current={currentPage} 
-        total={filteredAgenda.length} 
-        onPageChange={setCurrentPage} 
-/>
+          <Pagination
+            current={currentPage}
+            total={filteredAgenda.length}
+            onPageChange={setCurrentPage}
+          />
         </ModuleCard>
       )}
 
       {agendaTab === 'speakers' && (
-        <ModuleCard 
+        <ModuleCard
           title="Ponentes"
           description="Listado de expertos que participarán en el evento."
           headerActions={
             <AdminButton onClick={() => {
-              setEditingSpeaker({ id: Date.now(), name: '', role: '', avatar: '', bio: '', initials: '', tag: '', bgColor: '#ffffff', textColor: '#01579b' });
+              const nextId = speakers.length > 0 ? Math.max(...speakers.map(s => s.id)) + 1 : 1;
+              setEditingSpeaker({ id: nextId, name: '', role: '', avatar: '', bio: '', initials: '', tag: '', bgColor: '#ffffff', textColor: '#01579b' });
               setIsSpeakerModalOpen(true);
             }}>+ Agregar Ponente</AdminButton>
           }
         >
-                  <div style={{ marginBottom: '1.5rem' }}>
-          <SearchBar 
-            value={searchTerm} 
-            onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }} 
-            placeholder="Buscar..." 
-          />
-        </div>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <SearchBar
+              value={searchTerm}
+              onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
+              placeholder="Buscar..."
+            />
+          </div>
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -306,7 +374,7 @@ const currentCategories = filteredCategories.slice(
                   <th style={{ textAlign: 'right' }}>Opciones</th>
                 </tr>
               </thead>
-                <tbody>
+              <tbody>
                 {currentSpeakers.map(s => (
                   <tr key={s.id}>
                     <td><strong>{s.name}</strong></td>
@@ -327,16 +395,16 @@ const currentCategories = filteredCategories.slice(
               </tbody>
             </table>
           </div>
-          <Pagination 
-          current={currentPage} 
-          total={filteredSpeakers.length} 
-          onPageChange={setCurrentPage} 
-        />
+          <Pagination
+            current={currentPage}
+            total={filteredSpeakers.length}
+            onPageChange={setCurrentPage}
+          />
         </ModuleCard>
       )}
 
       {agendaTab === 'categories' && (
-        <ModuleCard 
+        <ModuleCard
           title="Categorías"
           description="Etiquetas visuales para clasificar las actividades."
           headerActions={
@@ -346,11 +414,11 @@ const currentCategories = filteredCategories.slice(
             }}>+ Nueva Categoría</AdminButton>
           }
         >
-            <div style={{ marginBottom: '1.5rem' }}>
-            <SearchBar 
-              value={searchTerm} 
-              onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }} 
-              placeholder="Buscar..." 
+          <div style={{ marginBottom: '1.5rem' }}>
+            <SearchBar
+              value={searchTerm}
+              onChange={(val: string) => { setSearchTerm(val); setCurrentPage(1); }}
+              placeholder="Buscar..."
             />
           </div>
           <div className="table-responsive">
@@ -383,16 +451,16 @@ const currentCategories = filteredCategories.slice(
               </tbody>
             </table>
           </div>
-          <Pagination 
-            current={currentPage} 
-            total={filteredCategories.length} 
-            onPageChange={setCurrentPage} 
-/>
+          <Pagination
+            current={currentPage}
+            total={filteredCategories.length}
+            onPageChange={setCurrentPage}
+          />
         </ModuleCard>
       )}
 
       {agendaTab === 'rooms' && (
-        <ModuleCard 
+        <ModuleCard
           title="Salas y Ubicaciones"
           description="Espacios físicos donde se llevarán a cabo las actividades."
           headerActions={
@@ -437,17 +505,19 @@ const currentCategories = filteredCategories.slice(
       {isAgendaModalOpen && editingItem && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingItem.id ? 'Editar' : 'Nueva'} Actividad</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingItem.id ? 'Editar' : 'Nueva'} Actividad</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
             <form onSubmit={handleSaveAgendaItem} className="admin-form">
               <div className="form-group">
-                <label>TÍTULO</label>
+                <label>TÍTULO <span style={{ color: '#ef4444' }}>*</span></label>
                 <input type="text" className="dashboard-input" value={editingItem.title} onChange={e => setEditingItem({ ...editingItem, title: e.target.value })} required />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <AdminSelect 
-                  label="HORA INICIO"
-                  value={editingItem.time} 
+                <AdminSelect
+                  label={<>HORA INICIO <span style={{ color: '#ef4444' }}>*</span></>}
+                  value={editingItem.time}
                   onChange={e => setEditingItem({ ...editingItem, time: e.target.value })}
+                  required
                   containerStyle={{ flex: 1 }}
                   options={[
                     ...Array.from({ length: 15 * 4 }).map((_, i) => {
@@ -462,10 +532,11 @@ const currentCategories = filteredCategories.slice(
                     })
                   ]}
                 />
-                <AdminSelect 
-                  label="HORA FIN"
-                  value={editingItem.endTime} 
+                <AdminSelect
+                  label={<>HORA FIN <span style={{ color: '#ef4444' }}>*</span></>}
+                  value={editingItem.endTime}
                   onChange={e => setEditingItem({ ...editingItem, endTime: e.target.value })}
+                  required
                   containerStyle={{ flex: 1 }}
                   options={[
                     ...Array.from({ length: 15 * 4 }).map((_, i) => {
@@ -482,27 +553,29 @@ const currentCategories = filteredCategories.slice(
                 />
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <AdminSelect 
-                  label="SALA / UBICACIÓN"
-                  value={editingItem.room} 
+                <AdminSelect
+                  label={<>SALA / UBICACIÓN <span style={{ color: '#ef4444' }}>*</span></>}
+                  value={editingItem.room}
                   onChange={e => setEditingItem({ ...editingItem, room: e.target.value, location: e.target.value })}
+                  required
                   containerStyle={{ flex: 1 }}
                   options={rooms.map(r => ({ value: r, label: r }))}
                 />
-                <AdminSelect 
-                  label="CATEGORÍA"
-                  value={editingItem.tag} 
+                <AdminSelect
+                  label={<>CATEGORÍA <span style={{ color: '#ef4444' }}>*</span></>}
+                  value={editingItem.tag}
                   onChange={e => setEditingItem({ ...editingItem, tag: e.target.value })}
+                  required
                   containerStyle={{ flex: 1 }}
                   options={[
-                    { value: '', label: 'Ninguna' },
+                    { value: '', label: 'Seleccionar...' },
                     ...Object.keys(categories).map(c => ({ value: c, label: c }))
                   ]}
                 />
               </div>
-              <AdminSelect 
+              <AdminSelect
                 label="PONENTE (Opcional)"
-                value={editingItem.speaker?.id || ''} 
+                value={editingItem.speaker?.id || ''}
                 onChange={e => {
                   const s = speakers.find(sp => sp.id === parseInt(e.target.value));
                   setEditingItem({ ...editingItem, speaker: s });
@@ -526,10 +599,12 @@ const currentCategories = filteredCategories.slice(
       {isSpeakerModalOpen && editingSpeaker && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1.5rem', fontFamily: 'Syne', fontWeight: 800 }}>Editar Ponente</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingSpeaker.id ? 'Editar' : 'Nuevo'} Ponente</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
+            
             <form onSubmit={handleSaveSpeaker} className="admin-form">
-              <div className="form-group"><label>NOMBRE</label><input type="text" className="dashboard-input" value={editingSpeaker.name} onChange={e => setEditingSpeaker({ ...editingSpeaker, name: e.target.value })} required /></div>
-              <div className="form-group"><label>CARGO / ROL</label><input type="text" className="dashboard-input" value={editingSpeaker.role} onChange={e => setEditingSpeaker({ ...editingSpeaker, role: e.target.value })} required /></div>
+              <div className="form-group"><label>NOMBRE <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingSpeaker.name} onChange={e => setEditingSpeaker({ ...editingSpeaker, name: e.target.value })} required /></div>
+              <div className="form-group"><label>CARGO / ROL <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingSpeaker.role} onChange={e => setEditingSpeaker({ ...editingSpeaker, role: e.target.value })} required /></div>
               <div className="form-group"><label>BIO (Opcional)</label><textarea className="dashboard-input" value={editingSpeaker.bio} onChange={e => setEditingSpeaker({ ...editingSpeaker, bio: e.target.value })} style={{ minHeight: '100px' }} /></div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
                 <AdminButton type="submit" style={{ flex: 1 }}>Guardar Ponente</AdminButton>
@@ -544,21 +619,22 @@ const currentCategories = filteredCategories.slice(
       {isCategoryModalOpen && editingCategory && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1.5rem', fontFamily: 'Syne', fontWeight: 800 }}>Editar Categoría</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingCategory.name ? 'Editar' : 'Nueva'} Categoría</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
             <form onSubmit={handleSaveCategory} className="admin-form">
-              <div className="form-group"><label>NOMBRE DE CATEGORÍA</label><input type="text" className="dashboard-input" value={editingCategory.name} onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })} required /></div>
+              <div className="form-group"><label>NOMBRE DE CATEGORÍA <span style={{ color: '#ef4444' }}>*</span></label><input type="text" className="dashboard-input" value={editingCategory.name} onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })} required /></div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label>COLOR TEXTO</label>
-                  <ColorPicker 
-                    selectedColor={editingCategory.style.text} 
+                  <label>COLOR TEXTO <span style={{ color: '#ef4444' }}>*</span></label>
+                  <ColorPicker
+                    selectedColor={editingCategory.style.text}
                     onSelect={c => {
                       const bgWithAlpha = c.startsWith('#') ? c + '26' : c;
-                      setEditingCategory({ 
-                        ...editingCategory, 
-                        style: { ...editingCategory.style, text: c, bg: bgWithAlpha } 
+                      setEditingCategory({
+                        ...editingCategory,
+                        style: { ...editingCategory.style, text: c, bg: bgWithAlpha }
                       });
-                    }} 
+                    }}
                   />
                 </div>
               </div>
@@ -583,10 +659,11 @@ const currentCategories = filteredCategories.slice(
       {isRoomModalOpen && editingRoom && (
         <div className="modal-bg open">
           <div className="modal" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '1.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingRoom.oldName ? 'Editar' : 'Nueva'} Sala</h3>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'Syne', fontWeight: 800 }}>{editingRoom.oldName ? 'Editar' : 'Nueva'} Sala</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
             <form onSubmit={handleSaveRoom} className="admin-form">
               <div className="form-group">
-                <label>NOMBRE DE LA SALA</label>
+                <label>NOMBRE DE LA SALA <span style={{ color: '#ef4444' }}>*</span></label>
                 <input type="text" className="dashboard-input" value={editingRoom.newName} onChange={e => setEditingRoom({ ...editingRoom, newName: e.target.value })} required />
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>

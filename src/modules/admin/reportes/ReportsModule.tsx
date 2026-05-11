@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { getGeneralReportQuery } from '../../../api/supabase/reports/reportQueries';
-import { type UserData } from '../../../utils/auth';
-import { getAgenda, type AgendaItem } from '../../../utils/agendaStore';
+import { useState } from 'react';
+import { useGeneralReport } from '../../../api/hooks/useReports';
+import { useCharlas } from '../../../api/hooks/useAgenda';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast } from '../../../utils/swal';
 import { Pagination, ITEMS_PER_PAGE } from '../../../components/Pagination';
@@ -14,17 +13,13 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
 export default function ReportsModule() {
-  const [users, setUsers] = useState<UserData[]>([]);
-  const [agenda] = useState<AgendaItem[]>(getAgenda());
+  const { data: users = [], isLoading: isLoadingUsers } = useGeneralReport();
+  const { data: agenda = [] } = useCharlas();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWorkshopFilter, setSelectedWorkshopFilter] = useState('all_records');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
   const [participantTypeFilter, setParticipantTypeFilter] = useState<'all' | 'alumno' | 'externo'>('all');
   const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    getGeneralReportQuery().then(setUsers);
-  }, []);
 
   const getWorkshopTitle = (id: string) => {
     const w = agenda.find(item => item.id === id);
@@ -209,8 +204,11 @@ export default function ReportsModule() {
           />
         </div>
 
-        <div className="table-responsive">
-          <table className="admin-table">
+        {isLoadingUsers ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Cargando datos del reporte...</div>
+        ) : (
+          <div className="table-responsive">
+            <table className="admin-table">
             <thead>
               <tr>
                 <th>Participante</th>
@@ -257,6 +255,7 @@ export default function ReportsModule() {
             </tbody>
           </table>
         </div>
+        )}
         <Pagination current={page} total={filteredUsers.length} onPageChange={setPage} />
       </ModuleCard>
     </section>

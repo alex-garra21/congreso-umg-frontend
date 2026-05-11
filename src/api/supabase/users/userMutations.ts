@@ -70,23 +70,67 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
 }
 
 export async function invalidatePaymentMutation(userId: string): Promise<{ success: boolean; message: string }> {
+  // 1. Obtener el token vinculado antes de desvincular
+  const { data: tokenData } = await supabase
+    .from('tokens_pago')
+    .select('codigo')
+    .eq('usado_por', userId)
+    .maybeSingle();
+
+  // 2. Desactivar validación de pago en el usuario
   const { error: userError } = await supabase
     .from('usuarios')
-    .update({ pago_validado: false })
+    .update({ pago_validado: false, pago_enviado: false }) // Reiniciamos ambos por seguridad
     .eq('id', userId);
 
   if (userError) return { success: false, message: 'Error al invalidar el pago.' };
 
-  await supabase
-    .from('tokens_pago')
-    .update({
-      usado: false,
-      usado_por: null,
-      fecha_uso: null
-    })
-    .eq('usado_por', userId);
+  // 3. Manejar el token
+  if (tokenData) {
+    if (tokenData.codigo.startsWith('ADMIN-')) {
+      // Si es un token de admin, lo eliminamos por completo
+      await supabase.from('tokens_pago').delete().eq('codigo', tokenData.codigo);
+    } else {
+      // Si es un token normal, lo liberamos
+      await supabase
+        .from('tokens_pago')
+        .update({
+          usado: false,
+          usado_por: null,
+          fecha_uso: null
+        })
+        .eq('codigo', tokenData.codigo);
+    }
+  }
 
-  return { success: true, message: 'Pago anulado correctamente.' };
+  return { success: true, message: 'Pago anulado y registro de token actualizado.' };
+}
+
+export async function adminValidateUserMutation(userId: string, adminId?: string): Promise<{ success: boolean; message: string }> {
+  // Generar código tipo ADMIN-XXXX-XXXX-XXXX
+  const genPart = () => Math.random().toString(36).substring(2, 6).toUpperCase();
+  const adminCode = `ADMIN-${genPart()}-${genPart()}-${genPart()}`;
+
+  // 1. Insertar el token marcado como usado
+  const { error: tokenError } = await supabase.from('tokens_pago').insert({
+    codigo: adminCode,
+    usado: true,
+    usado_por: userId,
+    creado_por: adminId,
+    fecha_uso: new Date().toISOString()
+  });
+
+  if (tokenError) return { success: false, message: 'Error al generar el token de auditoría.' };
+
+  // 2. Validar el pago del usuario
+  const { error: userError } = await supabase
+    .from('usuarios')
+    .update({ pago_validado: true })
+    .eq('id', userId);
+
+  if (userError) return { success: false, message: 'Error al validar el perfil del usuario.' };
+
+  return { success: true, message: `Pago validado con token: ${adminCode}` };
 }
 
 export async function deleteTokenMutation(code: string): Promise<void> {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface PasswordFieldProps {
-  label: string;
+  label: React.ReactNode;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   name?: string;

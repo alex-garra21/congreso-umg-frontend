@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getAgenda, type AgendaItem, type Speaker, generateSlug } from '../utils/agendaStore';
-import { loginUser, updateUserData, getCurrentUser, type UserData } from '../utils/auth';
-import { markAttendanceMutation } from '../api/supabase/enrollment/enrollmentMutations';
+import { type AgendaItem, type Speaker, generateSlug } from '../utils/agendaStore';
+import { useCharlas } from '../api/hooks/useAgenda';
+import { useAuth } from '../api/hooks/useAuth';
+import { loginUser, type UserData } from '../utils/auth';
+import { useMarkAttendance } from '../api/hooks/useEnrollment';
 
 // Utility to parse time strings like "9:00 AM" to Date objects
 function parseTimeStr(timeStr: string, baseDate?: string): Date {
@@ -41,7 +43,10 @@ export default function AttendancePage() {
   const [confirmedUser, setConfirmedUser] = useState<UserData | null>(null);
   const [confirmationTime, setConfirmationTime] = useState<string>('');
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [loggedInUser, setLoggedInUser] = useState<UserData | null>(null);
+  const { user: authUser } = useAuth();
+  const markAttendanceMutation = useMarkAttendance();
+
+  const { data: agenda = [], isLoading } = useCharlas();
 
   // Actualizar el tiempo cada 30 segundos para que la página sea reactiva al horario
   useEffect(() => {
@@ -52,32 +57,21 @@ export default function AttendancePage() {
   }, []);
 
   useEffect(() => {
-    const loadData = () => {
-      // Cargar Taller
-      if (workshopId) {
-        const agenda = getAgenda();
-        const item = agenda.find(a => a.id === workshopId || generateSlug(a.title) === workshopId);
-        if (item) {
-          setWorkshop(item);
-          if (item.speaker) {
-            setSpeaker(item.speaker as Speaker);
-          }
+    // Cargar Taller
+    if (workshopId && agenda.length > 0) {
+      const item = agenda.find(a => a.id === workshopId || generateSlug(a.title) === workshopId);
+      if (item) {
+        setWorkshop(item);
+        if (item.speaker) {
+          setSpeaker(item.speaker as Speaker);
         }
       }
 
-      // Detectar sesión activa
-      const user = getCurrentUser();
-      if (user) {
-        setLoggedInUser(user);
-        setEmail(user.correo); 
+      if (authUser) {
+        setEmail(authUser.correo); 
       }
-    };
-
-    loadData();
-
-    window.addEventListener('agendaUpdate', loadData);
-    return () => window.removeEventListener('agendaUpdate', loadData);
-  }, [workshopId]);
+    }
+  }, [workshopId, agenda]);
 
   const handleConfirmAttendance = async (e?: React.FormEvent, isQuickConfirm: boolean = false) => {
     if (e) e.preventDefault();
@@ -90,8 +84,8 @@ export default function AttendancePage() {
 
     let user: UserData | null = null;
 
-    if (isQuickConfirm && loggedInUser) {
-      user = loggedInUser;
+    if (isQuickConfirm && authUser) {
+      user = authUser;
     } else {
       if (!email || !password) {
         setError('Por favor, ingresa tus credenciales.');
@@ -141,27 +135,18 @@ export default function AttendancePage() {
     }
 
     // 5. Registrar asistencia en la NUBE
-    const { success } = await markAttendanceMutation(user.id, workshop.id);
-    if (!success) {
-      setError('Error de conexión al registrar la asistencia en la nube.');
+    try {
+      await markAttendanceMutation.mutateAsync({ userId: user.id, workshopId: workshop.id });
+    } catch (error) {
+      setError('Ocurrió un error al registrar tu asistencia en la nube. Por favor intenta de nuevo.');
       return;
     }
 
-    // 6. Registrar asistencia local
+    // 6. Registrar asistencia en la nube (Ya se hizo arriba, esto dispara el éxito visual)
     const timestamp = new Date().toISOString();
-    const updatedUser: UserData = {
-      ...user,
-      asistencias: [...(user.asistencias || []), { workshopId: workshop.id, timestamp }]
-    };
-
-    const updateResult = await updateUserData(updatedUser);
-    if (updateResult.success) {
-      setConfirmedUser(updatedUser);
-      setConfirmationTime(timestamp);
-      setIsSuccess(true);
-    } else {
-      setError('Error al actualizar registro local.');
-    }
+    setConfirmedUser(user);
+    setConfirmationTime(timestamp);
+    setIsSuccess(true);
   };
 
   const formatDate = (isoString: string) => {
@@ -187,6 +172,14 @@ export default function AttendancePage() {
   };
 
   const isOutOfTime = checkIsOutOfTime();
+
+  if (isLoading) {
+    return (
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Cargando información del taller...</p>
+      </div>
+    );
+  }
 
   if (!workshop) {
     return (
@@ -263,7 +256,7 @@ export default function AttendancePage() {
         }}>
           {!isSuccess ? (
             <>
-              {loggedInUser ? (
+              {authUser ? (
                 /* Vista de Confirmación Rápida */
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ 
@@ -279,10 +272,10 @@ export default function AttendancePage() {
                     fontSize: '20px',
                     margin: '0 auto 1rem'
                   }}>
-                    {loggedInUser.nombres[0]}{loggedInUser.apellidos[0]}
+                    {authUser.nombres[0]}{authUser.apellidos[0]}
                   </div>
                   <h2 style={{ fontSize: '22px', fontFamily: 'Syne', fontWeight: 800, color: '#1a202c', marginBottom: '8px' }}>
-                    ¡Hola, {loggedInUser.nombres.split(' ')[0]}!
+                    ¡Hola, {authUser.nombres.split(' ')[0]}!
                   </h2>
                   <p style={{ fontSize: '14px', color: '#718096', marginBottom: '1.5rem', lineHeight: 1.5 }}>
                     Hemos detectado tu sesión activa. ¿Deseas confirmar tu asistencia a este taller?
@@ -295,7 +288,7 @@ export default function AttendancePage() {
                   )}
 
                   <button
-                    onClick={() => handleConfirmAttendance(undefined, true)}
+                    onClick={(e) => handleConfirmAttendance(e, true)}
                     style={{
                       width: '100%',
                       padding: '14px',
@@ -316,7 +309,9 @@ export default function AttendancePage() {
                   </button>
 
                   <button
-                    onClick={() => setLoggedInUser(null)}
+                    onClick={() => {
+                      import('../utils/supabase').then(m => m.supabase.auth.signOut());
+                    }}
                     style={{
                       background: 'none',
                       border: 'none',

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser, setCurrentUser } from '../utils/auth';
+import { loginUser } from '../utils/auth';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import PasswordField from './PasswordField';
 
@@ -9,6 +9,8 @@ interface LoginModalProps {
   onClose: () => void;
   onSwitchToRegister?: () => void;
 }
+
+import { showToast } from '../utils/swal';
 
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) {
   const [correo, setCorreo] = useState('');
@@ -40,13 +42,25 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Validación detallada
+    let hasErrors = false;
+    if (!correo) { showToast('El Correo Electrónico es obligatorio.', 'error'); hasErrors = true; }
+    if (!contrasena) { showToast('La Contraseña es obligatoria.', 'error'); hasErrors = true; }
+    
+    if (hasErrors) return;
+
     const result = await loginUser(correo, contrasena);
 
-    if (result.success && result.user) {
-      setCurrentUser(result.user);
+    if (result.success) {
       clearFields();
       onClose();
-      navigate('/dashboard'); 
+      // Redirigir según el rol
+      if (result.user?.rol === 'admin') {
+        navigate('/dashboard/admin');
+      } else {
+        navigate('/dashboard/inicio');
+      }
     } else {
       setError(result.message);
     }
@@ -64,8 +78,9 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
       >
         <button className="modal-close" onClick={handleClose}>✕</button>
 
-        <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>Iniciar sesión</h3>
-        <p className="modal-sub">Accede para ver tus charlas y estado de pago</p>
+        <h3 style={{ fontSize: '24px', marginBottom: '4px', fontFamily: 'Syne', fontWeight: 800 }}>Iniciar sesión</h3>
+        <p className="modal-sub" style={{ marginBottom: '0.5rem' }}>Accede para ver tus charlas y estado de pago</p>
+        <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.</p>
 
         {error && (
           <div style={{ backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '1.5rem', border: '1px solid #feb2b2' }}>
@@ -75,12 +90,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Correo Electrónico</label>
+            <label>Correo Electrónico <span style={{ color: '#ef4444' }}>*</span></label>
             <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder="correo@ejemplo.com" required />
           </div>
 
           <PasswordField
-            label="Contraseña"
+            label={<>Contraseña <span style={{ color: '#ef4444' }}>*</span></>}
             value={contrasena}
             onChange={(e) => setContrasena(e.target.value)}
             placeholder="Tu contraseña"

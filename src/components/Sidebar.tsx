@@ -1,6 +1,7 @@
-import { useState, useEffect, type JSX } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { logout, getCurrentUser, type UserData } from '../utils/auth';
+import { supabase } from '../utils/supabase';
+import React, { useState } from 'react';
+import { useAuth } from '../api/hooks/useAuth';
 import logoUMG from '../assets/UMG-LOGO.svg';
 
 interface SidebarProps {
@@ -9,17 +10,9 @@ interface SidebarProps {
 
 export default function Sidebar({ onModuleChange }: SidebarProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      setUser(getCurrentUser());
-    };
-    window.addEventListener('sessionUpdate', handleUpdate);
-    return () => window.removeEventListener('sessionUpdate', handleUpdate);
-  }, []);
 
   const isPaid = user?.pagoValidado;
 
@@ -59,7 +52,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
   interface MenuItem {
     id: string;
     label: string;
-    icon: JSX.Element;
+    icon: React.ReactNode;
     section: string;
     badge?: string;
   }
@@ -86,8 +79,8 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
     );
   }
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate('/');
   };
 

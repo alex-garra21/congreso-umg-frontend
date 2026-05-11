@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getCurrentUser, updateUserData, type UserData } from '../../../utils/auth';
+import { useAuth } from '../../../api/hooks/useAuth';
+import { useUpdateUserData } from '../../../api/hooks/useUsers';
+import { type UserData } from '../../../utils/auth';
 import ChangePasswordModal from '../../../components/ChangePasswordModal';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showAlert } from '../../../utils/swal';
 
 export default function ProfileModule() {
-  const [user, setUser] = useState<UserData | null>(getCurrentUser());
+  const { user } = useAuth();
+  const updateUserDataMutation = useUpdateUserData();
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
@@ -41,7 +44,7 @@ export default function ProfileModule() {
   useEffect(() => {
     if (formData.correo.toLowerCase().endsWith('@miumg.edu.gt')) {
       if (formData.tipoParticipante !== 'alumno') {
-        setFormData(prev => ({ ...prev, tipoParticipante: 'alumno' }));
+        setFormData((prev: any) => ({ ...prev, tipoParticipante: 'alumno' }));
       }
     }
   }, [formData.correo]);
@@ -69,14 +72,14 @@ export default function ProfileModule() {
       let formatted = numbers;
       if (numbers.length > 4) formatted = numbers.substring(0, 4) + ' ' + numbers.substring(4);
       if (numbers.length > 9) formatted = formatted.substring(0, 10) + ' ' + numbers.substring(9);
-      setFormData(prev => ({ ...prev, dpi: formatted }));
+      setFormData((prev: any) => ({ ...prev, dpi: formatted }));
       return;
     }
 
     if (name === 'carnet') {
-      setFormData(prev => ({ ...prev, [name]: formatCarnet(value) }));
+      setFormData((prev: any) => ({ ...prev, [name]: formatCarnet(value) }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -92,12 +95,11 @@ export default function ProfileModule() {
       ciclo: formData.tipoParticipante === 'alumno' ? formData.ciclo : ''
     };
 
-    const result = await updateUserData(updatedUser);
-    if (result.success) {
+    try {
+      await updateUserDataMutation.mutateAsync(updatedUser);
       setIsSuccessModalOpen(true);
-      setUser(getCurrentUser());
-    } else {
-      showAlert('Error', result.message, 'error');
+    } catch (error: any) {
+      showAlert('Error', error?.message || 'Error al actualizar datos', 'error');
     }
   };
 

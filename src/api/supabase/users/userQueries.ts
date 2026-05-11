@@ -80,3 +80,38 @@ export async function getTokensQuery(): Promise<TokenData[]> {
     };
   });
 }
+export async function getUserProfileQuery(userId: string): Promise<UserData | null> {
+  const { data: userData, error } = await supabase
+    .from('usuarios')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error || !userData) return null;
+
+  const talleres = await getEnrolledWorkshopsQuery(userData.id);
+  const asistencias = await getAttendancesQuery(userData.id);
+
+  return {
+    id: userData.id,
+    nombres: userData.nombres,
+    apellidos: userData.apellidos,
+    sexo: userData.sexo || 'M',
+    correo: userData.correo,
+    contrasena: 'auth_managed',
+    rol: userData.rol as any,
+    pagoValidado: userData.pago_validado,
+    pagoEnviado: userData.pago_enviado,
+    nombreDiploma: userData.nombre_diploma,
+    tipoParticipante: userData.tipo_participante,
+    carnet: userData.carnet,
+    ciclo: userData.ciclo,
+    telefono: userData.telefono,
+    correoDiploma: userData.correo_diploma,
+    desactivado: userData.desactivado || false,
+    dpi: userData.dpi,
+    talleres,
+    asistencias,
+    diplomaEditado: userData.diploma_editado
+  };
+}
