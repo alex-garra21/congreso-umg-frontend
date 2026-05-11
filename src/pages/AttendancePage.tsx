@@ -65,13 +65,20 @@ export default function AttendancePage() {
         if (item.speaker) {
           setSpeaker(item.speaker as Speaker);
         }
-      }
 
-      if (authUser) {
-        setEmail(authUser.correo); 
+        // CHEQUEO AUTOMÁTICO: Si el usuario ya está logueado, verificar si ya confirmó asistencia
+        if (authUser) {
+          setEmail(authUser.correo);
+          const existing = authUser.asistencias?.find(a => a.workshopId === item.id);
+          if (existing) {
+            setConfirmedUser(authUser);
+            setConfirmationTime(existing.timestamp);
+            setIsSuccess(true);
+          }
+        }
       }
     }
-  }, [workshopId, agenda]);
+  }, [workshopId, agenda, authUser]);
 
   const handleConfirmAttendance = async (e?: React.FormEvent, isQuickConfirm: boolean = false) => {
     if (e) e.preventDefault();
