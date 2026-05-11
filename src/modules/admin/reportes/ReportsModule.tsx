@@ -110,11 +110,16 @@ export default function ReportsModule() {
     const workshopTitle = isSpecificWorkshop ? getWorkshopTitle(selectedWorkshopFilter) : '';
 
     if (isDiplomaList) {
-      worksheet.columns = [{ header: 'Participante', key: 'name', width: 35 }, { header: 'Correo', key: 'email', width: 35 }, { header: 'Taller(es)', key: 'workshops', width: 45 }];
+      worksheet.columns = [
+        { header: 'Participante (Para Diploma)', key: 'name', width: 40 },
+        { header: 'Correo (Para Diploma)', key: 'email', width: 40 },
+        { header: 'Taller(es)', key: 'workshops', width: 45 }
+      ];
+      
       filteredUsers.forEach(u => {
         const realW = getRealWorkshops(u.talleres);
         worksheet.addRow({
-          name: getDisplayName(u),
+          name: u.nombreDiploma || getDisplayName(u),
           email: u.correoDiploma || u.correo,
           workshops: isSpecificWorkshop ? workshopTitle : (realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-')
         });
