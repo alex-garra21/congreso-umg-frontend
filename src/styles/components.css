@@ -209,10 +209,12 @@ select.dashboard-input {
   background: var(--bg-card);
 }
 
-.dashboard-input:disabled {
+.dashboard-input:disabled,
+.dashboard-input[readonly] {
   background-color: var(--bg-app);
-  opacity: 0.8;
+  opacity: 0.75;
   cursor: not-allowed;
+  border-color: var(--border-soft);
 }
 
 /* ── MODALS ── */

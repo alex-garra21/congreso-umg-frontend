@@ -5,8 +5,6 @@ import { type UserData } from '../../../utils/auth';
 import ChangePasswordModal from '../../../components/ChangePasswordModal';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast } from '../../../utils/swal';
-import { Icons } from '../../../components/Icons';
-import Modal from '../../../components/ui/Modal';
 import FormField from '../../../components/ui/FormField';
 import AdminSelect from '../../../components/ui/AdminSelect';
 import AvatarUpload from '../../../components/ui/AvatarUpload';
@@ -30,7 +28,6 @@ export default function ProfileModule() {
     avatarUrl: '',
   });
 
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
@@ -43,7 +40,7 @@ export default function ProfileModule() {
         tipoParticipante: user.tipoParticipante || ((PARTICIPANT_TYPES && PARTICIPANT_TYPES.length > 0) ? PARTICIPANT_TYPES[0].id : 'externo'),
         carnet: user.carnet || '',
         ciclo: user.ciclo || '',
-        telefono: user.telefono || '',
+        telefono: formatPhone(user.telefono || ''),
         sexo: user.sexo || '',
         avatarUrl: user.avatarUrl || '',
       });
@@ -74,6 +71,14 @@ export default function ProfileModule() {
     return formatted;
   };
 
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').substring(0, 8);
+    if (digits.length > 4) {
+      return digits.substring(0, 4) + ' ' + digits.substring(4);
+    }
+    return digits;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
@@ -88,19 +93,21 @@ export default function ProfileModule() {
 
     if (name === 'carnet') {
       // Aplicar formato de guiones solo si es alumno
-      const formattedValue = formData.tipoParticipante === 'alumno' 
-        ? formatCarnet(value) 
+      const formattedValue = formData.tipoParticipante === 'alumno'
+        ? formatCarnet(value)
         : value.replace(/\D/g, '').substring(0, getParticipantIdMaxLength(formData.tipoParticipante));
-        
+
       setFormData((prev: any) => ({ ...prev, [name]: formattedValue }));
     } else if (name === 'tipoParticipante') {
       // Al cambiar el tipo, limpiamos carnet y ciclo para evitar conflictos de formato
-      setFormData((prev: any) => ({ 
-        ...prev, 
+      setFormData((prev: any) => ({
+        ...prev,
         [name]: value,
         carnet: '',
         ciclo: ''
       }));
+    } else if (name === 'telefono') {
+      setFormData((prev: any) => ({ ...prev, telefono: formatPhone(value) }));
     } else {
       setFormData((prev: any) => ({ ...prev, [name]: value }));
     }
@@ -119,7 +126,7 @@ export default function ProfileModule() {
 
     try {
       await updateUserDataMutation.mutateAsync(updatedUser);
-      setIsSuccessModalOpen(true);
+      showToast('Información actualizada correctamente', 'success');
     } catch (error: any) {
       showToast(error?.message || 'Error al actualizar datos', 'error');
     }
@@ -132,9 +139,9 @@ export default function ProfileModule() {
       <ModuleTitle title="Mi perfil" />
       <section className="dashboard-section profile-container">
         <div className="profile-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <AvatarUpload 
-            userId={user.id!} 
-            currentAvatarUrl={formData.avatarUrl} 
+          <AvatarUpload
+            userId={user.id!}
+            currentAvatarUrl={formData.avatarUrl}
             initials={(user.nombres?.[0] || '') + (user.apellidos?.[0] || '')}
             onAvatarChange={async (newUrl) => {
               setFormData(prev => ({ ...prev, avatarUrl: newUrl }));
@@ -144,7 +151,7 @@ export default function ProfileModule() {
               } catch (e) {
                 console.error("Error auto-guardando avatar:", e);
               }
-            }} 
+            }}
           />
           <h2 style={{ fontFamily: 'Source Sans 3', fontWeight: 800, fontSize: '24px' }}>Información personal</h2>
 
@@ -155,24 +162,24 @@ export default function ProfileModule() {
         <form onSubmit={handleSave} className="profile-form">
           <div className="form-row">
             <FormField label="Nombres" style={{ flex: 1 }}>
-              <input 
-                type="text" 
-                name="nombres" 
-                value={formData.nombres} 
-                onChange={handleChange} 
-                placeholder="Nombres" 
-                readOnly 
+              <input
+                type="text"
+                name="nombres"
+                value={formData.nombres}
+                onChange={handleChange}
+                placeholder="Nombres"
+                readOnly
                 className="dashboard-input"
               />
             </FormField>
             <FormField label="Apellidos" style={{ flex: 1 }}>
-              <input 
-                type="text" 
-                name="apellidos" 
-                value={formData.apellidos} 
-                onChange={handleChange} 
-                placeholder="Apellidos" 
-                readOnly 
+              <input
+                type="text"
+                name="apellidos"
+                value={formData.apellidos}
+                onChange={handleChange}
+                placeholder="Apellidos"
+                readOnly
                 className="dashboard-input"
               />
             </FormField>
@@ -183,10 +190,10 @@ export default function ProfileModule() {
               <input type="text" name="dpi" value={formData.dpi} onChange={handleChange} placeholder="0000 00000 0000" required className="dashboard-input" />
             </FormField>
             <FormField label="Sexo" required style={{ flex: 1 }}>
-              <AdminSelect 
-                name="sexo" 
-                value={formData.sexo} 
-                onChange={handleChange as any} 
+              <AdminSelect
+                name="sexo"
+                value={formData.sexo}
+                onChange={handleChange as any}
                 options={[
                   { value: 'M', label: 'Hombre' },
                   { value: 'F', label: 'Mujer' }
@@ -198,20 +205,21 @@ export default function ProfileModule() {
 
           <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
             <FormField label="Correo de acceso" style={{ flex: 2 }}>
-              <input 
-                type="email" 
-                name="correo" 
-                value={formData.correo} 
-                readOnly 
+              <input
+                type="email"
+                name="correo"
+                value={formData.correo}
+                readOnly
                 className="dashboard-input"
               />
             </FormField>
             <FormField label="Tipo de participante" required style={{ flex: 1 }}>
-              <AdminSelect 
-                name="tipoParticipante" 
-                value={formData.tipoParticipante} 
-                onChange={handleChange as any} 
+              <AdminSelect
+                name="tipoParticipante"
+                value={formData.tipoParticipante}
+                onChange={handleChange as any}
                 options={PARTICIPANT_TYPES.map(type => ({ value: type.id, label: type.label }))}
+                disabled={true}
               />
             </FormField>
           </div>
@@ -226,13 +234,13 @@ export default function ProfileModule() {
                   </span>
                 )}
               </FormField>
-              
+
               {requiresCiclo(formData.tipoParticipante) && (
                 <FormField label="Ciclo" required style={{ flex: 1 }}>
-                  <AdminSelect 
-                    name="ciclo" 
-                    value={formData.ciclo} 
-                    onChange={handleChange as any} 
+                  <AdminSelect
+                    name="ciclo"
+                    value={formData.ciclo}
+                    onChange={handleChange as any}
                     options={CICLOS.map(c => ({ value: c, label: c }))}
                     placeholder="Selección"
                   />
@@ -248,8 +256,8 @@ export default function ProfileModule() {
           </div>
 
           <div className="profile-actions" style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <LoadingButton 
-              type="submit" 
+            <LoadingButton
+              type="submit"
               isLoading={updateUserDataMutation.isPending}
               loadingText="Guardando..."
               style={{ minWidth: '180px' }}
@@ -268,24 +276,9 @@ export default function ProfileModule() {
           </div>
         </form>
       </section>
-      
+
       {/* Botón regresar al inicio */}
       <BackButton />
-
-      <Modal
-        isOpen={isSuccessModalOpen}
-        onClose={() => setIsSuccessModalOpen(false)}
-        title="¡Cambios Guardados!"
-        maxWidth="400px"
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-            <Icons.CheckCircle size={64} color="var(--status-success)" />
-          </div>
-          <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu información ha sido actualizada correctamente.</p>
-          <LoadingButton fullWidth onClick={() => setIsSuccessModalOpen(false)}>Entendido</LoadingButton>
-        </div>
-      </Modal>
 
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}

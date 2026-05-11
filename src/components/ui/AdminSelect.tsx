@@ -16,6 +16,7 @@ interface AdminSelectProps {
   className?: string;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 const AdminSelect: React.FC<AdminSelectProps> = ({ 
@@ -26,7 +27,8 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
   label, 
   containerStyle, 
   className = "",
-  placeholder = "Seleccionar..."
+  placeholder = "Seleccionar...",
+  disabled = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,16 +76,16 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
       )}
       
       <div 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
         style={{
           width: '100%',
           padding: '12px 16px',
           fontSize: '14px',
-          background: 'var(--bg-card)',
+          background: disabled ? 'var(--bg-app)' : 'var(--bg-card)',
           border: isOpen ? '1.5px solid var(--accent-primary)' : '1.5px solid var(--border-soft)',
           borderRadius: '12px',
           color: selectedOption ? 'var(--text-primary)' : 'var(--text-secondary)',
-          cursor: 'pointer',
+          cursor: disabled ? 'not-allowed' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -91,7 +93,8 @@ const AdminSelect: React.FC<AdminSelectProps> = ({
           boxShadow: isOpen ? '0 0 0 4px rgba(24, 95, 165, 0.1)' : 'none',
           fontFamily: "'Source Sans 3', sans-serif",
           fontWeight: 500,
-          userSelect: 'none'
+          userSelect: 'none',
+          opacity: disabled ? 0.7 : 1
         }}
       >
         <span style={{ 

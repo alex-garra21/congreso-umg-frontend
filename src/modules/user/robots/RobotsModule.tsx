@@ -33,7 +33,7 @@ export default function RobotsModule() {
               </p>
               <div>
                 <AdminButton
-                  variant="outline"
+                  variant="primary"
                   onClick={() => navigate('/dashboard/pago')}
                   icon={<Icons.CreditCard size={18} />}
                 >

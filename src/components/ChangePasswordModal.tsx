@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { verifyAndChangePassword, validatePasswordStrength } from '../utils/auth';
 import PasswordField from './PasswordField';
-import { Icons } from './Icons';
 import Modal from './ui/Modal';
 import LoadingButton from './ui/LoadingButton';
 import { showToast } from '../utils/swal';
@@ -18,12 +17,11 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     newPassword: '',
     confirmPassword: ''
   });
-  const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const clearFields = () => {
     setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
-    setShowSuccess(false);
+    setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
     setIsSubmitting(false);
   };
 
@@ -62,8 +60,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     setIsSubmitting(false);
 
     if (result.success) {
-      setShowSuccess(true);
-      setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      showToast('Contraseña actualizada correctamente', 'success');
+      handleClose();
     } else {
       showToast(result.message, 'error');
     }
@@ -75,86 +73,74 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={showSuccess ? "¡Contraseña Cambiada!" : "Cambiar contraseña"}
+      title="Cambiar contraseña"
       maxWidth="400px"
       zIndex={10001}
     >
-      {showSuccess ? (
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-            <Icons.CheckCircle size={64} color="#7ed321" />
-          </div>
-          <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Tu contraseña ha sido actualizada con éxito.</p>
-          <LoadingButton fullWidth onClick={handleClose}>Cerrar</LoadingButton>
+      <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Ingresa tu nueva contraseña a continuación.</p>
+
+      <form onSubmit={handleSubmit}>
+        <PasswordField
+          label="Contraseña Actual"
+          value={passwords.oldPassword}
+          onChange={e => setPasswords({ ...passwords, oldPassword: e.target.value })}
+          placeholder="********"
+          required
+        />
+
+        <PasswordField
+          label="Nueva Contraseña"
+          value={passwords.newPassword}
+          onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
+          placeholder="********"
+          required
+        />
+
+        <div style={{ marginTop: '-10px' }}>
+          {passwords.newPassword.length > 0 && (
+            <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
+          )}
+          {!passwords.newPassword && (
+            <div style={{ fontSize: '15px', color: '#ff0000', marginBottom: '20px', fontWeight: 500 }}>
+              Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
+            </div>
+          )}
         </div>
-      ) : (
-        <>
-          <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>Ingresa tu nueva contraseña a continuación.</p>
 
-          <form onSubmit={handleSubmit}>
-            <PasswordField
-              label="Contraseña Actual"
-              value={passwords.oldPassword}
-              onChange={e => setPasswords({ ...passwords, oldPassword: e.target.value })}
-              placeholder="********"
-              required
-            />
+        <PasswordField
+          label="Confirmar Nueva Contraseña"
+          value={passwords.confirmPassword}
+          onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+          placeholder="********"
+          required
+          style={{ marginBottom: '2rem' }}
+        />
 
-            <PasswordField
-              label="Nueva Contraseña"
-              value={passwords.newPassword}
-              onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
-              placeholder="********"
-              required
-            />
-
-            <div style={{ marginTop: '-10px' }}>
-              {passwords.newPassword.length > 0 && (
-                <PasswordRequirements requirements={currentPasswordStrength?.requirements || []} />
-              )}
-              {!passwords.newPassword && (
-                <div style={{ fontSize: '15px', color: '#ff0000', marginBottom: '20px', fontWeight: 500 }}>
-                  Requisitos: 6 caracteres, Mayúscula, Minúscula y Número.
-                </div>
-              )}
-            </div>
-
-            <PasswordField
-              label="Confirmar Nueva Contraseña"
-              value={passwords.confirmPassword}
-              onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-              placeholder="********"
-              required
-              style={{ marginBottom: '2rem' }}
-            />
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <LoadingButton
-                type="submit"
-                isLoading={isSubmitting}
-                loadingText="Actualizando..."
-                style={{ flex: 2 }}
-              >
-                Actualizar
-              </LoadingButton>
-              <LoadingButton
-                type="button"
-                variant="ghost"
-                onClick={handleClose}
-                disabled={isSubmitting}
-                style={{
-                  flex: 1,
-                  color: '#e53e3e',
-                  borderColor: '#fed7d7',
-                  background: '#fff5f5'
-                }}
-              >
-                Cancelar
-              </LoadingButton>
-            </div>
-          </form>
-        </>
-      )}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <LoadingButton
+            type="submit"
+            isLoading={isSubmitting}
+            loadingText="Actualizando..."
+            style={{ flex: 2 }}
+          >
+            Actualizar
+          </LoadingButton>
+          <LoadingButton
+            type="button"
+            variant="ghost"
+            onClick={handleClose}
+            disabled={isSubmitting}
+            style={{
+              flex: 1,
+              color: '#e53e3e',
+              borderColor: '#fed7d7',
+              background: '#fff5f5'
+            }}
+          >
+            Cancelar
+          </LoadingButton>
+        </div>
+      </form>
     </Modal>
   );
 }

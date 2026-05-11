@@ -6,6 +6,7 @@ interface BackButtonProps {
   label?: string;
   className?: string;
   style?: React.CSSProperties;
+  icon?: React.ReactNode;
 }
 
 /**
@@ -13,18 +14,23 @@ interface BackButtonProps {
  * usually the Dashboard. Follows the project's premium design system.
  */
 export default function BackButton({ 
-  to = '/dashboard', 
+  to = '/dashboard/inicio', 
   label = 'Regresar al Inicio', 
   className = '', 
-  style = {} 
+  style = {},
+  icon
 }: BackButtonProps) {
   const navigate = useNavigate();
+
+  const handleNavigate = () => {
+    navigate(to);
+  };
 
   return (
     <div style={{ display: 'flex', justifySelf: 'center', width: '100%', justifyContent: 'center', margin: '2rem 0' }}>
       <button 
         className={`btn-back-home-premium ${className}`}
-        onClick={() => navigate(to)}
+        onClick={handleNavigate}
         style={{ 
           display: 'flex', 
           alignItems: 'center', 
@@ -41,7 +47,7 @@ export default function BackButton({
           ...style
         }}
       >
-        <Icons.ArrowLeft size={18} color="#ffffff" />
+        {icon || <Icons.ArrowLeft size={18} color="#ffffff" />}
         {label}
       </button>
     </div>

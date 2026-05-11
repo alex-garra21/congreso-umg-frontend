@@ -151,7 +151,7 @@ export default function DashboardHome() {
           <p>Haz clic en cualquier paso para ir directamente al módulo correspondiente.</p>
         </div>
 
-        <div className="steps-vertical">
+        <div className="steps-vertical" style={{ marginTop: '2.5rem' }}>
           <EnrollmentStep
             status={hasDpi ? "completed" : "pending"} icon={hasDpi ? <Icons.Check /> : <Icons.Users />}
             title={hasDpi ? "Perfil completo" : "Datos de perfil pendientes"}
@@ -188,6 +188,16 @@ export default function DashboardHome() {
             badgeLabel={diplomaReady ? "Completado" : "Pendiente"}
             badgeVariant={diplomaReady ? "success" : "danger"}
             onClick={() => navigate('/dashboard/diploma')}
+          />
+
+          <EnrollmentStep
+            status={isActualPaid ? "completed" : "pending"}
+            icon={isActualPaid ? <Icons.Zap /> : <Icons.Zap />}
+            title="Guerra de Robots"
+            description={isActualPaid ? "Inscripción y gestión de robots habilitada" : "Habilitado al validar tu pago"}
+            badgeLabel={isActualPaid ? "Habilitado" : "Pendiente"}
+            badgeVariant={isActualPaid ? "success" : "danger"}
+            onClick={() => navigate('/dashboard/robots')}
           />
         </div>
       </section>

@@ -279,7 +279,10 @@ export default function WorkshopsModule() {
 
           <div className="selection-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Actividades Generales (Obligatorias) */}
-            {agenda.filter(a => a.tag?.toUpperCase().trim() === 'GENERAL').map(workshop => (
+            {agenda
+              .filter(a => a.tag?.toUpperCase().trim() === 'GENERAL')
+              .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time))
+              .map(workshop => (
               <div key={`summary-${workshop.id}`} className="selection-item mandatory">
                 <div className="selection-item-info">
                   <span className="selection-item-room">{workshop.room}</span>
@@ -290,11 +293,12 @@ export default function WorkshopsModule() {
               </div>
             ))}
 
-            {enrolledIds.map(id => {
-              const workshop = agenda.find(a => a.id === id);
-              if (!workshop || workshop.tag?.toUpperCase().trim() === 'GENERAL') return null;
-              return (
-                <div key={`summary-${id}`} className="selection-item">
+            {enrolledIds
+              .map(id => agenda.find(a => a.id === id))
+              .filter((w): w is AgendaItem => !!w && w.tag?.toUpperCase().trim() !== 'GENERAL')
+              .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time))
+              .map(workshop => (
+                <div key={`summary-${workshop.id}`} className="selection-item">
                   <div className="selection-item-info">
                     <span className="selection-item-room">{workshop.room}</span>
                     <span className="selection-item-title">{workshop.title}</span>
@@ -310,8 +314,7 @@ export default function WorkshopsModule() {
                     </button>
                   )}
                 </div>
-              );
-            })}
+              ))}
 
             {enrolledIds.length === 0 && (
               <div style={{
@@ -413,7 +416,11 @@ export default function WorkshopsModule() {
             );
           })()}
 
-          <BackButton />
+          <BackButton 
+            to="/dashboard/diploma" 
+            label="Validar Datos para Diploma"
+            icon={<Icons.Award size={18} color="#ffffff" />}
+          />
         </div>
       </div>
 

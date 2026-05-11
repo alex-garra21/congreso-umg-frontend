@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAuth } from '../../../api/hooks/useAuth';
-import { isStaff } from '../../../utils/auth';
 import { validateTokenMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
 import { showToast } from '../../../utils/swal';
@@ -42,8 +41,6 @@ export default function PaymentModule() {
     }
   };
 
-  const dashboardPath = isStaff(user?.rol) ? '/dashboard/admin-tokens' : '/dashboard/inicio';
-
   if (isPaid) {
     return (
       <div className="payment-module">
@@ -57,7 +54,11 @@ export default function PaymentModule() {
             Tu inscripción ha sido validada exitosamente. Ya puedes disfrutar de todos los beneficios del congreso y elegir tus talleres.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <BackButton to={dashboardPath} />
+            <BackButton 
+              to="/dashboard/talleres" 
+              label="Ir a Selección de Talleres"
+              icon={<Icons.Calendar size={18} color="#ffffff" />}
+            />
           </div>
         </section>
       </div>
@@ -101,7 +102,7 @@ export default function PaymentModule() {
       </section>
 
       {/* Botón regresar al inicio */}
-      <BackButton to={dashboardPath} />
+      <BackButton />
     </div>
   );
 }

@@ -27,7 +27,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     correo: '',
     contrasena: '',
     confirmarContrasena: '',
-    tipoParticipante: (PARTICIPANT_TYPES && PARTICIPANT_TYPES.length > 0) ? PARTICIPANT_TYPES[0].id : 'externo' as any,
+    tipoParticipante: '',
     carnet: '',
     ciclo: ''
   });
@@ -82,7 +82,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const clearFields = () => {
     setFormData({
       nombres: '', apellidos: '', sexo: '', correo: '', contrasena: '', confirmarContrasena: '',
-      tipoParticipante: PARTICIPANT_TYPES[0].id, carnet: '', ciclo: ''
+      tipoParticipante: '', carnet: '', ciclo: ''
     });
     setIsRegistered(false);
   };
@@ -105,6 +105,11 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.tipoParticipante) {
+      showToast('Por favor seleccione un tipo de participante.', 'warning');
+      return;
+    }
 
     // Validación de dominio de correo
     const emailParts = formData.correo.toLowerCase().split('@');
@@ -146,7 +151,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
       setIsRegistered(true);
       setFormData({
         nombres: '', apellidos: '', sexo: '', correo: '', contrasena: '', confirmarContrasena: '',
-        tipoParticipante: PARTICIPANT_TYPES[0].id, carnet: '', ciclo: ''
+        tipoParticipante: '', carnet: '', ciclo: ''
       });
     } else {
       showToast(result.message, 'error');
@@ -208,6 +213,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 value={formData.tipoParticipante}
                 onChange={handleChange as any}
                 options={PARTICIPANT_TYPES.map(type => ({ value: type.id, label: type.label }))}
+                placeholder="Selección"
               />
             </FormField>
 
