@@ -4,6 +4,7 @@ import { useAuth } from '../api/hooks/useAuth';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
 import { Icons } from './Icons';
+import logoPng from '../assets/LogoCongresoA.png';
 
 export default function Navbar() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -63,9 +64,17 @@ export default function Navbar() {
           <button className="menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <Icons.X size={24} /> : <Icons.Menu size={24} />}
           </button>
-          <Link to="/" className="nav-logo" style={{ textDecoration: 'none' }}>
-            CONGRESO SISTEMAS UMG 2026
-          </Link>
+          <Link to="/" className="nav-logo" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <img 
+            src={logoPng} 
+            alt="Logo Congreso" 
+            style={{ 
+            height: '40px', // Ajusta este valor según el tamaño de tu nav
+            width: 'auto',
+            objectFit: 'contain'
+            }} 
+          />
+        </Link>
         </div>
 
         <ul className="nav-links">
