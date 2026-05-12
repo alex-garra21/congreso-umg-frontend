@@ -32,8 +32,8 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
       title={`${isNew ? 'Nuevo' : 'Editar'} Ponente`}
       maxWidth="600px"
     >
-      <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '1.5rem' }}>
-        Los campos marcados con <span style={{ color: '#ef4444' }}>*</span> son obligatorios.
+      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+        Los campos marcados con <span style={{ color: 'var(--status-error)' }}>*</span> son obligatorios.
       </p>
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
@@ -73,7 +73,7 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
 
         <h4 style={{ fontSize: '14px', fontWeight: 800, margin: '2rem 0 1rem', fontFamily: 'Source Sans 3', color: 'var(--accent-primary)' }}>Redes Sociales</h4>
         
-        <div style={{ background: '#f8f9fa', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border-soft)' }}>
+        <div style={{ background: 'var(--bg-app)', padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border-soft)' }}>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '1.5rem' }}>
             <div style={{ flex: 1 }}>
               <AdminSelect 
@@ -121,7 +121,7 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {editingSpeaker.socialLinks && Object.entries(editingSpeaker.socialLinks).map(([type, url]) => (
-              <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fff', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-soft)' }}>
+              <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-soft)' }}>
                 <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-light)', borderRadius: '6px' }}>
                   {type === 'facebook' && <Icons.Facebook size={16} color="var(--accent-primary)" />}
                   {type === 'instagram' && <Icons.Instagram size={16} color="var(--accent-primary)" />}
@@ -168,7 +168,7 @@ export default function SpeakerEditModal({ isOpen, onClose, speaker, onSave, isN
               </div>
             ))}
             {(!editingSpeaker.socialLinks || Object.keys(editingSpeaker.socialLinks).length === 0) && (
-              <p style={{ textAlign: 'center', fontSize: '12px', color: '#868e96', margin: '1rem 0' }}>No se han agregado redes sociales.</p>
+              <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', margin: '1rem 0' }}>No se han agregado redes sociales.</p>
             )}
           </div>
         </div>

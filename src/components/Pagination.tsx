@@ -15,15 +15,39 @@ const Pagination = ({ current, total, onPageChange, itemsPerPage = ITEMS_PER_PAG
       <button
         onClick={() => onPageChange(Math.max(1, current - 1))}
         disabled={current === 1}
-        style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-soft)', background: 'white', cursor: current === 1 ? 'not-allowed' : 'pointer', opacity: current === 1 ? 0.5 : 1, fontWeight: 600, fontSize: '14px' }}
+        style={{ 
+          padding: '8px 16px', 
+          borderRadius: '10px', 
+          border: '1px solid var(--border-soft)', 
+          background: 'var(--bg-card)', 
+          color: 'var(--text-primary)',
+          cursor: current === 1 ? 'not-allowed' : 'pointer', 
+          opacity: current === 1 ? 0.5 : 1, 
+          fontWeight: 700, 
+          fontSize: '13px',
+          transition: 'all 0.2s',
+          boxShadow: 'var(--shadow-sm)'
+        }}
       >
         Anterior
       </button>
-      <span style={{ fontSize: '14px', fontWeight: 600 }}>Página {current} de {totalPages}</span>
+      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>Página {current} de {totalPages}</span>
       <button
         onClick={() => onPageChange(Math.min(totalPages, current + 1))}
         disabled={current === totalPages}
-        style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-soft)', background: 'white', cursor: current === totalPages ? 'not-allowed' : 'pointer', opacity: current === totalPages ? 0.5 : 1, fontWeight: 600, fontSize: '14px' }}
+        style={{ 
+          padding: '8px 16px', 
+          borderRadius: '10px', 
+          border: '1px solid var(--border-soft)', 
+          background: 'var(--bg-card)', 
+          color: 'var(--text-primary)',
+          cursor: current === totalPages ? 'not-allowed' : 'pointer', 
+          opacity: current === totalPages ? 0.5 : 1, 
+          fontWeight: 700, 
+          fontSize: '13px',
+          transition: 'all 0.2s',
+          boxShadow: 'var(--shadow-sm)'
+        }}
       >
         Siguiente
       </button>

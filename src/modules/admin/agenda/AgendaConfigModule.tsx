@@ -42,11 +42,11 @@ export default function AgendaConfigModule() {
 
       <div style={{
         maxWidth: '800px',
-        background: 'white',
+        background: 'var(--bg-card)',
         padding: '2rem',
         borderRadius: '24px',
         border: '1px solid var(--border-soft)',
-        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)',
+        boxShadow: 'var(--shadow-lg)',
         marginTop: '2rem'
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2.5rem' }}>
@@ -68,7 +68,7 @@ export default function AgendaConfigModule() {
                   onChange={(e) => handleChange('row_height', parseInt(e.target.value))}
                   style={{ width: '100%', accentColor: 'var(--accent-primary)' }}
                 />
-                <p style={{ fontSize: '11px', marginTop: '4px', color: '#94a3b8' }}>Aumenta este valor para que el horario se vea más alto y espaciado.</p>
+                <p style={{ fontSize: '11px', marginTop: '4px', color: 'var(--text-muted)' }}>Aumenta este valor para que el horario se vea más alto y espaciado.</p>
               </div>
 
               <div>
