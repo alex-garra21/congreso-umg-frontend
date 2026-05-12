@@ -46,10 +46,10 @@ export default function AgendaModule() {
 
   return (
     <section className="dashboard-section">
-      <div className="section-header" style={{ 
-        marginBottom: '2rem', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div className="section-header" style={{
+        marginBottom: '2rem',
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'flex-start',
         flexWrap: 'wrap',
         gap: '1rem'
@@ -67,9 +67,9 @@ export default function AgendaModule() {
             onTabChange={(id) => setAgendaTab(id as any)}
           />
         </div>
-        
+
         <div style={{ marginTop: '0.5rem' }}>
-          <button 
+          <button
             onClick={() => setIsConfigOpen(true)}
             style={{
               display: 'flex',
@@ -104,12 +104,12 @@ export default function AgendaModule() {
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             Selecciona el intervalo de tiempo para los selectores de la agenda y asistencia.
           </p>
-          
+
           <div style={{ marginBottom: '2rem' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '12px', 
-              fontWeight: 600, 
+            <label style={{
+              display: 'block',
+              fontSize: '12px',
+              fontWeight: 600,
               color: 'var(--text-secondary)',
               marginBottom: '0.5rem',
               textTransform: 'uppercase',
