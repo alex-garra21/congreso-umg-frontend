@@ -3,6 +3,7 @@ import { supabase } from '../utils/supabase';
 import React, { useState } from 'react';
 import { useAuth } from '../api/hooks/useAuth';
 import logoUMG from '../assets/UMG-LOGO.svg';
+import logoSistemas from '../assets/LogoSistemas.svg';
 import { Icons } from './Icons';
 import { getParticipantLabel } from '../data/userTypes';
 import { isStaff } from '../utils/auth';
@@ -87,7 +88,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
           {isExpanded ? (
             <div className="logo-full">
               <span className="logo-main">CONGRESO 2026</span>
-              <span className="logo-sub">SISTEMAS UMG - COBÁN</span>
+              <img src={logoSistemas} alt="Sistemas UMG" className="logo-img-sub" />
             </div>
           ) : (
             <button

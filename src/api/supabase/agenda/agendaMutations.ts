@@ -80,4 +80,15 @@ export async function savePonentesMutation(ponentes: Speaker[]): Promise<void> {
 
   const { error } = await supabase.rpc('sincronizar_ponentes', { p_ponentes: mapped });
   if (error) throw error;
+
+  // Parche: Debido a que el RPC sincronizar_ponentes podría no estar manejando la columna 'redes_sociales',
+  // realizamos una actualización manual para asegurar que los enlaces se persistan correctamente.
+  for (const p of ponentes) {
+    if (p.id) {
+      await supabase
+        .from('ponentes')
+        .update({ redes_sociales: p.socialLinks || {} })
+        .eq('id', p.id);
+    }
+  }
 }
