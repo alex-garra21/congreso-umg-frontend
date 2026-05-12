@@ -22,31 +22,31 @@ const Alert: React.FC<AlertProps> = ({
 }) => {
   const configs = {
     success: {
-      bg: '#f0fff4',
-      border: '#c6f6d5',
-      text: '#22543d',
-      titleColor: '#1c4532',
+      bg: 'rgba(16, 185, 129, 0.08)',
+      border: 'rgba(16, 185, 129, 0.2)',
+      text: 'var(--text-primary)',
+      titleColor: '#10b981',
       defaultIcon: <Icons.CheckCircle size={20} />
     },
     warning: {
-      bg: '#fff9db',
-      border: '#fab005',
-      text: '#862e00',
-      titleColor: '#5c2b0a',
+      bg: 'rgba(245, 158, 11, 0.08)',
+      border: 'rgba(245, 158, 11, 0.2)',
+      text: 'var(--text-primary)',
+      titleColor: '#f59e0b',
       defaultIcon: <Icons.AlertTriangle size={20} />
     },
     error: {
-      bg: '#fff5f5',
-      border: '#feb2b2',
-      text: '#9b2c2c',
-      titleColor: '#822727',
+      bg: 'rgba(239, 68, 68, 0.08)',
+      border: 'rgba(239, 68, 68, 0.2)',
+      text: 'var(--text-primary)',
+      titleColor: '#ef4444',
       defaultIcon: <Icons.AlertTriangle size={20} />
     },
     info: {
-      bg: '#ebf8ff',
-      border: '#bee3f8',
-      text: '#2a4365',
-      titleColor: '#2a4365',
+      bg: 'rgba(59, 130, 246, 0.08)',
+      border: 'rgba(59, 130, 246, 0.2)',
+      text: 'var(--text-primary)',
+      titleColor: '#3b82f6',
       defaultIcon: <Icons.Info size={20} />
     }
   };

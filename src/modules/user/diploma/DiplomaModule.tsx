@@ -126,14 +126,14 @@ export default function DiplomaModule() {
                   readOnly={isLocked || !isPaid}
                   className="dashboard-input"
                   style={{
-                    borderColor: isDiplomaNameTooLong ? '#d32f2f' : undefined,
-                    backgroundColor: (isLocked || !isPaid) ? '#f8fafc' : undefined,
-                    color: (isLocked || !isPaid) ? '#64748b' : undefined,
+                    borderColor: isDiplomaNameTooLong ? 'var(--status-error)' : undefined,
+                    backgroundColor: (isLocked || !isPaid) ? 'var(--bg-app)' : 'var(--bg-input)',
+                    color: (isLocked || !isPaid) ? 'var(--text-muted)' : 'var(--text-primary)',
                     cursor: (isLocked || !isPaid) ? 'not-allowed' : 'text'
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-                  <span style={{ fontSize: '12px', color: isDiplomaNameTooLong ? '#d32f2f' : '#718096' }}>
+                  <span style={{ fontSize: '12px', color: isDiplomaNameTooLong ? 'var(--status-error)' : 'var(--text-muted)' }}>
                     {formData.nombreDiploma.length} / 25 caracteres
                   </span>
                 </div>
@@ -153,11 +153,11 @@ export default function DiplomaModule() {
                 required
                 readOnly={isLocked || !isPaid}
                 className="dashboard-input"
-                style={{
-                  backgroundColor: (isLocked || !isPaid) ? '#f8fafc' : undefined,
-                  color: (isLocked || !isPaid) ? '#64748b' : undefined,
-                  cursor: (isLocked || !isPaid) ? 'not-allowed' : 'text'
-                }}
+                  style={{
+                    backgroundColor: (isLocked || !isPaid) ? 'var(--bg-app)' : 'var(--bg-input)',
+                    color: (isLocked || !isPaid) ? 'var(--text-muted)' : 'var(--text-primary)',
+                    cursor: (isLocked || !isPaid) ? 'not-allowed' : 'text'
+                  }}
               />
             </FormField>
 
@@ -167,20 +167,21 @@ export default function DiplomaModule() {
           </div>
 
           <div className="diploma-preview-container">
-            <label style={{ fontSize: '12px', fontWeight: 700, color: '#4a5568', marginBottom: '8px', display: 'block' }}>
+            <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', display: 'block' }}>
               ASÍ APARECERÁ EN TU DIPLOMA
             </label>
             <div style={{
               position: 'relative',
               width: '100%',
               aspectRatio: '1.414',
-              backgroundColor: '#f8fafc',
+              backgroundColor: 'var(--bg-app)',
               borderRadius: '12px',
-              border: '1.5px solid #e2e8f0',
+              border: '1.5px solid var(--border-soft)',
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center'
+              alignItems: 'center',
+              boxShadow: 'var(--shadow-sm)'
             }}>
               <img src={diplomaTemplate} alt="Template de Diploma" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
 
@@ -214,7 +215,7 @@ export default function DiplomaModule() {
                 Previsualización Ilustrativa
               </div>
             </div>
-            <p style={{ fontSize: '11px', color: '#718096', marginTop: '12px', textAlign: 'center', fontStyle: 'italic', maxWidth: '400px', margin: '12px auto 0' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '12px', textAlign: 'center', fontStyle: 'italic', maxWidth: '400px', margin: '12px auto 0' }}>
               * Esta imagen es puramente ilustrativa y no representa el diseño final del diploma oficial.
             </p>
           </div>
@@ -242,11 +243,12 @@ export default function DiplomaModule() {
                 style={{
                   width: 'auto',
                   padding: '12px 24px',
-                  border: '1.5px solid #e2e8f0',
-                  color: '#4a5568',
+                  border: '1.5px solid var(--border-soft)',
+                  color: 'var(--text-secondary)',
                   borderRadius: '12px',
                   opacity: !isPaid ? 0.6 : 1,
-                  cursor: !isPaid ? 'not-allowed' : 'pointer'
+                  cursor: !isPaid ? 'not-allowed' : 'pointer',
+                  background: 'transparent'
                 }}
                 onClick={() => {
                   const fullName = `${user.nombres} ${user.apellidos}`.trim().toUpperCase();
@@ -271,10 +273,10 @@ export default function DiplomaModule() {
             <div className="diploma-actions-grid">
               <div style={{
                 padding: '1.25rem',
-                backgroundColor: '#f0fff4',
-                border: '1px solid #c6f6d5',
+                backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
                 borderRadius: '12px',
-                color: '#2f855a',
+                color: '#10b981',
                 textAlign: 'center',
                 fontWeight: 600,
                 fontSize: '14px',

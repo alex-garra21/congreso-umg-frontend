@@ -236,19 +236,42 @@ export default function WorkshopsModule() {
         {!isPaid && (
           <div style={{
             marginBottom: '2rem',
-            borderRadius: '20px',
+            borderRadius: '24px',
             padding: '1.5rem 2rem',
-            background: 'linear-gradient(135deg, #fff9db 0%, #fff3bf 100%)',
-            border: '1px solid #fab005',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-soft)',
             display: 'flex',
             alignItems: 'center',
-            gap: '1rem',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)'
+            gap: '1.5rem',
+            boxShadow: 'var(--shadow-md)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <div style={{ color: '#f08c00', display: 'flex' }}><Icons.AlertTriangle size={28} /></div>
-            <div style={{ color: '#862e00', fontSize: '15px', lineHeight: '1.5' }}>
-              <strong style={{ display: 'block', fontSize: '16px', marginBottom: '2px' }}>Modo Vista Previa</strong>
-              Explora la agenda completa. Valida tu pago en el módulo de <span style={{ textDecoration: 'underline', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/dashboard/pago')}>Pagos</span> para habilitar tu inscripción.
+            <div style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: '6px',
+              background: '#fab005'
+            }} />
+            <div style={{ 
+              background: 'rgba(250, 176, 5, 0.1)', 
+              width: '50px', 
+              height: '50px', 
+              borderRadius: '16px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: '#f08c00'
+            }}>
+              <Icons.AlertTriangle size={28} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: 'block', fontSize: '17px', marginBottom: '4px', color: 'var(--text-primary)' }}>Modo Vista Previa</strong>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5', margin: 0 }}>
+                Explora la agenda completa. Valida tu pago en el módulo de <span style={{ textDecoration: 'underline', fontWeight: 700, cursor: 'pointer', color: 'var(--accent-primary)' }} onClick={() => navigate('/dashboard/pago')}>Pagos</span> para habilitar tu inscripción.
+              </p>
             </div>
           </div>
         )}
@@ -466,14 +489,16 @@ export default function WorkshopsModule() {
                   <Icons.Map size={14} color="var(--accent-primary)" /> {selectedWorkshop.room}
                 </span>
                 <span style={{
-                  background: 'rgba(0, 0, 0, 0.05)',
+                  background: 'var(--bg-app)',
+                  color: 'var(--text-primary)',
                   padding: '6px 14px',
                   borderRadius: '100px',
                   fontSize: '13px',
                   fontWeight: 700,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '6px',
+                  border: '1px solid var(--border-soft)'
                 }}>
                   <Icons.Clock size={14} /> {selectedWorkshop.time} - {selectedWorkshop.endTime}
                 </span>
@@ -508,7 +533,7 @@ export default function WorkshopsModule() {
                       {selectedWorkshop.occupiedQuotas || 0} / {selectedWorkshop.maxQuotas}
                     </span>
                   </div>
-                  <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
+                  <div style={{ width: '100%', height: '8px', background: 'var(--bg-app)', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-soft)' }}>
                     <div style={{
                       width: `${Math.min(((selectedWorkshop.occupiedQuotas || 0) / selectedWorkshop.maxQuotas) * 100, 100)}%`,
                       height: '100%',
@@ -563,7 +588,7 @@ export default function WorkshopsModule() {
                         {isSelected ? 'Quitar' : 'Inscribirme'}
                       </AdminButton>
                     ) : isMandatory ? (
-                      <div style={{ height: '100%', padding: '0 1rem', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800, color: '#0f172a', border: '1px solid rgba(0,0,0,0.05)', textAlign: 'center', textTransform: 'uppercase' }}>
+                      <div style={{ height: '100%', padding: '0 1rem', borderRadius: '12px', background: 'var(--bg-app)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', border: '1px solid var(--border-soft)', textAlign: 'center', textTransform: 'uppercase' }}>
                         Obligatorio
                       </div>
                     ) : !isPaid ? (
@@ -605,12 +630,12 @@ export default function WorkshopsModule() {
 
       <style>{`
         .calendar-container {
-          background: #ffffff;
+          background: var(--bg-card);
           border-radius: 28px;
           padding: 2rem;
           border: 1px solid var(--border-soft);
           overflow-x: auto;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+          box-shadow: var(--shadow-md);
           margin-bottom: 2rem;
         }
         .calendar-grid { 
@@ -619,8 +644,9 @@ export default function WorkshopsModule() {
           position: relative; 
           border-radius: 16px;
           overflow: hidden;
-          background: #f8fafc;
+          background: var(--bg-app);
           grid-template-rows: 60px repeat(${HOURS.length * 12}, var(--agenda-row-height));
+          border: 1px solid var(--border-soft);
         }
         .grid-header { 
           font-family: 'Source Sans 3', sans-serif; 
@@ -629,8 +655,8 @@ export default function WorkshopsModule() {
           justify-content: center;
           text-align: center;
           z-index: 20; 
-          background: #ffffff; 
-          border-bottom: 1px solid #e2e8f0;
+          background: var(--bg-card); 
+          border-bottom: 1px solid var(--border-soft);
         }
         .time-label { 
           font-weight: 800; 
@@ -648,16 +674,16 @@ export default function WorkshopsModule() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 4px;
+          padding-top: 8px;
           font-size: 12px;
           font-weight: 700;
-          color: #94a3b8;
-          border-right: 1px solid #e2e8f0;
-          background: #ffffff;
+          color: var(--text-muted);
+          border-right: 1px solid var(--border-soft);
+          background: var(--bg-card);
           z-index: 10;
         }
         .hour-grid-line {
-          border-top: 1px dashed #e2e8f0;
+          border-top: 1px dashed var(--border-soft);
           pointer-events: none;
           z-index: 5;
         }
@@ -692,13 +718,15 @@ export default function WorkshopsModule() {
           z-index: 25; 
         }
         .calendar-workshop.mandatory {
-          background: rgba(15, 23, 42, 0.04);
-          border: 1.5px dashed rgba(15, 23, 42, 0.1);
+          background: rgba(255, 255, 255, 0.02);
+          border: 1.5px dashed var(--border-med);
           cursor: default;
+          opacity: 0.9;
         }
         .calendar-workshop.mandatory.selected {
-          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
-          border-color: #000;
+          background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+          border-color: var(--border-soft);
+          opacity: 1;
         }
         .w-title { 
           font-size: var(--agenda-font-title); 
@@ -763,11 +791,11 @@ export default function WorkshopsModule() {
           justify-content: space-between;
           gap: 24px;
           padding: 1rem 1.5rem;
-          background: #ffffff;
+          background: var(--bg-card);
           border: 1px solid var(--border-soft);
           border-radius: 16px;
           transition: all 0.2s;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+          box-shadow: var(--shadow-sm);
         }
         .selection-item:hover {
           border-color: var(--accent-primary);
@@ -775,8 +803,15 @@ export default function WorkshopsModule() {
           transform: translateX(5px);
         }
         .selection-item.mandatory {
-          background: #f8fafc;
-          border-left: 4px solid #0f172a;
+          background: rgba(255, 255, 255, 0.02);
+          border-left: 4px solid var(--accent-primary);
+          border-right: 1px solid var(--border-soft);
+          border-top: 1px solid var(--border-soft);
+          border-bottom: 1px solid var(--border-soft);
+        }
+        .selection-item.mandatory .selection-item-title {
+          color: var(--text-secondary);
+          font-weight: 700;
         }
         .selection-item-info {
           display: flex;
@@ -796,8 +831,26 @@ export default function WorkshopsModule() {
           text-align: center;
         }
         .selection-item.mandatory .selection-item-room {
-          color: #0f172a;
-          background: rgba(15, 23, 42, 0.08);
+          color: var(--text-muted);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-soft);
+        }
+        .selection-item-badge {
+          font-size: 10px;
+          font-weight: 800;
+          text-transform: uppercase;
+          padding: 4px 12px;
+          border-radius: 100px;
+          background: var(--bg-app);
+          color: var(--text-muted);
+          border: 1px solid var(--border-soft);
+          letter-spacing: 1px;
+        }
+        .selection-item.mandatory .selection-item-badge {
+          background: rgba(59, 130, 246, 0.1);
+          color: var(--accent-primary);
+          border-color: rgba(59, 130, 246, 0.2);
+        }
         }
         .selection-item-title {
           font-weight: 700;

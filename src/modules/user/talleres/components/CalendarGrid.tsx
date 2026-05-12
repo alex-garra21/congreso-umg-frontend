@@ -47,7 +47,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               gridColumn: idx + 2,
               backgroundColor: colorTheme.main,
               color: '#ffffff',
-              borderTopRightRadius: idx === rooms.length - 1 ? '16px' : '0'
+              borderTopRightRadius: idx === rooms.length - 1 ? '16px' : '0',
+              borderLeft: '1px solid rgba(255,255,255,0.1)'
             }}>
               {room.name}
             </div>
@@ -62,7 +63,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               gridColumn: idx + 2,
               gridRow: `2 / span ${HOURS.length * 12}`,
               backgroundColor: colorTheme.bg,
-              borderLeft: '1px solid rgba(0,0,0,0.03)'
+              borderLeft: '1px solid var(--border-soft)',
+              opacity: 0.5
             }}></div>
           );
         })}
