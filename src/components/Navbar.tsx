@@ -68,11 +68,7 @@ export default function Navbar() {
           <img 
             src={logoPng} 
             alt="Logo Congreso" 
-            style={{ 
-            height: '40px', // Ajusta este valor según el tamaño de tu nav
-            width: 'auto',
-            objectFit: 'contain'
-            }} 
+            className="nav-logo-img"
           />
         </Link>
         </div>

@@ -20,6 +20,22 @@
   white-space: nowrap;
 }
 
+.nav-logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  transition: filter 0.3s ease;
+}
+
+/* Si el logo es blanco (optimizado para modo oscuro), 
+   lo convertimos a azul oscuro en modo claro */
+@media (prefers-color-scheme: light) {
+  .nav-logo-img {
+    /* Filtro para convertir blanco en #185FA5 (accent-primary) aprox */
+    filter: brightness(0) saturate(100%) invert(31%) sepia(85%) saturate(545%) hue-rotate(170deg) brightness(92%) contrast(89%);
+  }
+}
+
 .nav-mobile-left {
   display: flex;
   align-items: center;

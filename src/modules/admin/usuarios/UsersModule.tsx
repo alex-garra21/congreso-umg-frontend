@@ -25,7 +25,7 @@ export default function UsersModule() {
   const adminValidateMutation = useAdminValidateUser();
   const resetDiplomaStatusMutation = useResetDiplomaStatus();
   const resetWorkshopsMutation = useResetUserWorkshops();
-  const { user: currentAdmin } = useAuth();
+  const { user: currentAdmin, isLoading: isAuthLoading } = useAuth();
 
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -126,6 +126,16 @@ export default function UsersModule() {
 
   const paginatedUsers = filteredUsers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
+  if (isAuthLoading && users.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: 'var(--text-secondary)' }}>
+        <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(99, 179, 237, 0.2)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }}></div>
+        <span>Cargando directorio...</span>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   // Opciones de rol filtradas
   const roleOptions = [
     { value: 'all', label: 'Todos' },
@@ -176,7 +186,7 @@ export default function UsersModule() {
           </div>
         </div>
 
-        <AdminTable isLoading={isLoading} headers={["Nombre Completo", "Tipo", "Contacto", "Rol", "Pago", "Tokens", "Acciones"]} emptyMessage="No se encontraron registros con los filtros seleccionados.">
+        <AdminTable isLoading={isLoading || isAuthLoading} headers={["Nombre Completo", "Tipo", "Contacto", "Rol", "Pago", "Tokens", "Acciones"]} emptyMessage="No se encontraron registros con los filtros seleccionados.">
           {paginatedUsers.map(u => (
             <tr key={u.correo}>
               <td><div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{u.nombres} {u.apellidos}</div></td>

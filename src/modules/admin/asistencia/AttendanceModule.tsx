@@ -23,11 +23,11 @@ import { timeToMinutes, generateTimeOptions, normalizeTime } from '../../../util
 import { useTimeConfig } from '../../../context/TimeContext';
 
 export default function AttendanceModule() {
-  const { data: users = [] } = useAllUsers();
-  const { data: agenda = [] } = useCharlas();
+  const { data: users = [], isLoading: isUsersLoading } = useAllUsers();
+  const { data: agenda = [], isLoading: isAgendaLoading } = useCharlas();
   const saveAgendaMutation = useSaveAgenda();
   const { timeInterval } = useTimeConfig();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, isLoading: isAuthLoading } = useAuth();
   const isColaborador = currentUser?.rol === 'colaborador';
 
   const [searchAgenda, setSearchAgenda] = useState('');
@@ -119,6 +119,16 @@ export default function AttendanceModule() {
 
   const paginatedAgenda = filteredAgenda.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
+  if ((isAuthLoading || isAgendaLoading) && agenda.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: 'var(--text-secondary)' }}>
+        <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(99, 179, 237, 0.2)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }}></div>
+        <span>Cargando actividades...</span>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <section className="dashboard-section" style={{ padding: '0' }}>
       <div style={{ padding: '2rem 2.5rem 0' }}>
@@ -152,6 +162,7 @@ export default function AttendanceModule() {
           </div>
         </div>
         <AdminTable
+          isLoading={isAgendaLoading || isAuthLoading || isUsersLoading}
           headers={["Actividad", "Horario", "Tolerancia", "Inscritos", "Asistencia", "Acciones"]}
           emptyMessage="No se encontraron talleres."
         >

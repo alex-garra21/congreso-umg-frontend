@@ -119,13 +119,25 @@ export default function TokensModule() {
     
     // Filtro por creador (Staff, Todos o Usuario Específico por ID)
     const matchesCreator = creatorFilter === 'all' || 
-                          (creatorFilter === 'staff' ? (t.createdByRole === 'admin' || t.createdByRole === 'colaborador') : t.createdBy === creatorFilter);
+                          (creatorFilter === 'staff' 
+                            ? (t.createdByRole === 'admin' || t.createdByRole === 'colaborador') 
+                            : String(t.createdBy) === String(creatorFilter));
 
     // Si es colaborador, solo ve los tokens que él mismo creó
-    const matchesOwnership = isOnlyAdmin || t.createdBy === currentAdmin?.id;
+    const matchesOwnership = isOnlyAdmin || String(t.createdBy) === String(currentAdmin?.id);
 
     return matchesSearch && matchesStatus && matchesType && matchesDate && matchesOwnership && matchesCreator;
   });
+
+  if (isAuthLoading && tokens.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: 'var(--text-secondary)' }}>
+        <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(99, 179, 237, 0.2)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }}></div>
+        <span>Cargando datos de seguridad...</span>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   const currentTokensOnPage = filteredTokens.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
@@ -352,7 +364,7 @@ export default function TokensModule() {
         </div>
 
         <AdminTable
-          isLoading={isLoading}
+          isLoading={isLoading || isAuthLoading}
           headers={[
             isOnlyAdmin ? <input type="checkbox" checked={currentTokensOnPage.length > 0 && currentTokensOnPage.every(t => selectedTokens.includes(t.code))} onChange={handleSelectAllTokens} /> : null,
             "No.", "Token", "Estado", "Asignado a", "Tipo", "Creado por", "Creación", isOnlyAdmin ? "Opciones" : null

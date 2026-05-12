@@ -18,7 +18,7 @@ import CategoriesTab from './tabs/CategoriesTab';
 import RoomsTab from './tabs/RoomsTab';
 
 export default function AgendaModule() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const [agendaTab, setAgendaTab] = useState<'schedule' | 'speakers' | 'categories' | 'rooms'>('schedule');
   const { timeInterval, setTimeInterval } = useTimeConfig();
@@ -27,10 +27,20 @@ export default function AgendaModule() {
   const isOnlyAdmin = user?.rol === 'admin';
 
   useEffect(() => {
-    if (user && !isOnlyAdmin) {
+    if (!isAuthLoading && user && !isOnlyAdmin) {
       navigate('/dashboard/inicio');
     }
-  }, [user, isOnlyAdmin, navigate]);
+  }, [user, isOnlyAdmin, isAuthLoading, navigate]);
+
+  if (isAuthLoading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: 'var(--text-secondary)' }}>
+        <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(99, 179, 237, 0.2)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }}></div>
+        <span>Validando permisos...</span>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   if (!isOnlyAdmin) return null;
 
