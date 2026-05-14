@@ -1,4 +1,6 @@
 import { lazy, Suspense } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../api/hooks/useAuth';
 
 const TokensModule = lazy(() => import('../modules/admin/tokens/TokensModule'));
 const UsersModule = lazy(() => import('../modules/admin/usuarios/UsersModule'));
@@ -12,6 +14,14 @@ interface AdminModuleProps {
 }
 
 export default function AdminModule({ defaultTab }: AdminModuleProps) {
+  const { user: currentUser } = useAuth();
+  const isAdmin = currentUser?.rol === 'admin';
+  const isColaborador = currentUser?.rol === 'colaborador';
+
+  if (!isAdmin && !isColaborador) {
+    return <Navigate to="/dashboard/inicio" replace />;
+  }
+
   return (
     <div className="admin-module">
       <Suspense fallback={
