@@ -22,13 +22,15 @@ export default function PaymentModule() {
 
     setIsSubmitting(true);
     try {
-      const result = await validateTokenMutation(codigo.trim(), user?.id || '');
-      
+      const result = await validateTokenMutation(codigo.trim());
+
       if (result.success) {
         refetchProfile();
         showToast('¡Código validado exitosamente! Tu inscripción ha sido activada.', 'success');
       } else {
-        if (result.errorType === 'not_found') {
+        if (result.errorType === 'too_many_attempts') {
+          showToast('Demasiados intentos fallidos. Por favor, intenta de nuevo más tarde o contacta a soporte.', 'error');
+        } else if (result.errorType === 'not_found') {
           showToast('El código ingresado no existe. Por favor, verifica que lo hayas escrito correctamente.', 'error');
         } else if (result.errorType === 'already_used') {
           showToast('Este código ya ha sido validado por otro usuario.', 'warning');
@@ -54,8 +56,8 @@ export default function PaymentModule() {
             Tu inscripción ha sido validada exitosamente. Ya puedes disfrutar de todos los beneficios del congreso y elegir tus talleres.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <BackButton 
-              to="/dashboard/talleres" 
+            <BackButton
+              to="/dashboard/talleres"
               label="Ir a Selección de Talleres"
               icon={<Icons.Calendar size={18} color="#ffffff" />}
             />

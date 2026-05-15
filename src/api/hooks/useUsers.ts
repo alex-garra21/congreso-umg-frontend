@@ -124,7 +124,7 @@ export function useValidateToken() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ code, userId }: { code: string; userId: string }) => validateTokenMutation(code, userId),
+    mutationFn: ({ code }: { code: string }) => validateTokenMutation(code),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['tokens'] });

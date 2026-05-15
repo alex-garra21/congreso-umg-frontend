@@ -184,11 +184,13 @@ export async function generateTokenMutation(code: string, adminId?: string): Pro
   }
 }
 
-export async function validateTokenMutation(code: string, userId: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'already_paid' | 'error' }> {
+// Eliminamos el parámetro userId de la firma de la función
+export async function validateTokenMutation(code: string): Promise<{ success: boolean; errorType?: 'not_found' | 'already_used' | 'already_paid' | 'too_many_attempts' | 'error' }> {
   try {
+    // Mandamos ÚNICAMENTE el código. 
+    // Supabase extraerá mágicamente el ID de usuario desde el token de la sesión.
     const { data, error } = await supabase.rpc('validar_token_pago', {
-      p_codigo: code.trim(),
-      p_user_id: userId
+      p_codigo: code.trim()
     });
 
     if (error) {
