@@ -131,7 +131,7 @@ export default function ReportsModule() {
         { header: 'Participante', key: 'name', width: 30 },
         { header: 'Correo', key: 'email', width: 30 },
         { header: 'DPI', key: 'dpi', width: 20 },
-        { header: 'Sexo', key: 'sex', width: 15 },
+        { header: 'Género', key: 'sex', width: 15 },
         { header: 'Teléfono', key: 'phone', width: 15 },
         { header: isColaborador ? 'Carnet' : 'Carnet/codigo docente', key: 'identifier', width: 25 }
       ];

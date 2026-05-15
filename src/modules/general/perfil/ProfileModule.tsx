@@ -189,14 +189,14 @@ export default function ProfileModule() {
             <FormField label="DPI" required style={{ flex: 3 }}>
               <input type="text" name="dpi" value={formData.dpi} onChange={handleChange} placeholder="0000 00000 0000" required className="dashboard-input" />
             </FormField>
-            <FormField label="Sexo" required style={{ flex: 1 }}>
+            <FormField label="Género" required style={{ flex: 1 }}>
               <AdminSelect
                 name="sexo"
                 value={formData.sexo}
                 onChange={handleChange as any}
                 options={[
-                  { value: 'M', label: 'Hombre' },
-                  { value: 'F', label: 'Mujer' }
+                  { value: 'M', label: 'Masculino' },
+                  { value: 'F', label: 'Femenino' }
                 ]}
                 placeholder="Selección"
               />

@@ -105,7 +105,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.tipoParticipante) {
       showToast('Por favor seleccione un tipo de participante.', 'warning');
       return;
@@ -243,14 +243,14 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
             )}
 
             <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
-              <FormField label="Sexo" required style={{ flex: 1 }}>
+              <FormField label="Género" required style={{ flex: 1 }}>
                 <AdminSelect
                   name="sexo"
                   value={formData.sexo}
                   onChange={handleChange as any}
                   options={[
-                    { value: 'M', label: 'Hombre' },
-                    { value: 'F', label: 'Mujer' }
+                    { value: 'M', label: 'Masculino' },
+                    { value: 'F', label: 'Femenino' }
                   ]}
                   placeholder="Selección"
                 />
