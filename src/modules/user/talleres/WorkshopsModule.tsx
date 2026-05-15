@@ -141,7 +141,7 @@ export default function WorkshopsModule() {
       setEnrolledIds(prev => prev.filter(id => id !== workshop.id));
     } else {
       if (isTimeCollision(workshop)) {
-        showToast('Conflicto de horario: Este taller choca con tu selección actual.', 'warning');
+        showToast('Conflicto de horario: Esta conferencia choca con tu selección actual.', 'warning');
         return;
       }
       setEnrolledIds(prev => [...prev, workshop.id]);
@@ -229,7 +229,7 @@ export default function WorkshopsModule() {
       '--agenda-card-radius': `${visualConfig.card_border_radius}px`
     } as any}>
       <div style={{ padding: '2rem 2.5rem 0' }}>
-        <ModuleTitle title="Inscripción de Talleres" />
+        <ModuleTitle title="Inscripción de Conferencias" />
       </div>
 
       <div style={{ padding: '0 2.5rem' }}>
@@ -297,7 +297,7 @@ export default function WorkshopsModule() {
             gap: '10px'
           }}>
             <Icons.ClipboardList size={22} color="var(--accent-primary)" />
-            Talleres Seleccionados
+            Conferencias Seleccionadas
           </h3>
 
           <div className="selection-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -349,7 +349,7 @@ export default function WorkshopsModule() {
                 color: 'var(--text-secondary)',
                 fontSize: '14px'
               }}>
-                Aún no has seleccionado ningún taller. Haz clic en las tarjetas del calendario para agregarlos.
+                Aún no has seleccionado ninguna conferencia. Haz clic en las tarjetas del calendario para agregarlas.
               </div>
             )}
           </div>
@@ -405,7 +405,7 @@ export default function WorkshopsModule() {
                       : `Inscribir ${enrolledIds.filter(id => {
                           const w = agenda.find(a => a.id === id);
                           return w?.tag?.toUpperCase().trim() !== 'GENERAL';
-                        }).length} Talleres`
+                        }).length} Conferencias`
                   }
                 </AdminButton>
 
@@ -455,7 +455,7 @@ export default function WorkshopsModule() {
           <h3 style={{ fontFamily: 'Source Sans 3', fontWeight: 800, fontSize: '20px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
             <Icons.Star size={24} color="#fab005" /> ¡Todo Listo!
           </h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem', lineHeight: 1.6 }}>Tus talleres han sido registrados correctamente en el sistema. Puedes consultar tu horario detallado en el dashboard principal.</p>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem', lineHeight: 1.6 }}>Tus conferencias han sido registrados correctamente en el sistema. Puedes consultar tu horario detallado en el dashboard principal.</p>
           <AdminButton onClick={() => setShowSuccessModal(false)} style={{ width: '100%' }}>Excelente</AdminButton>
         </div>
       </Modal>
@@ -543,7 +543,7 @@ export default function WorkshopsModule() {
                   </div>
                   {(selectedWorkshop.occupiedQuotas || 0) >= selectedWorkshop.maxQuotas && !isSelected && (
                     <p style={{ color: '#ef4444', fontSize: '12px', fontWeight: 700, marginTop: '8px', textAlign: 'center' }}>
-                      ¡Cupos agotados para este taller!
+                      ¡Cupos agotados para esta conferencia!
                     </p>
                   )}
                 </div>

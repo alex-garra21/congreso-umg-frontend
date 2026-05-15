@@ -106,7 +106,7 @@ export default function AgendaConfigModule() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: 'var(--text-secondary)' }}>
-                  Título del Taller ({localConfig.font_size_title}px)
+                  Título de la Conferencia ({localConfig.font_size_title}px)
                 </label>
                 <input
                   type="range" min="10" max="18" step="1"

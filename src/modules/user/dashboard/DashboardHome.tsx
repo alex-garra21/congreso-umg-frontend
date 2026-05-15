@@ -91,9 +91,9 @@ export default function DashboardHome() {
         />
 
         <StatusCard
-          label="TALLERES" value={workshopsCount} accentColor={workshopsReady ? 'var(--status-success)' : 'var(--status-error)'}
-          sub={workshopsCount === 1 ? 'Taller seleccionado' : 'Talleres en tu agenda'}
-          footerLink="Gestionar talleres →" onClick={() => navigate('/dashboard/talleres')}
+          label="CONFERENCIAS" value={workshopsCount} accentColor={workshopsReady ? 'var(--status-success)' : 'var(--status-error)'}
+          sub={workshopsCount === 1 ? 'Conferencia seleccionada' : 'Conferencias en tu agenda'}
+          footerLink="Gestionar conferencias →" onClick={() => navigate('/dashboard/talleres')}
         />
 
         <StatusCard
@@ -173,8 +173,8 @@ export default function DashboardHome() {
           <EnrollmentStep
             status={workshopsReady ? "completed" : workshopsCount > 0 ? "in-progress" : "pending"}
             icon={workshopsReady ? <Icons.Check /> : <Icons.Layout />}
-            title="Selección de Talleres"
-            description={workshopsCount > 0 ? `${workshopsCount} talleres en tu agenda` : "Elige los talleres de tu interés"}
+            title="Selección de Conferencias"
+            description={workshopsCount > 0 ? `${workshopsCount} conferencias en tu agenda` : "Elige las conferencias de tu interés"}
             badgeLabel={workshopsReady ? "Completado" : "Pendiente"}
             badgeVariant={workshopsReady ? "success" : "danger"}
             onClick={() => navigate('/dashboard/talleres')}

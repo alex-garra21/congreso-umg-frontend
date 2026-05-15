@@ -101,11 +101,11 @@ export default function DiplomaModule() {
         )}
 
         <Alert variant="warning" title="¿Cuándo recibirás tu diploma?" icon={<Icons.Award size={20} />}>
-          <p>El diploma se genera y envía automáticamente por cada taller en el que cumplas <strong>los tres requisitos</strong>:</p>
+          <p>El diploma se genera y envía automáticamente por cada conferencia en la que cumplas <strong>los tres requisitos</strong>:</p>
           <ul style={{ listStyleType: 'disc', paddingLeft: '1.2rem', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <li>Estar inscrito al Congreso 2026 con pago validado</li>
-            <li>Haber seleccionado el taller específico en tu agenda</li>
-            <li>Haber confirmado tu asistencia escaneando el QR durante el taller</li>
+            <li>Haber seleccionado la conferencia específica en tu agenda</li>
+            <li>Haber confirmado tu asistencia escaneando el QR durante la conferencia</li>
           </ul>
         </Alert>
 
@@ -143,7 +143,7 @@ export default function DiplomaModule() {
             <FormField
               label="Correo para recibir el diploma"
               required
-              description="Se enviará un diploma por cada taller donde se confirme tu asistencia."
+              description="Se enviará un diploma por cada conferencia donde se confirme tu asistencia."
             >
               <input
                 type="email"

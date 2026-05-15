@@ -40,7 +40,7 @@ export default function Sidebar({ onModuleChange }: SidebarProps) {
   // pero aquí lo habilitamos para que el admin pruebe el flujo)
   menuItems.push(
     { id: 'pago', label: 'Pago', Icon: Icons.CreditCard, section: 'INSCRIPCIÓN', badge: isPaid ? 'OK' : 'PEND' },
-    { id: 'talleres', label: 'Mis talleres', Icon: Icons.Calendar, section: 'INSCRIPCIÓN' },
+    { id: 'talleres', label: 'Mis conferencias', Icon: Icons.Calendar, section: 'INSCRIPCIÓN' },
     { id: 'diploma', label: 'Diploma', Icon: Icons.Award, section: 'INSCRIPCIÓN' }
   );
 

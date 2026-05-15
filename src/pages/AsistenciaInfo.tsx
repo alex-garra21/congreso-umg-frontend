@@ -6,7 +6,7 @@ export default function AsistenciaInfo() {
     {
       Icon: Icons.QrCode,
       title: "Acceso Instantáneo",
-      desc: "Olvídate de las filas. Presenta tu código QR personal desde tu móvil y obtén acceso inmediato a todas las conferencias y talleres. El sistema registrará tu entrada en tiempo real."
+      desc: "Olvídate de las filas. Presenta tu código QR personal desde tu móvil y obtén acceso inmediato a todas las conferencias. El sistema registrará tu entrada en tiempo real."
     },
     {
       Icon: Icons.Award,

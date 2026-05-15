@@ -138,10 +138,10 @@ export default function ReportsModule() {
 
       // Si es un taller específico, solo una columna de Taller
       if (isSpecificWorkshop) {
-        cols.push({ header: 'Taller', key: 'workshop', width: 35 });
+        cols.push({ header: 'Conferencia', key: 'workshop', width: 35 });
       } else {
         const maxWorkshops = Math.max(...filteredUsers.map(u => getRealWorkshops(u.talleres).length), 1);
-        for (let i = 1; i <= maxWorkshops; i++) cols.push({ header: `Taller ${i}`, key: `w${i}`, width: 35 });
+        for (let i = 1; i <= maxWorkshops; i++) cols.push({ header: `Conferencia ${i}`, key: `w${i}`, width: 35 });
       }
 
       cols.push({ header: 'Tipo', key: 'type', width: 25 });
@@ -181,7 +181,7 @@ export default function ReportsModule() {
     // Generar Nombre de Archivo Inteligente
     let fileName = isDiplomaList ? 'Lista_Diplomas' : 'Reporte';
     if (isSpecificWorkshop) fileName += `_${workshopTitle.replace(/[^a-z0-9]/gi, '_')}`;
-    else if (selectedWorkshopFilter === 'none') fileName += '_Sin_Talleres';
+    else if (selectedWorkshopFilter === 'none') fileName += '_Sin_Conferencias';
 
     if (paymentFilter !== 'all') fileName += `_${paymentFilter === 'paid' ? 'Pagados' : 'Pendientes'}`;
 
@@ -231,14 +231,14 @@ export default function ReportsModule() {
           </div>
           <div style={{ width: '220px' }}>
             <AdminSelect
-              label="TALLER"
+              label="CONFERENCIA"
               value={selectedWorkshopFilter}
               onChange={(e) => setSelectedWorkshopFilter(e.target.value)}
               options={[
                 ...(!isColaborador ? [
                   { value: 'all_records', label: 'Todos los registros' },
-                  { value: 'none', label: 'Sin talleres' },
-                  { value: '', label: 'Cualquier taller' }
+                  { value: 'none', label: 'Sin conferencias' },
+                  { value: '', label: 'Cualquier conferencia' }
                 ] : []),
                 ...agenda
                   .filter(a => a.tagId !== 1 && a.tag?.toUpperCase().trim() !== 'GENERAL')
@@ -276,7 +276,7 @@ export default function ReportsModule() {
           isLoading={isLoadingUsers}
           headers={[
             "Participante",
-            "Talleres Inscritos",
+            "Conferencias Inscritas",
             "Perfil",
             ...(isSpecificWorkshop ? ["Asistencia"] : [])
           ]}

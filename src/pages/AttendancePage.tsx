@@ -85,7 +85,7 @@ export default function AttendancePage() {
     setError('');
 
     if (!workshop) {
-      setError('Taller no encontrado.');
+      setError('Conferencia no encontrada.');
       return;
     }
 
@@ -112,7 +112,7 @@ export default function AttendancePage() {
 
     const isEnrolled = user.talleres?.some(t => t.id === workshop.id);
     if (!isEnrolled) {
-      setError('No apareces inscrito en este taller. Primero debes agregarlo a tu agenda en la sección "Mis Talleres" de tu perfil.');
+      setError('No apareces inscrito en esta conferencia. Primero debes agregarla a tu agenda en la sección "Mis Conferencias" de tu perfil.');
       return;
     }
 
@@ -123,7 +123,7 @@ export default function AttendancePage() {
     if (workshop.date && workshop.date !== todayStr) {
       const workshopDateObj = new Date(`${workshop.date}T12:00:00`);
       const formattedWorkshopDate = workshopDateObj.toLocaleDateString('es-GT', { day: 'numeric', month: 'long', year: 'numeric' });
-      setError(`Este taller está programado para el día ${formattedWorkshopDate}. Solo puedes confirmar asistencia el mismo día del evento.`);
+      setError(`Esta conferencia está programada para el día ${formattedWorkshopDate}. Solo puedes confirmar asistencia el mismo día del evento.`);
       return;
     }
 
@@ -134,7 +134,7 @@ export default function AttendancePage() {
     endTime.setMinutes(endTime.getMinutes() + graceMinutes);
 
     if (currentTime < startTime || currentTime > endTime) {
-      setError(`La confirmación de asistencia está disponible desde el inicio del taller (${workshop.time}) hasta ${graceMinutes} minutos después de su finalización (${workshop.endTime}).`);
+      setError(`La confirmación de asistencia está disponible desde el inicio de la conferencia (${workshop.time}) hasta ${graceMinutes} minutos después de su finalización (${workshop.endTime}).`);
       return;
     }
 
@@ -190,7 +190,7 @@ export default function AttendancePage() {
   if (isLoading) {
     return (
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc' }}>
-        <p style={{ color: 'var(--text-secondary)' }}>Cargando información del taller...</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Cargando información de la conferencia...</p>
       </div>
     );
   }
@@ -199,8 +199,8 @@ export default function AttendancePage() {
     return (
     <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc' }}>
         <div style={{ textAlign: 'center', padding: '2rem', background: 'white', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-          <h2 style={{ color: '#1a365d', marginBottom: '1rem', fontFamily: 'Source Sans 3' }}>Taller no encontrado</h2>
-          <p style={{ color: '#4a5568', marginBottom: '2rem' }}>El código del taller proporcionado no es válido o ya no existe.</p>
+          <h2 style={{ color: '#1a365d', marginBottom: '1rem', fontFamily: 'Source Sans 3' }}>Conferencia no encontrada</h2>
+          <p style={{ color: '#4a5568', marginBottom: '2rem' }}>El código de la conferencia proporcionado no es válido o ya no existe.</p>
           <Link to="/" style={{ color: '#3182ce', textDecoration: 'none', fontWeight: 600 }}>Volver al inicio</Link>
         </div>
       </div>
@@ -234,7 +234,7 @@ export default function AttendancePage() {
             textTransform: 'uppercase', 
             marginBottom: '8px' 
           }}>
-            {isOutOfTime ? 'Taller fuera de horario' : 'Taller en curso'}
+            {isOutOfTime ? 'Conferencia fuera de horario' : 'Conferencia en curso'}
           </p>
           <h1 style={{ fontSize: '28px', fontFamily: 'Source Sans 3', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             {workshop.title}
@@ -294,7 +294,7 @@ export default function AttendancePage() {
                     ¡Hola, {authUser.nombres.split(' ')[0]}!
                   </h2>
                   <p style={{ fontSize: '14px', color: '#718096', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                    Hemos detectado tu sesión activa. ¿Deseas confirmar tu asistencia a este taller?
+                    Hemos detectado tu sesión activa. ¿Deseas confirmar tu asistencia a esta conferencia?
                   </p>
 
                   {error && (
@@ -347,7 +347,7 @@ export default function AttendancePage() {
                     Identifícate para confirmar
                   </h2>
                   <p style={{ fontSize: '14px', color: '#718096', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                    Ingresa tus datos una sola vez. Este dispositivo te recordará para futuros talleres.
+                    Ingresa tus datos una sola vez. Este dispositivo te recordará para futuras conferencias.
                   </p>
 
                   {error && (
@@ -452,7 +452,7 @@ export default function AttendancePage() {
                   ¡Ya confirmaste tu<br />asistencia!
                 </h2>
                 <p style={{ color: '#4a5568', fontSize: '14px', marginBottom: '2rem', lineHeight: 1.5 }}>
-                  Tu presencia en este taller ya fue registrada correctamente.
+                  Tu presencia en esta conferencia ya fue registrada correctamente.
                 </p>
 
                 <div style={{ width: '100%', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
@@ -461,7 +461,7 @@ export default function AttendancePage() {
                     <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right' }}>{confirmedUser?.nombres} {confirmedUser?.apellidos?.split(' ')[0]}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px' }}>
-                    <span style={{ color: '#718096' }}>Taller</span>
+                    <span style={{ color: '#718096' }}>Conferencia</span>
                     <span style={{ fontWeight: 600, color: '#1a202c', textAlign: 'right', maxWidth: '150px' }}>{workshop.title}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px' }}>
@@ -492,9 +492,9 @@ export default function AttendancePage() {
               const today = new Date();
               const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
               if (workshop.date && workshop.date !== todayStr) {
-                return 'Este taller no está programado para hoy.';
+                return 'Esta conferencia no está programada para hoy.';
               }
-              return 'La confirmación de asistencia se habilitará automáticamente cuando inicie el taller.';
+              return 'La confirmación de asistencia se habilitará automáticamente cuando inicie la conferencia.';
             })()}
           </p>
         </div>

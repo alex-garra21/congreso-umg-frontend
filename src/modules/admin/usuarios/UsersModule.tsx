@@ -74,13 +74,13 @@ export default function UsersModule() {
 
   const handleResetWorkshops = async (user: UserData) => {
     if (!user.id) return;
-    const confirmed = await showConfirm('Resetear Talleres', `¿Limpiar la selección de talleres de ${user.nombres} y permitirle elegir de nuevo?`, 'Sí, resetear', true);
+    const confirmed = await showConfirm('Resetear Conferencias', `¿Limpiar la selección de conferencias de ${user.nombres} y permitirle elegir de nuevo?`, 'Sí, resetear', true);
     if (confirmed) {
       const result = await resetWorkshopsMutation.mutateAsync(user.id!);
       if (result.success) {
-        showToast('Talleres reseteados correctamente', 'success');
+        showToast('Conferencias reseteadas correctamente', 'success');
       } else {
-        showToast('Error al resetear talleres', 'error');
+        showToast('Error al resetear conferencias', 'error');
       }
     }
   };
@@ -231,7 +231,7 @@ export default function UsersModule() {
                     <button 
                       onClick={() => handleResetWorkshops(u)} 
                       className="action-btn" 
-                      title="Resetear Talleres" 
+                      title="Resetear Conferencias" 
                       style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
                     >
                       <Icons.Calendar size={18} />

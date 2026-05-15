@@ -110,7 +110,7 @@ export default function AgendaPage() {
             <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)', fontFamily: 'Source Sans 3, sans-serif' }}>Programa próximamente</h3>
             <p style={{ fontSize: '0.95rem' }}>
               La jornada de la {periodoSeleccionado.toLowerCase()} aún no ha sido publicada.<br />
-              Vuelve pronto para ver las charlas y talleres confirmados.
+              Vuelve pronto para ver las conferencias confirmadas.
             </p>
           </div>
         ) : (
