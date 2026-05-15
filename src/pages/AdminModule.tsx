@@ -18,8 +18,15 @@ export default function AdminModule({ defaultTab }: AdminModuleProps) {
   const isAdmin = currentUser?.rol === 'admin';
   const isColaborador = currentUser?.rol === 'colaborador';
 
+  // Bloqueo total para participantes
   if (!isAdmin && !isColaborador) {
     return <Navigate to="/dashboard/inicio" replace />;
+  }
+
+  // Bloqueo de pestañas específicas para colaboradores (solo pueden ver tokens)
+  const restrictedTabs = ['users', 'reports', 'attendance', 'agenda', 'agenda-config'];
+  if (isColaborador && restrictedTabs.includes(defaultTab)) {
+    return <Navigate to="/dashboard/admin-tokens" replace />;
   }
 
   return (

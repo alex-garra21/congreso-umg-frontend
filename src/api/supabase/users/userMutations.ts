@@ -45,26 +45,40 @@ export async function registerUserMutation(user: UserData): Promise<{ success: b
 export async function updateUserDataMutation(updatedData: UserData): Promise<{ success: boolean; error?: any }> {
   if (!updatedData.id) return { success: false };
 
+  // SEGURIDAD: Obtener el usuario que hace la petición para comparar IDs
+  const { data: { user: sessionUser } } = await supabase.auth.getUser();
+  const isSelfUpdate = sessionUser?.id === updatedData.id;
+
+  // Construir el payload de forma segura (Campos de perfil general)
+  const updatePayload: any = {
+    nombres: updatedData.nombres,
+    apellidos: updatedData.apellidos,
+    dpi: updatedData.dpi,
+    sexo: updatedData.sexo,
+    nombre_diploma: updatedData.nombreDiploma,
+    tipo_participante: updatedData.tipoParticipante,
+    carnet: updatedData.carnet,
+    ciclo: updatedData.ciclo,
+    telefono: updatedData.telefono,
+    correo_diploma: updatedData.correoDiploma,
+    diploma_editado: updatedData.diplomaEditado,
+    avatar_url: updatedData.avatarUrl,
+  };
+
+  // CAMPOS CRÍTICOS: Solo se envían si NO es una auto-actualización.
+  // Un administrador no puede promoverse o degradarse a sí mismo por seguridad,
+  // y un participante no puede enviar estos campos.
+  if (!isSelfUpdate) {
+    if (updatedData.rol) updatePayload.rol = updatedData.rol;
+    if (updatedData.pagoValidado !== undefined) updatePayload.pago_validado = updatedData.pagoValidado;
+    if (updatedData.pagoEnviado !== undefined) updatePayload.pago_enviado = updatedData.pagoEnviado;
+    if (updatedData.desactivado !== undefined) updatePayload.desactivado = updatedData.desactivado;
+    if (updatedData.limiteTokens !== undefined) updatePayload.limite_tokens = updatedData.limiteTokens;
+  }
+
   const { error } = await supabase
     .from('usuarios')
-    .update({
-      nombres: updatedData.nombres,
-      apellidos: updatedData.apellidos,
-      pago_validado: updatedData.pagoValidado,
-      pago_enviado: updatedData.pagoEnviado,
-      dpi: updatedData.dpi,
-      rol: updatedData.rol,
-      desactivado: updatedData.desactivado,
-      nombre_diploma: updatedData.nombreDiploma,
-      tipo_participante: updatedData.tipoParticipante,
-      carnet: updatedData.carnet,
-      ciclo: updatedData.ciclo,
-      telefono: updatedData.telefono,
-      correo_diploma: updatedData.correoDiploma,
-      diploma_editado: updatedData.diplomaEditado,
-      avatar_url: updatedData.avatarUrl,
-      limite_tokens: updatedData.limiteTokens
-    })
+    .update(updatePayload)
     .eq('id', updatedData.id);
 
   return { success: !error, error };
