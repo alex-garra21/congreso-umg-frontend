@@ -119,9 +119,11 @@ export default function TokensModule() {
     
     // Filtro por creador (Staff, Todos o Usuario Específico por ID)
     const matchesCreator = creatorFilter === 'all' || 
-                          (creatorFilter === 'staff' 
-                            ? (t.createdByRole === 'admin' || t.createdByRole === 'colaborador') 
-                            : String(t.createdBy) === String(creatorFilter));
+                          (creatorFilter === 'staff' ? (t.createdByRole === 'admin' || t.createdByRole === 'colaborador') :
+                           creatorFilter === 'admin' ? t.createdByRole === 'admin' :
+                           creatorFilter === 'colaborador' ? t.createdByRole === 'colaborador' :
+                           creatorFilter === 'participante' ? t.createdByRole === 'participante' :
+                           String(t.createdBy) === String(creatorFilter));
 
     // Si es colaborador, solo ve los tokens que él mismo creó
     const matchesOwnership = isOnlyAdmin || String(t.createdBy) === String(currentAdmin?.id);
@@ -353,7 +355,10 @@ export default function TokensModule() {
                 onChange={e => setCreatorFilter(e.target.value)} 
                 options={[
                   { value: 'all', label: 'Todos' },
-                  { value: 'staff', label: 'Todo el Personal' },
+                  { value: 'staff', label: 'Todo el Staff' },
+                  { value: 'admin', label: 'Solo Administradores' },
+                  { value: 'colaborador', label: 'Solo Colaboradores' },
+                  { value: 'participante', label: 'Solo Participantes' },
                   ...allUsers
                     .filter(u => u.rol === 'admin' || u.rol === 'colaborador')
                     .map(u => ({ value: u.id!, label: `${u.nombres} ${u.apellidos}` }))
