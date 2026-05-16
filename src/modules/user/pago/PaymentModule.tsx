@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { validateTokenMutation } from '../../../api/supabase/users/userMutations';
 import ModuleTitle from '../../../components/ModuleTitle';
@@ -11,8 +13,31 @@ export default function PaymentModule() {
   const [codigo, setCodigo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, refetchProfile } = useAuth();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const isPaid = user?.pagoValidado;
+
+  // Verificación automática al cargar (Autocuración)
+  useEffect(() => {
+    const checkExistingToken = async () => {
+      if (isPaid) return;
+      
+      try {
+        // Enviamos un string vacío para activar la lógica de autocuración del RPC
+        const result = await validateTokenMutation('');
+        if (result.success) {
+          await queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+          await refetchProfile();
+          showToast('Sincronización de pago exitosa.', 'success');
+        }
+      } catch (e) {
+        console.error("Error en autocuración de pago:", e);
+      }
+    };
+
+    checkExistingToken();
+  }, [isPaid, queryClient, refetchProfile]);
 
   const handleSendPayment = async () => {
     if (!codigo.trim()) {
@@ -25,19 +50,29 @@ export default function PaymentModule() {
       const result = await validateTokenMutation(codigo.trim());
 
       if (result.success) {
-        refetchProfile();
+        // Invalida el caché global para forzar actualización en toda la app (incluida la sidebar)
+        await queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+        await refetchProfile();
+        
         showToast('¡Código validado exitosamente! Tu inscripción ha sido activada.', 'success');
+        
+        // Redirección automática tras éxito
+        setTimeout(() => {
+          navigate('/dashboard/talleres');
+        }, 1500);
       } else {
-        if (result.errorType === 'too_many_attempts') {
-          showToast('Demasiados intentos fallidos. Por favor, intenta de nuevo más tarde o contacta a soporte.', 'error');
-        } else if (result.errorType === 'not_found') {
-          showToast('El código ingresado no existe. Por favor, verifica que lo hayas escrito correctamente.', 'error');
-        } else if (result.errorType === 'already_used') {
-          showToast('Este código ya ha sido validado por otro usuario.', 'warning');
-        } else {
-          showToast('Hubo un problema al validar tu código. Por favor, intenta de nuevo.', 'error');
-        }
+        const errorMessages = {
+          'not_found': 'El código ingresado no existe. Por favor, verifica que lo hayas escrito correctamente.',
+          'already_used': 'Este código ya ha sido utilizado por otro participante.',
+          'already_paid': 'Tu cuenta ya cuenta con un pago validado.',
+          'too_many_attempts': 'Demasiados intentos fallidos. Por seguridad, tu cuenta ha sido bloqueada temporalmente (10 horas).',
+          'error': 'Hubo un problema al validar tu código. Por favor, intenta de nuevo.'
+        };
+        
+        showToast(errorMessages[result.errorType || 'error'], 'error');
       }
+    } catch (error) {
+       showToast('Error de conexión con el servidor.', 'error');
     } finally {
       setIsSubmitting(false);
     }
