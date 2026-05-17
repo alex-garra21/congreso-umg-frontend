@@ -125,8 +125,12 @@ export default function ProfileModule() {
     };
 
     try {
-      await updateUserDataMutation.mutateAsync(updatedUser);
-      showToast('Información actualizada correctamente', 'success');
+      const result = await updateUserDataMutation.mutateAsync(updatedUser);
+      if (result && result.success === false) {
+        showToast(result.error?.message || 'Error al actualizar datos', 'error');
+      } else {
+        showToast('Información actualizada correctamente', 'success');
+      }
     } catch (error: any) {
       showToast(error?.message || 'Error al actualizar datos', 'error');
     }
