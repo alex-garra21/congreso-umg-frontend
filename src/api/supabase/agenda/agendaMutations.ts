@@ -92,3 +92,8 @@ export async function savePonentesMutation(ponentes: Speaker[]): Promise<void> {
     }
   }
 }
+
+export async function detectScheduleConflictsMutation(): Promise<void> {
+  const { error } = await supabase.rpc('detectar_choques_agenda');
+  if (error) throw error;
+}

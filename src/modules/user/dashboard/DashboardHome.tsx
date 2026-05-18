@@ -81,6 +81,43 @@ export default function DashboardHome() {
     <div className="dashboard-home">
       <ModuleTitle title="Inicio" />
 
+      {user?.alertaChoqueHorario && (
+        <div style={{
+          marginBottom: '2rem',
+          borderRadius: '16px',
+          padding: '1.5rem 2rem',
+          background: 'var(--bg-card)',
+          border: '2px solid #ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1.5rem',
+          boxShadow: 'var(--shadow-md)',
+          position: 'relative',
+          overflow: 'hidden',
+          cursor: 'pointer'
+        }} onClick={() => navigate('/dashboard/talleres')}>
+          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px', background: '#ef4444' }} />
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.1)', 
+            width: '50px', 
+            height: '50px', 
+            borderRadius: '16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            color: '#ef4444'
+          }}>
+            <Icons.AlertTriangle size={28} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <strong style={{ display: 'block', fontSize: '17px', marginBottom: '4px', color: '#ef4444' }}>Atención: Conflicto de horario detectado en tu agenda</strong>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5', margin: 0 }}>
+              Debido a un cambio reciente en la agenda, una o más de tus conferencias tienen un conflicto. Haz clic aquí para corregirlo.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 1. SECCIÓN PERSONAL (Para todos) */}
       <div className="status-grid-container">
         <StatusCard
@@ -91,8 +128,8 @@ export default function DashboardHome() {
         />
 
         <StatusCard
-          label="CONFERENCIAS" value={workshopsCount} accentColor={workshopsReady ? 'var(--status-success)' : 'var(--status-error)'}
-          sub={workshopsCount === 1 ? 'Conferencia seleccionada' : 'Conferencias en tu agenda'}
+          label="CONFERENCIAS" value={workshopsCount} accentColor={user?.alertaChoqueHorario ? 'var(--status-error)' : workshopsReady ? 'var(--status-success)' : 'var(--status-error)'}
+          sub={user?.alertaChoqueHorario ? 'Conflicto de horario detectado' : workshopsCount === 1 ? 'Conferencia seleccionada' : 'Conferencias en tu agenda'}
           footerLink="Gestionar conferencias →" onClick={() => navigate('/dashboard/talleres')}
         />
 
@@ -171,12 +208,12 @@ export default function DashboardHome() {
           />
 
           <EnrollmentStep
-            status={workshopsReady ? "completed" : workshopsCount > 0 ? "in-progress" : "pending"}
-            icon={workshopsReady ? <Icons.Check /> : <Icons.Layout />}
-            title="Selección de Conferencias"
-            description={workshopsCount > 0 ? `${workshopsCount} conferencias en tu agenda` : "Elige las conferencias de tu interés"}
-            badgeLabel={workshopsReady ? "Completado" : "Pendiente"}
-            badgeVariant={workshopsReady ? "success" : "danger"}
+            status={user?.alertaChoqueHorario ? "pending" : workshopsReady ? "completed" : workshopsCount > 0 ? "in-progress" : "pending"}
+            icon={user?.alertaChoqueHorario ? <Icons.AlertTriangle /> : workshopsReady ? <Icons.Check /> : <Icons.Layout />}
+            title={user?.alertaChoqueHorario ? "Conflicto de Conferencias" : "Selección de Conferencias"}
+            description={user?.alertaChoqueHorario ? "Se requiere corregir conflicto de horario" : workshopsCount > 0 ? `${workshopsCount} conferencias en tu agenda` : "Elige las conferencias de tu interés"}
+            badgeLabel={user?.alertaChoqueHorario ? "Atención" : workshopsReady ? "Completado" : "Pendiente"}
+            badgeVariant={user?.alertaChoqueHorario ? "danger" : workshopsReady ? "success" : "danger"}
             onClick={() => navigate('/dashboard/talleres')}
           />
 

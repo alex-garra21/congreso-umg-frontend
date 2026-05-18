@@ -77,7 +77,8 @@ export async function getAllUsersQuery(): Promise<UserData[]> {
       talleres: inscripcionesByUser[userData.id] || [],
       asistencias: asistenciasByUser[userData.id] || [],
       limiteTokens: userData.limite_tokens || 0,
-      tokensCreados: (userData as any).tokens_creados?.[0]?.count || 0
+      tokensCreados: (userData as any).tokens_creados?.[0]?.count || 0,
+      alertaChoqueHorario: userData.alerta_choque_horario
     };
   });
 }
@@ -161,6 +162,7 @@ export async function getUserProfileQuery(userId: string): Promise<UserData | nu
     diplomaEditado: userData.diploma_editado,
     avatarUrl: userData.avatar_url,
     limiteTokens: userData.limite_tokens || 0,
-    tokensCreados: (userData as any).tokens_creados?.[0]?.count || 0
+    tokensCreados: (userData as any).tokens_creados?.[0]?.count || 0,
+    alertaChoqueHorario: userData.alerta_choque_horario
   };
 }

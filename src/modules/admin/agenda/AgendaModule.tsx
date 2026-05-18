@@ -16,6 +16,8 @@ import ScheduleTab from './tabs/ScheduleTab';
 import SpeakersTab from './tabs/SpeakersTab';
 import CategoriesTab from './tabs/CategoriesTab';
 import RoomsTab from './tabs/RoomsTab';
+import { showConfirm, showToast } from '../../../utils/swal';
+import { useDetectScheduleConflicts } from '../../../api/hooks/useAgenda';
 
 export default function AgendaModule() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -23,6 +25,26 @@ export default function AgendaModule() {
   const [agendaTab, setAgendaTab] = useState<'schedule' | 'speakers' | 'categories' | 'rooms'>('schedule');
   const { timeInterval, setTimeInterval } = useTimeConfig();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  
+  const detectConflictsMutation = useDetectScheduleConflicts();
+
+  const handleDetectConflicts = async () => {
+    const confirmed = await showConfirm(
+      '¿Escanear Conflictos de Horario?',
+      'Se revisarán las inscripciones de todos los usuarios. Si sus conferencias seleccionadas tienen un conflicto de horario debido a cambios recientes, se les notificará y se les exigirá re-seleccionar. Esta acción no se puede deshacer.',
+      'Sí, Escanear y Notificar',
+      true
+    );
+    
+    if (confirmed) {
+      try {
+        await detectConflictsMutation.mutateAsync();
+        showToast('Escaneo completado. Se ha notificado a los usuarios afectados.', 'success');
+      } catch (error: any) {
+        showToast(`Error al escanear: ${error.message}`, 'error');
+      }
+    }
+  };
 
   const isOnlyAdmin = user?.rol === 'admin';
 
@@ -68,7 +90,41 @@ export default function AgendaModule() {
           />
         </div>
         
-        <div style={{ marginTop: '0.5rem' }}>
+        <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+          <button 
+            onClick={handleDetectConflicts}
+            disabled={detectConflictsMutation.isPending}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.6rem 1rem',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: '10px',
+              color: '#ef4444',
+              cursor: detectConflictsMutation.isPending ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+              opacity: detectConflictsMutation.isPending ? 0.7 : 1
+            }}
+            onMouseOver={(e) => {
+              if (!detectConflictsMutation.isPending) {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!detectConflictsMutation.isPending) {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+              }
+            }}
+          >
+            {detectConflictsMutation.isPending ? <Icons.Clock size={18} /> : <Icons.AlertTriangle size={18} />}
+            Escanear Conflictos
+          </button>
           <button 
             onClick={() => setIsConfigOpen(true)}
             style={{

@@ -102,3 +102,13 @@ export function useSaveAgenda() {
     },
   });
 }
+
+export function useDetectScheduleConflicts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => import('../supabase/agenda/agendaMutations').then(m => m.detectScheduleConflictsMutation()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}

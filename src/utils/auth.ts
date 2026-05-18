@@ -26,6 +26,7 @@ export interface UserData {
   codigoDocente?: string;
   limiteTokens?: number;
   tokensCreados?: number;
+  alertaChoqueHorario?: boolean;
 }
 
 export const isStaff = (rol?: string) => rol === 'admin' || rol === 'colaborador';
@@ -110,7 +111,8 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
       correo: profile.correo,
       rol: profile.rol,
       pagoValidado: profile.pago_validado,
-      avatarUrl: profile.avatar_url
+      avatarUrl: profile.avatar_url,
+      alertaChoqueHorario: profile.alerta_choque_horario
     } as UserData : undefined
   };
 }

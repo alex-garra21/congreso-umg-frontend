@@ -53,7 +53,7 @@ export default function WorkshopsModule() {
 
       const confirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`);
 
-      if (confirmed === 'true') {
+      if (confirmed === 'true' && !user.alertaChoqueHorario) {
         setIsConfirmed(true);
         if (user.talleres) {
           const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
@@ -61,22 +61,28 @@ export default function WorkshopsModule() {
         }
       } else {
         setIsConfirmed(false);
-        const saved = localStorage.getItem(`workshops_${user.correo}`);
-        if (saved) {
-          const parsed = JSON.parse(saved) as string[];
-          // Filtrar por si acaso se coló alguna actividad GENERAL en el localStorage
-          const electivesOnly = parsed.filter(id => {
-            const w = agenda.find(a => a.id === id);
-            return w?.tag?.toUpperCase().trim() !== 'GENERAL';
-          });
-          setEnrolledIds(electivesOnly);
-        } else if (user.talleres) {
+        if (user.alertaChoqueHorario && user.talleres) {
+          // Si hay alerta, ignoramos el localStorage y mostramos el estado REAL de la base de datos
+          // para que el usuario vea exactamente cuáles conferencias están chocando.
           const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
           setEnrolledIds(onlyWorkshops);
+        } else {
+          const saved = localStorage.getItem(`workshops_${user.correo}`);
+          if (saved) {
+            const parsed = JSON.parse(saved) as string[];
+            const electivesOnly = parsed.filter(id => {
+              const w = agenda.find(a => a.id === id);
+              return w?.tag?.toUpperCase().trim() !== 'GENERAL';
+            });
+            setEnrolledIds(electivesOnly);
+          } else if (user.talleres) {
+            const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
+            setEnrolledIds(onlyWorkshops);
+          }
         }
       }
     }
-  }, [user?.correo, user?.talleres, user?.pagoValidado, agenda]);
+  }, [user?.correo, user?.talleres, user?.pagoValidado, user?.alertaChoqueHorario, agenda]);
 
   useEffect(() => {
     if (user?.correo) localStorage.setItem(`workshops_${user.correo}`, JSON.stringify(enrolledIds));
@@ -141,11 +147,28 @@ export default function WorkshopsModule() {
       setEnrolledIds(prev => prev.filter(id => id !== workshop.id));
     } else {
       if (isTimeCollision(workshop)) {
-        showToast('Conflicto de horario: Esta conferencia choca con tu selección actual.', 'warning');
+        showToast('Conflicto de horario: Esta conferencia tiene un conflicto con tu selección actual.', 'warning');
         return;
       }
       setEnrolledIds(prev => [...prev, workshop.id]);
     }
+  };
+
+  const hasCurrentCollision = () => {
+    for (let i = 0; i < enrolledIds.length; i++) {
+      const w1 = agenda.find(a => a.id === enrolledIds[i]);
+      if (!w1 || w1.tag?.toUpperCase().trim() === 'GENERAL') continue;
+      const start1 = timeToMinutes(w1.time), end1 = timeToMinutes(w1.endTime);
+      
+      for (let j = i + 1; j < enrolledIds.length; j++) {
+        const w2 = agenda.find(a => a.id === enrolledIds[j]);
+        if (!w2 || w2.tag?.toUpperCase().trim() === 'GENERAL') continue;
+        const start2 = timeToMinutes(w2.time), end2 = timeToMinutes(w2.endTime);
+        
+        if (start1 < end2 && start2 < end1) return true;
+      }
+    }
+    return false;
   };
 
   const handleCardClick = (workshop: AgendaItem) => {
@@ -175,7 +198,7 @@ export default function WorkshopsModule() {
           ...generalActivities
         ];
 
-        await updateUserDataMutation({ ...user, talleres: newTalleresObjects });
+        await updateUserDataMutation({ ...user, talleres: newTalleresObjects, alertaChoqueHorario: false });
         localStorage.setItem(`workshops_confirmed_${user.correo}`, 'true');
         setIsConfirmed(true);
         setShowSuccessModal(true);
@@ -276,13 +299,62 @@ export default function WorkshopsModule() {
           </div>
         )}
 
-        <CalendarGrid
-          rooms={rooms} HOURS={HOURS} minHour={minHour}
-          roomColors={roomColors} agenda={agenda}
-          enrolledIds={enrolledIds} isConfirmed={isConfirmed}
-          isTimeCollision={isTimeCollision} toggleEnroll={handleCardClick}
-          getWorkshopStyles={getWorkshopStyles}
-        />
+        {user?.alertaChoqueHorario && (
+          <div onClick={() => {
+            setIsConfirmed(false);
+            document.getElementById('agenda-grid')?.scrollIntoView({ behavior: 'smooth' });
+          }} style={{
+            marginBottom: '2rem',
+            borderRadius: '24px',
+            padding: '1.5rem 2rem',
+            background: 'var(--bg-card)',
+            border: '2px solid #ef4444',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.5rem',
+            boxShadow: 'var(--shadow-md)',
+            position: 'relative',
+            overflow: 'hidden',
+            cursor: 'pointer'
+          }}>
+            <div style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: '6px',
+              background: '#ef4444'
+            }} />
+            <div style={{ 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              width: '50px', 
+              height: '50px', 
+              borderRadius: '16px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: '#ef4444'
+            }}>
+              <Icons.AlertTriangle size={28} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong style={{ display: 'block', fontSize: '17px', marginBottom: '4px', color: '#ef4444' }}>Atención: Cambio en la Agenda</strong>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5', margin: 0 }}>
+                Debido a un cambio reciente en el horario por parte de la administración, tu selección de conferencias tiene un conflicto. <strong>Se ha habilitado tu selección nuevamente y no cuenta como una modificación.</strong> Por favor, corrige las conferencias que tienen un conflicto y vuelve a guardar.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div id="agenda-grid">
+          <CalendarGrid
+            rooms={rooms} HOURS={HOURS} minHour={minHour}
+            roomColors={roomColors} agenda={agenda}
+            enrolledIds={enrolledIds} isConfirmed={isConfirmed}
+            isTimeCollision={isTimeCollision} toggleEnroll={handleCardClick}
+            getWorkshopStyles={getWorkshopStyles}
+          />
+        </div>
 
         {/* Listado de Talleres Seleccionados */}
         <div className="selection-summary-container" style={{ marginTop: '3rem' }}>
@@ -386,7 +458,7 @@ export default function WorkshopsModule() {
                 <AdminButton
                   size="lg"
                   onClick={handleConfirm}
-                  disabled={enrolledIds.length === 0 || saveStatus === 'saving'}
+                  disabled={enrolledIds.length === 0 || saveStatus === 'saving' || hasCurrentCollision()}
                   icon={saveStatus === 'saving' ? <Icons.Clock size={20} /> : <Icons.Check size={20} />}
                   className="admin-btn-hover"
                   style={{
@@ -409,7 +481,7 @@ export default function WorkshopsModule() {
                   }
                 </AdminButton>
 
-                {wasAlreadyConfirmed && (
+                {wasAlreadyConfirmed && !user?.alertaChoqueHorario && (
                   <button
                     onClick={handleCancelEdit}
                     className="btn-ghost"
@@ -439,11 +511,13 @@ export default function WorkshopsModule() {
             );
           })()}
 
-          <BackButton 
-            to="/dashboard/diploma" 
-            label="Validar Datos para Diploma"
-            icon={<Icons.Award size={18} color="#ffffff" />}
-          />
+          {isConfirmed && (
+            <BackButton 
+              to="/dashboard/diploma" 
+              label="Validar Datos para Diploma"
+              icon={<Icons.Award size={18} color="#ffffff" />}
+            />
+          )}
         </div>
       </div>
 
