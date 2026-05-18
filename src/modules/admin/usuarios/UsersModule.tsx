@@ -56,10 +56,11 @@ export default function UsersModule() {
 
   const handleToggleActivation = async (user: UserData, activate: boolean) => {
     const title = activate ? 'Activar' : 'Desactivar';
-    const confirmed = await showConfirm(`${title} Colaborador`, `¿Estás seguro de ${title.toLowerCase()} a ${user.nombres}?`, title, !activate);
+    const roleName = user.rol === 'admin' ? 'Administrador' : user.rol === 'colaborador' ? 'Colaborador' : 'Participante';
+    const confirmed = await showConfirm(`${title} ${roleName}`, `¿Estás seguro de ${title.toLowerCase()} a ${user.nombres}?`, title, !activate);
     if (confirmed) {
       await updateUserDataMutation.mutateAsync({ ...user, desactivado: !activate });
-      showToast(`Colaborador ${activate ? 'activado' : 'desactivado'}`, 'success');
+      showToast(`${roleName} ${activate ? 'activado' : 'desactivado'}`, 'success');
     }
   };
 
