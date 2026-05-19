@@ -111,6 +111,16 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
       return;
     }
 
+    if (requiresAcademicInfo(formData.tipoParticipante) && !formData.carnet.trim()) {
+      showToast(`Por favor ingrese su ${getParticipantIdLabel(formData.tipoParticipante).toLowerCase()}.`, 'warning');
+      return;
+    }
+
+    if (requiresCiclo(formData.tipoParticipante) && !formData.ciclo) {
+      showToast('Por favor seleccione su ciclo académico.', 'warning');
+      return;
+    }
+
     // Validación de dominio de correo
     const emailParts = formData.correo.toLowerCase().split('@');
     if (emailParts.length !== 2) {

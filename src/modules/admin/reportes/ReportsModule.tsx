@@ -30,26 +30,45 @@ export default function ReportsModule() {
   }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedWorkshopFilter, setSelectedWorkshopFilter] = useState('all_records');
+  const [selectedWorkshopIds, setSelectedWorkshopIds] = useState<string[]>([]);
+  const [workshopsInitialized, setWorkshopsInitialized] = useState(false);
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
   const [attendanceFilter, setAttendanceFilter] = useState<'all' | 'attended' | 'not_attended'>('all');
   const [participantTypeFilter, setParticipantTypeFilter] = useState<string[]>(allowedParticipantTypes.map(t => t.id));
   const [page, setPage] = useState(1);
 
+  const workshopOptions = useMemo(() => {
+    const realWorkshops = agenda
+      .filter(a => a.tagId !== 1 && a.tag?.toUpperCase().trim() !== 'GENERAL')
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .map(w => ({ id: w.id, label: w.title }));
+    
+    if (!isColaborador) {
+      return [
+        { id: 'ALL_RECORDS', label: 'Todos los registros' },
+        { id: 'NONE', label: 'Sin conferencias' }, 
+        ...realWorkshops
+      ];
+    }
+    return realWorkshops;
+  }, [agenda, isColaborador]);
+
+  // Inicializar selección de talleres
+  useEffect(() => {
+    if (!workshopsInitialized && agenda.length > 0) {
+      if (isColaborador && workshopOptions.length > 0) {
+        setSelectedWorkshopIds([workshopOptions[0].id]);
+      } else {
+        setSelectedWorkshopIds(['ALL_RECORDS']);
+      }
+      setWorkshopsInitialized(true);
+    }
+  }, [agenda, isColaborador, workshopsInitialized, workshopOptions]);
+
   // Sincronizar filtros si cambia el rol (ej: al cargar la sesión)
   useEffect(() => {
     setParticipantTypeFilter(allowedParticipantTypes.map(t => t.id));
   }, [allowedParticipantTypes]);
-
-  // Forzar selección de un taller para colaboradores
-  useEffect(() => {
-    if (isColaborador && agenda.length > 0 && (selectedWorkshopFilter === 'all_records' || selectedWorkshopFilter === 'none' || selectedWorkshopFilter === '')) {
-      const realWorkshops = agenda.filter(a => a.tagId !== 1 && a.tag?.toUpperCase().trim() !== 'GENERAL');
-      if (realWorkshops.length > 0) {
-        setSelectedWorkshopFilter(realWorkshops[0].id);
-      }
-    }
-  }, [isColaborador, agenda, selectedWorkshopFilter]);
 
   const getWorkshopTitle = (id: string) => {
     const w = agenda.find(item => item.id === id);
@@ -60,20 +79,29 @@ export default function ReportsModule() {
   const getRealWorkshops = (talleres?: { id: string; category: string }[]) =>
     (talleres || []).filter(t => t.category?.toUpperCase().trim() !== 'GENERAL');
 
-  const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
+  const isSingleWorkshopSelected = selectedWorkshopIds.length === 1 && selectedWorkshopIds[0] !== 'NONE';
+  const singleWorkshopId = isSingleWorkshopSelected ? selectedWorkshopIds[0] : null;
 
   const filteredUsers = users.filter(u => !u.desactivado).filter(u => {
     const matchesSearch = (u.nombres + ' ' + u.apellidos).toLowerCase().includes(searchTerm.toLowerCase()) || u.correo.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Al filtrar por un taller específico, buscamos en TODOS los talleres del usuario (incluyendo los de staff)
+    // Filtrar por los talleres seleccionados
     const realWorkshops = getRealWorkshops(u.talleres);
-    const matchesWorkshop = selectedWorkshopFilter === 'all_records'
-      ? true
-      : selectedWorkshopFilter === ''
-        ? (realWorkshops.length > 0)
-        : selectedWorkshopFilter === 'none'
-          ? (realWorkshops.length === 0)
-          : (realWorkshops.some(tw => tw.id === selectedWorkshopFilter));
+    let matchesWorkshop = false;
+    
+    if (selectedWorkshopIds.includes('ALL_RECORDS') || selectedWorkshopIds.length === 0) {
+      matchesWorkshop = true; // "Todos los registros" o si por error lo dejan vacío
+    } else {
+      if (selectedWorkshopIds.includes('NONE')) {
+        // Si "Sin conferencias" está seleccionado, solo mostramos si no tienen talleres.
+        matchesWorkshop = realWorkshops.length === 0;
+      } else {
+        // El usuario DEBE tener TODOS los talleres seleccionados (Lógica AND)
+        matchesWorkshop = selectedWorkshopIds.length > 0 && selectedWorkshopIds.every(selectedId => 
+          realWorkshops.some(tw => tw.id === selectedId)
+        );
+      }
+    }
 
     const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && u.pagoValidado) || (paymentFilter === 'unpaid' && !u.pagoValidado);
 
@@ -87,8 +115,8 @@ export default function ReportsModule() {
     const matchesAttendance = attendanceFilter === 'all'
       ? true
       : attendanceFilter === 'attended'
-        ? (u.asistencias as any[] || []).some((a: any) => isSpecificWorkshop ? a.workshopId === selectedWorkshopFilter : true)
-        : !(u.asistencias as any[] || []).some((a: any) => isSpecificWorkshop ? a.workshopId === selectedWorkshopFilter : true);
+        ? (u.asistencias as any[] || []).some((a: any) => isSingleWorkshopSelected ? a.workshopId === singleWorkshopId : selectedWorkshopIds.includes(a.workshopId))
+        : !(u.asistencias as any[] || []).some((a: any) => isSingleWorkshopSelected ? a.workshopId === singleWorkshopId : selectedWorkshopIds.includes(a.workshopId));
 
     return matchesSearch && matchesWorkshop && matchesPayment && matchesType && matchesAttendance;
   });
@@ -105,9 +133,8 @@ export default function ReportsModule() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(isDiplomaList ? 'Diplomas' : 'Reporte_General');
 
-    // Si hay un taller específico seleccionado
-    const isSpecificWorkshop = selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none';
-    const workshopTitle = isSpecificWorkshop ? getWorkshopTitle(selectedWorkshopFilter) : '';
+    // Nombre de taller único para exportación
+    const workshopTitle = isSingleWorkshopSelected ? getWorkshopTitle(singleWorkshopId!) : '';
 
     if (isDiplomaList) {
       worksheet.columns = [
@@ -121,7 +148,7 @@ export default function ReportsModule() {
         worksheet.addRow({
           name: u.nombreDiploma || getDisplayName(u),
           email: u.correoDiploma || u.correo,
-          workshops: isSpecificWorkshop ? workshopTitle : (realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-')
+          workshops: isSingleWorkshopSelected ? workshopTitle : (realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-')
         });
       });
     } else {
@@ -137,7 +164,7 @@ export default function ReportsModule() {
       ];
 
       // Si es un taller específico, solo una columna de Taller
-      if (isSpecificWorkshop) {
+      if (isSingleWorkshopSelected) {
         cols.push({ header: 'Conferencia', key: 'workshop', width: 35 });
       } else {
         const maxWorkshops = Math.max(...filteredUsers.map(u => getRealWorkshops(u.talleres).length), 1);
@@ -145,7 +172,7 @@ export default function ReportsModule() {
       }
 
       cols.push({ header: 'Tipo', key: 'type', width: 25 });
-      if (isSpecificWorkshop) {
+      if (isSingleWorkshopSelected) {
         cols.push({ header: 'Asistencia', key: 'attendance', width: 15 });
       }
       cols.push({ header: 'Pago', key: 'pay', width: 15 });
@@ -164,13 +191,17 @@ export default function ReportsModule() {
           pay: u.pagoValidado ? 'SÍ' : 'NO'
         };
 
-        if (isSpecificWorkshop) {
-          const hasAttendance = (u.asistencias as any[] || []).some((a: any) => a.workshopId === selectedWorkshopFilter);
+        if (isSingleWorkshopSelected) {
+          const hasAttendance = (u.asistencias as any[] || []).some((a: any) => a.workshopId === singleWorkshopId);
           row.attendance = hasAttendance ? 'SÍ' : 'NO';
           row.workshop = workshopTitle;
         } else {
           const realW = getRealWorkshops(u.talleres);
-          realW.forEach((tw, i) => row[`w${i + 1}`] = getWorkshopTitle(tw.id));
+          if (realW.length === 0) {
+            row['w1'] = '-';
+          } else {
+            realW.forEach((tw, i) => row[`w${i + 1}`] = getWorkshopTitle(tw.id));
+          }
         }
         worksheet.addRow(row);
       });
@@ -180,8 +211,10 @@ export default function ReportsModule() {
 
     // Generar Nombre de Archivo Inteligente
     let fileName = isDiplomaList ? 'Lista_Diplomas' : 'Reporte';
-    if (isSpecificWorkshop) fileName += `_${workshopTitle.replace(/[^a-z0-9]/gi, '_')}`;
-    else if (selectedWorkshopFilter === 'none') fileName += '_Sin_Conferencias';
+    if (isSingleWorkshopSelected) fileName += `_${workshopTitle.replace(/[^a-z0-9]/gi, '_')}`;
+    else if (selectedWorkshopIds.length === 1 && selectedWorkshopIds[0] === 'NONE') fileName += '_Sin_Conferencias';
+    else if (selectedWorkshopIds.includes('ALL_RECORDS') || selectedWorkshopIds.length === 0) fileName += '_Todos_Los_Registros';
+    else fileName += '_Multiples_Conferencias';
 
     if (paymentFilter !== 'all') fileName += `_${paymentFilter === 'paid' ? 'Pagados' : 'Pendientes'}`;
 
@@ -206,7 +239,7 @@ export default function ReportsModule() {
         title="Base de Datos de Inscritos"
         description="Filtra y exporta la información necesaria para diplomas y logística."
         headerActions={
-          (!isColaborador || (selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== 'none' && selectedWorkshopFilter !== '')) && (
+          (!isColaborador || (selectedWorkshopIds.length > 0)) && (
             <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               <AdminButton variant="success" onClick={() => exportExcel(false)} icon={<Icons.Download size={18} />}>Reporte General</AdminButton>
               <AdminButton variant="outline" onClick={() => exportExcel(true)} icon={<Icons.Award size={18} />}>Lista de Diplomas</AdminButton>
@@ -229,22 +262,28 @@ export default function ReportsModule() {
           <div style={{ flex: '1 1 250px' }}>
             <SearchBar value={searchTerm} onChange={(val) => { setSearchTerm(val); setPage(1); }} placeholder="Buscar por nombre o correo..." />
           </div>
-          <div style={{ width: '220px' }}>
-            <AdminSelect
+          <div style={{ width: '250px' }}>
+            <MultiSelectFilter
               label="CONFERENCIA"
-              value={selectedWorkshopFilter}
-              onChange={(e) => setSelectedWorkshopFilter(e.target.value)}
-              options={[
-                ...(!isColaborador ? [
-                  { value: 'all_records', label: 'Todos los registros' },
-                  { value: 'none', label: 'Sin conferencias' },
-                  { value: '', label: 'Cualquier conferencia' }
-                ] : []),
-                ...agenda
-                  .filter(a => a.tagId !== 1 && a.tag?.toUpperCase().trim() !== 'GENERAL')
-                  .sort((a, b) => a.title.localeCompare(b.title))
-                  .map(w => ({ value: w.id, label: w.title }))
-              ]}
+              options={workshopOptions}
+              selectedIds={selectedWorkshopIds}
+              onChange={(ids) => {
+                let newIds = ids;
+                const previouslyHadAll = selectedWorkshopIds.includes('ALL_RECORDS');
+                const nowHasAll = ids.includes('ALL_RECORDS');
+
+                // Si selecciona "Todos los registros", limpiamos el resto
+                if (!previouslyHadAll && nowHasAll) {
+                  newIds = ['ALL_RECORDS'];
+                } 
+                // Si tenía "Todos" y seleccionó otra cosa, le quitamos el "Todos"
+                else if (previouslyHadAll && nowHasAll && ids.length > 1) {
+                  newIds = ids.filter(id => id !== 'ALL_RECORDS');
+                }
+                
+                setSelectedWorkshopIds(newIds);
+                setPage(1);
+              }}
             />
           </div>
           <div style={{ width: '150px' }}>
@@ -278,7 +317,7 @@ export default function ReportsModule() {
             "Participante",
             "Conferencias Inscritas",
             "Perfil",
-            ...(isSpecificWorkshop ? ["Asistencia"] : [])
+            ...(isSingleWorkshopSelected ? ["Asistencia"] : [])
           ]}
         >
           {paginatedUsers.map(u => (
@@ -293,9 +332,9 @@ export default function ReportsModule() {
                     const realW = getRealWorkshops(u.talleres);
                     if (realW.length === 0) return <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Ninguno</span>;
 
-                    // Si hay un taller específico filtrado, mostrar solo ese
-                    if (selectedWorkshopFilter !== 'all_records' && selectedWorkshopFilter !== '' && selectedWorkshopFilter !== 'none') {
-                      return <AdminBadge variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(selectedWorkshopFilter)}</AdminBadge>;
+                    // Si hay un solo taller seleccionado, mostrar solo ese
+                    if (isSingleWorkshopSelected) {
+                      return <AdminBadge variant="info" style={{ fontSize: '10px' }}>{getWorkshopTitle(singleWorkshopId!)}</AdminBadge>;
                     }
 
                     // Si no, mostrar todos
@@ -312,10 +351,10 @@ export default function ReportsModule() {
                   <AdminBadge variant="neutral">{getParticipantLabel(u.tipoParticipante)}</AdminBadge>
                 )}
               </td>
-                  {isSpecificWorkshop && (
+                  {isSingleWorkshopSelected && (
                     <td>
                       {(() => {
-                        const hasAttendance = (u.asistencias as any[] || []).some((a: any) => a.workshopId === selectedWorkshopFilter);
+                        const hasAttendance = (u.asistencias as any[] || []).some((a: any) => a.workshopId === singleWorkshopId);
                         return hasAttendance ? (
                           <AdminBadge variant="success" dot>Asistió</AdminBadge>
                         ) : (

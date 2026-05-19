@@ -117,6 +117,16 @@ export default function ProfileModule() {
     e.preventDefault();
     if (!user) return;
 
+    if (requiresAcademicInfo(formData.tipoParticipante) && !formData.carnet.trim()) {
+      showToast(`Por favor ingrese su ${getParticipantIdLabel(formData.tipoParticipante).toLowerCase()}.`, 'warning');
+      return;
+    }
+
+    if (requiresCiclo(formData.tipoParticipante) && !formData.ciclo) {
+      showToast('Por favor seleccione su ciclo académico.', 'warning');
+      return;
+    }
+
     const updatedUser: UserData = {
       ...user,
       ...formData,

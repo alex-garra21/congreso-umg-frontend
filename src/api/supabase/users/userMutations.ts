@@ -56,7 +56,6 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
     dpi: updatedData.dpi,
     sexo: updatedData.sexo,
     nombre_diploma: updatedData.nombreDiploma,
-    tipo_participante: updatedData.tipoParticipante,
     carnet: updatedData.carnet,
     ciclo: updatedData.ciclo,
     telefono: updatedData.telefono,
@@ -71,6 +70,7 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
 
   if (!isSelfUpdate) {
     if (updatedData.rol) updatePayload.rol = updatedData.rol;
+    if (updatedData.tipoParticipante) updatePayload.tipo_participante = updatedData.tipoParticipante;
     if (updatedData.pagoValidado !== undefined) updatePayload.pago_validado = updatedData.pagoValidado;
     if (updatedData.pagoEnviado !== undefined) updatePayload.pago_enviado = updatedData.pagoEnviado;
     if (updatedData.desactivado !== undefined) updatePayload.desactivado = updatedData.desactivado;
