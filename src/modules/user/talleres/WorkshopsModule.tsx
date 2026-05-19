@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../api/hooks/useAuth';
 import { updateUserDataMutation } from '../../../api/supabase/users/userMutations';
@@ -23,8 +23,8 @@ export default function WorkshopsModule() {
   const { data: salas } = useSalas();
   const { config: visualConfig } = useAgendaConfig();
 
-  const agenda = charlas || [];
-  const rooms = salas || [];
+  const agenda = useMemo(() => charlas || [], [charlas]);
+  const rooms = useMemo(() => salas || [], [salas]);
 
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [isConfirmed, setIsConfirmed] = useState(false);
