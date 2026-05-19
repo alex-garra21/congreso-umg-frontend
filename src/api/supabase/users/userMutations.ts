@@ -69,9 +69,6 @@ export async function updateUserDataMutation(updatedData: UserData): Promise<{ s
     updatePayload.alerta_choque_horario = updatedData.alertaChoqueHorario;
   }
 
-  // CAMPOS CRÍTICOS: Solo se envían si NO es una auto-actualización.
-  // Un administrador no puede promoverse o degradarse a sí mismo por seguridad,
-  // y un participante no puede enviar estos campos.
   if (!isSelfUpdate) {
     if (updatedData.rol) updatePayload.rol = updatedData.rol;
     if (updatedData.pagoValidado !== undefined) updatePayload.pago_validado = updatedData.pagoValidado;

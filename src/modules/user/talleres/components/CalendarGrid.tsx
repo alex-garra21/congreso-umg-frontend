@@ -69,16 +69,41 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           );
         })}
 
-        {/* Etiquetas de Horas */}
+        {/* Etiquetas de Horas y Medias Horas */}
         {HOURS.map(hour => (
-          <div key={hour} className="hour-row-label" style={{ gridRow: `${(hour - minHour) * 12 + 2} / span 12` }}>
-            {hour > 12 ? `${hour - 12}:00` : `${hour}:00`}
-          </div>
+          <React.Fragment key={`hour-label-group-${hour}`}>
+            {/* Etiqueta de la hora en punto (MÁS GRANDE) */}
+            <div className="hour-row-label" style={{ 
+              gridRow: `${(hour - minHour) * 12 + 2} / span 6`,
+              fontSize: '14px',
+              fontWeight: 800,
+              color: 'var(--text-primary)'
+            }}>
+              {hour > 12 ? `${hour - 12}:00` : `${hour}:00`}
+            </div>
+            {/* Etiqueta de la media hora (MÁS PEQUEÑA) */}
+            <div className="hour-row-label" style={{ 
+              gridRow: `${(hour - minHour) * 12 + 8} / span 6`, 
+              color: 'var(--text-muted)', 
+              opacity: 0.5,
+              fontSize: '11px',
+              fontWeight: 600
+            }}>
+              {hour > 12 ? `${hour - 12}:30` : `${hour}:30`}
+            </div>
+          </React.Fragment>
         ))}
 
-        {/* Líneas Horizontales */}
+        {/* Líneas Horizontales (Hora y Media Hora) */}
         {HOURS.map(hour => (
-          <div key={`line-${hour}`} className="hour-grid-line" style={{ gridRow: (hour - minHour) * 12 + 2 }} />
+          <React.Fragment key={`line-group-${hour}`}>
+            <div className="hour-grid-line" style={{ gridRow: (hour - minHour) * 12 + 2 }} />
+            <div className="hour-grid-line" style={{ 
+              gridRow: (hour - minHour) * 12 + 8, 
+              borderTopStyle: 'dashed', 
+              opacity: 0.4 
+            }} />
+          </React.Fragment>
         ))}
 
         {/* Tarjetas de Talleres */}
