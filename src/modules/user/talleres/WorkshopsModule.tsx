@@ -98,16 +98,18 @@ export default function WorkshopsModule() {
   }, [enrolledIds, user?.correo]);
 
 
-  let minHour = 8, maxHour = 17;
+  let minHour = 8, maxTimeMinutes = 17 * 60;
   if (agenda.length > 0) {
-    const times = agenda.map((w: AgendaItem) => timeToMinutes(w.time) / 60).filter(t => !isNaN(t));
-    const endTimes = agenda.map((w: AgendaItem) => timeToMinutes(w.endTime) / 60).filter(t => !isNaN(t));
+    const times = agenda.map((w: AgendaItem) => timeToMinutes(w.time)).filter(t => !isNaN(t));
+    const endTimes = agenda.map((w: AgendaItem) => timeToMinutes(w.endTime)).filter(t => !isNaN(t));
     
-    if (times.length > 0) minHour = Math.floor(Math.min(...times));
-    if (endTimes.length > 0) maxHour = Math.ceil(Math.max(...endTimes));
+    if (times.length > 0) minHour = Math.floor(Math.min(...times) / 60);
+    if (endTimes.length > 0) maxTimeMinutes = Math.max(...endTimes);
     
-    if (minHour >= maxHour) maxHour = minHour + 1;
+    if (minHour * 60 >= maxTimeMinutes) maxTimeMinutes = minHour * 60 + 60;
   }
+  const totalRows = Math.round((maxTimeMinutes / 60 - minHour) * 12);
+  const maxHour = Math.ceil(maxTimeMinutes / 60);
   const HOURS = []; for (let i = minHour; i <= maxHour; i++) HOURS.push(i);
 
   const roomColors = [
@@ -357,7 +359,7 @@ export default function WorkshopsModule() {
 
         <div id="agenda-grid">
           <CalendarGrid
-            rooms={rooms} HOURS={HOURS} minHour={minHour}
+            rooms={rooms} HOURS={HOURS} minHour={minHour} totalRows={totalRows}
             roomColors={roomColors} agenda={agenda}
             enrolledIds={enrolledIds} isConfirmed={isConfirmed}
             isTimeCollision={isTimeCollision} toggleEnroll={handleCardClick}
