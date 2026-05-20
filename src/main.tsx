@@ -17,6 +17,21 @@ window.addEventListener('error', (e) => {
     // Evitar bucle infinito si es un problema de red real (ej: sin internet)
     if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
       sessionStorage.setItem('chunk_err_reload', now.toString());
+
+      // Limpiar cachés locales específicas que puedan causar conflictos (sin cerrar sesión del usuario)
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('workshops_') || key.startsWith('modifications_count_') || key === 'agenda_visual_config')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+      } catch (err) {
+        console.error('Error al limpiar caché local:', err);
+      }
+
       window.location.reload();
     }
   }
