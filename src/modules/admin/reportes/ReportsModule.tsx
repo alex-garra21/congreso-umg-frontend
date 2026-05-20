@@ -79,7 +79,7 @@ export default function ReportsModule() {
   const getRealWorkshops = (talleres?: { id: string; category: string }[]) =>
     (talleres || []).filter(t => t.category?.toUpperCase().trim() !== 'GENERAL');
 
-  const isSingleWorkshopSelected = selectedWorkshopIds.length === 1 && selectedWorkshopIds[0] !== 'NONE';
+  const isSingleWorkshopSelected = selectedWorkshopIds.length === 1 && selectedWorkshopIds[0] !== 'NONE' && selectedWorkshopIds[0] !== 'ALL_RECORDS';
   const singleWorkshopId = isSingleWorkshopSelected ? selectedWorkshopIds[0] : null;
 
   const filteredUsers = users.filter(u => !u.desactivado).filter(u => {
