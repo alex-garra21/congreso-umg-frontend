@@ -23,8 +23,21 @@ window.addEventListener('error', (e) => {
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && (key.startsWith('workshops_') || key.startsWith('modifications_count_') || key === 'agenda_visual_config')) {
-            keysToRemove.push(key);
+          if (key) {
+            const lowerKey = key.toLowerCase();
+            const shouldRemove = 
+              lowerKey.startsWith('workshops_') || 
+              lowerKey.startsWith('modifications_count_') || 
+              lowerKey === 'agenda_visual_config' ||
+              lowerKey.startsWith('agenda_') ||
+              lowerKey.startsWith('ponentes_') ||
+              lowerKey.startsWith('salas_') ||
+              lowerKey.startsWith('categorias_') ||
+              lowerKey.startsWith('charlas_');
+
+            if (shouldRemove) {
+              keysToRemove.push(key);
+            }
           }
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
