@@ -28,7 +28,7 @@ export const WorkshopCard: React.FC<WorkshopCardProps> = ({
       <div className="workshop-content" style={{ display: 'flex', flexDirection: 'column', height: '100%', pointerEvents: 'none' }}>
         <div className="w-time">
           <Icons.Clock size={10} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-          {workshop.time.replace(' AM', '').replace(' PM', '')} - {workshop.endTime.replace(' AM', '').replace(' PM', '')}
+          {(workshop.time || '').replace(' AM', '').replace(' PM', '')} - {(workshop.endTime || '').replace(' AM', '').replace(' PM', '')}
         </div>
         
         <div className="w-title">{workshop.title}</div>

@@ -69,12 +69,21 @@ export default function WorkshopsModule() {
         } else {
           const saved = localStorage.getItem(`workshops_${user.correo}`);
           if (saved) {
-            const parsed = JSON.parse(saved) as string[];
-            const electivesOnly = parsed.filter(id => {
-              const w = agenda.find(a => a.id === id);
-              return w?.tag?.toUpperCase().trim() !== 'GENERAL';
-            });
-            setEnrolledIds(electivesOnly);
+            try {
+              const parsed = JSON.parse(saved);
+              if (Array.isArray(parsed)) {
+                const electivesOnly = parsed.filter((id: string) => {
+                  const w = agenda.find(a => a.id === id);
+                  return w?.tag?.toUpperCase().trim() !== 'GENERAL';
+                });
+                setEnrolledIds(electivesOnly);
+              } else {
+                localStorage.removeItem(`workshops_${user.correo}`);
+              }
+            } catch (e) {
+              console.error('Error parsing saved workshops:', e);
+              localStorage.removeItem(`workshops_${user.correo}`);
+            }
           } else if (user.talleres) {
             const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
             setEnrolledIds(onlyWorkshops);
