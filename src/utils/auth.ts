@@ -118,19 +118,25 @@ export async function loginUser(correo: string, contrasena: string): Promise<{ s
 }
 
 export async function changePassword(newPassword: string): Promise<{ success: boolean; message: string }> {
+  //Validación forzada antes de actualizar en el servidor remoto
+  const validation = validatePasswordStrength(newPassword);
+  if (!validation.isValid) {
+    return { success: false, message: validation.message };
+  }
+
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) {
-    return { success: false, message: `Error: ${error.message}` };
+    return { success: false, message: 'No se pudo actualizar la contraseña. Inténtalo de nuevo.' };
   }
   return { success: true, message: 'Contraseña actualizada correctamente.' };
 }
 
 export async function verifyAndChangePassword(oldPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-  // 1. Obtener el usuario actual para tener su correo
+  // Obtener el usuario actual para tener su correo
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !user.email) return { success: false, message: 'No hay una sesión activa.' };
 
-  // 2. Verificar contraseña actual intentando hacer login
+  // Verificar contraseña actual intentando hacer login
   const { error: reauthError } = await supabase.auth.signInWithPassword({
     email: user.email,
     password: oldPassword,
@@ -140,19 +146,17 @@ export async function verifyAndChangePassword(oldPassword: string, newPassword: 
     return { success: false, message: 'La contraseña anterior es incorrecta.' };
   }
 
-  // 3. Si es correcta, actualizar a la nueva
   return changePassword(newPassword);
 }
 
 export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; message: string }> {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    // Forzamos a Supabase a usar la URL actual para el enlace de recuperación
     redirectTo: `${window.location.origin}/reset-password`,
   });
 
   if (error) {
-    console.error("Detalle técnico:", error);
-    return { success: false, message: `Error: ${error.message}` };
+    //Eliminación de console.error y ocultamiento de error.message
+    return { success: false, message: 'Hubo un error al procesar la solicitud de recuperación.' };
   }
   return { success: true, message: 'Código enviado a tu correo' };
 }
@@ -161,9 +165,16 @@ export async function sendPasswordResetEmail(email: string): Promise<{ success: 
 export async function resetPasswordWithOTP(email: string, token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
   const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' });
   if (error) return { success: false, message: 'Código inválido o expirado' };
+  //Validación de fuerza de contraseña previa en la recuperación por OTP
+  const validation = validatePasswordStrength(newPassword);
+  if (!validation.isValid) {
+    return { success: false, message: validation.message };
+  }
 
   const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-  if (updateError) return { success: false, message: `Error: ${updateError.message}` };
+  if (updateError) {
+    return { success: false, message: 'Ocurrió un error al procesar el cambio de contraseña.' };
+  }
 
   return { success: true, message: 'Contraseña actualizada con éxito' };
 }
