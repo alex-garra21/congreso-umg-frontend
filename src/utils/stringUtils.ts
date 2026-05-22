@@ -4,8 +4,9 @@
 
 const ACADEMIC_TITLES = [
   'Ing.', 'Inga.', 'Lic.', 'Licda.', 'MA.', 'MSc.', 'Dr.', 'Dra.', 'Pgo.', 'Pga.', 'Arq.', 'Arqa.', 'PhD.',
-  'PHD.', 'Phd.', 'Ph.D.', 'Ph.d.', 'Mtr.', 'Mtrda.', 'M.A.', 'M.Sc.', 'M.Sc.', 'M.Sc.', 'M.Eng.', 'M.Eng.',
-  'Mgtr.', 'Mgtrda.', 'Prof.', 'Profra.', 'Sra.', 'Sr.', 'Srta.', 'Sra.', 'Sr.', 'Ma.', 'MSc.', 'MSc.', 'Ing. MA.'
+  'Mtr.', 'Mtrda.', 'M.A.', 'M.Sc.', 'M.Sc.', 'M.Sc.', 'M.Eng.', 'M.Eng.',
+  'Mgtr.', 'Mgtrda.', 'Prof.', 'Profra.', 'Sra.', 'Sr.', 'Srta.', 'Sra.', 'Sr.', 'Ing. MA.',
+  'Lcda.', 'Lc.', 'Ing MSC.',
 ];
 
 /**
