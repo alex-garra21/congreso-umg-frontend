@@ -21,7 +21,7 @@ const steps = [
     id: '03',
     Icon: Icons.CreditCard,
     title: 'Valida tu pago',
-    desc: 'Luego de realizar tu pago, ingresa el código de activación que se te proporcionó para validar el pago de tu inscripción.'
+    desc: 'Ingresa el código de activación que se te proporcionó para validar el pago de tu inscripción.'
   },
   {
     id: '04',
