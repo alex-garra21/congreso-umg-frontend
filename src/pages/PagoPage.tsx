@@ -56,7 +56,7 @@ export default function PagoPage() {
           <Icons.Info size={24} />
         </div>
         <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.5' }}>
-          Tu inscripción queda <strong>pendiente</strong> hasta que el pago sea validado. Las charlas seleccionadas se reservan durante ese período.
+          Tu inscripción queda <strong>pendiente</strong> hasta que el pago sea validado.
         </p>
       </div>
     </PublicContainer>

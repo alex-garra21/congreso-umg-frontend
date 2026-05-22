@@ -6,17 +6,17 @@ export default function AsistenciaInfo() {
     {
       Icon: Icons.QrCode,
       title: "Acceso Instantáneo",
-      desc: "Olvídate de las filas. Presenta tu código QR personal desde tu móvil y obtén acceso inmediato a todas las conferencias. El sistema registrará tu entrada en tiempo real."
+      desc: "Olvídate de las filas. Lee el código QR de la conferencia con tu dispositivo móvil y valida tu asistencia."
     },
     {
       Icon: Icons.Award,
       title: "Diplomas Digitales",
-      desc: "Tu asistencia es validada automáticamente por el sistema QR. Al completar el congreso, tu diploma estará listo para descargar desde tu perfil, garantizando la validez de tu participación."
+      desc: "Tu asistencia es validada automáticamente por el sistema QR. Tu diploma se enviará posteriormente al correo que proporciones en tu perfil, garantizando la validez de tu participación."
     },
     {
       Icon: Icons.Shield,
       title: "Seguridad y Control",
-      desc: "Cada entrada es única y está vinculada a tu perfil. Esto nos permite mantener un control de aforo preciso y garantizar que la experiencia sea cómoda y segura para todos los asistentes."
+      desc: "Cada asistencia es única y está vinculada a tu perfil. Esto nos permite mantener un control de preciso y garantizar que la experiencia sea cómoda y segura para los asistentes."
     }
   ];
 
