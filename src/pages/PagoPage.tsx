@@ -18,13 +18,13 @@ export default function PagoPage() {
           
           <h4 style={{ fontSize: '24px', marginBottom: '1.5rem' }}>Efectivo — Código de pago</h4>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '1.1rem' }}>
-            Obtén un código único al realizar tu pago en efectivo en caja de tesorería UMG.
+            Obtén un código único al realizar tu pago en efectivo.
           </p>
 
           <div style={{ display: 'grid', gap: '1rem', textAlign: 'left', width: '100%', maxWidth: '400px' }}>
             {[
-              'Realiza el pago en caja autorizada',
-              'Recibirás un código único personal',
+              'Realiza el pago en efectivo',
+              'Recibirás un código único para la validación de tu pago',
               'Ingrésalo en tu perfil del sistema',
               'El sistema valida y activa tu inscripción al instante'
             ].map((step, idx) => (

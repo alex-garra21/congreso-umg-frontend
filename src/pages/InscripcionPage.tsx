@@ -14,20 +14,20 @@ const steps = [
   {
     id: '02',
     Icon: Icons.Calendar,
-    title: 'Selecciona charlas',
-    desc: 'Elige las charlas de tu interés. El sistema evita automáticamente conflictos de horario.'
+    title: 'Selecciona conferencias',
+    desc: 'Elige las conferencias de tu interés. El sistema evitará automáticamente conflictos de horario.'
   },
   {
     id: '03',
     Icon: Icons.CreditCard,
-    title: 'Realiza tu pago',
-    desc: 'Sube tu comprobante de pago. Nuestro equipo administrativo validará la información.'
+    title: 'Valida tu pago',
+    desc: 'Luego de realizar tu pago, ingresa el código de activación que se te proporcionó para validar el pago de tu inscripción.'
   },
   {
     id: '04',
     Icon: Icons.CheckCircle,
     title: '¡Listo para el evento!',
-    desc: 'Una vez validado, tendrás acceso total a tu perfil, agenda y código QR de acceso.'
+    desc: 'Una vez validado, tendrás acceso total a tu perfil, agenda y el poder registrar tu asistencia con el código QR durante el evento.'
   }
 ];
 
