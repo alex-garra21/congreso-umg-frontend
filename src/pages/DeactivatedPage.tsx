@@ -103,7 +103,7 @@ export default function DeactivatedPage() {
             <div>
               <h4 style={{ margin: '0 0 8px', fontSize: '16px', color: 'var(--text-primary)' }}>Cuenta Desactivada</h4>
               <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                Tu perfil ha sido desactivado por el administrador del sistema. Para más detalles sobre tu registro, por favor contacta a soporte técnico.
+                Tu perfil ha sido desactivado por el administrador del sistema. Para más detalles sobre tu registro, acude a la organización del congreso.
               </p>
             </div>
           </div>
@@ -111,25 +111,6 @@ export default function DeactivatedPage() {
 
         {/* Acciones */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <a
-            href="mailto:soporte@congresoumg.com"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              background: 'var(--accent-primary)',
-              color: 'white',
-              padding: '14px',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '15px'
-            }}
-          >
-            <Icons.Mail size={18} />
-            soporte@congresoumg.com
-          </a>
           <button
             onClick={handleLogout}
             style={{
