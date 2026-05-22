@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { getUserProfileQuery } from '../supabase/users/userQueries';
+import { clearAppLocalStorageCache } from '../../utils/appCache';
 
 
 export function useAuth() {
@@ -57,6 +58,11 @@ export function useGlobalAuthListener() {
       if (_event === 'SIGNED_OUT') {
         queryClient.setQueryData(['userProfile'], null);
         localStorage.removeItem('congreso_current_user');
+        try {
+          clearAppLocalStorageCache();
+        } catch (e) {
+          console.error('Error al limpiar caché tras logout:', e);
+        }
       } else if (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION' || _event === 'USER_UPDATED') {
         queryClient.invalidateQueries({ queryKey: ['userProfile'] });
         queryClient.invalidateQueries({ queryKey: ['users'] });

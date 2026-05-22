@@ -83,7 +83,7 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="nav-right">
+        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <button className="btn-ghost" onClick={openLogin}>
             {isAuthenticated ? 'Ir al Dashboard' : 'Iniciar sesión'}
           </button>

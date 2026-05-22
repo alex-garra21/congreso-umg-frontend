@@ -4,6 +4,30 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './index.css'
 import App from './App.tsx'
+import {
+  applyHardRefreshCacheClearIfNeeded,
+  clearAppLocalStorageCache,
+  registerHardRefreshCacheClear,
+} from './utils/appCache.ts'
+
+// F5 / recargar pestaña: limpiar caché de app (talleres, agenda, etc.) pero conservar sesión Supabase
+registerHardRefreshCacheClear()
+applyHardRefreshCacheClearIfNeeded()
+
+// Limpieza autónoma y automática cada 15 minutos al inicializar la app
+try {
+  const AUTO_CLEAR_INTERVAL = 15 * 60 * 1000; // 15 minutos en milisegundos
+  const LAST_AUTO_CLEAR_KEY = 'app_last_auto_clear';
+  const lastClear = localStorage.getItem(LAST_AUTO_CLEAR_KEY);
+  const now = Date.now();
+
+  if (!lastClear || now - parseInt(lastClear, 10) > AUTO_CLEAR_INTERVAL) {
+    clearAppLocalStorageCache();
+    localStorage.setItem(LAST_AUTO_CLEAR_KEY, now.toString());
+  }
+} catch (e) {
+  console.error('Error en la limpieza autónoma de caché:', e);
+}
 
 // Manejador automático de ChunkLoadError (Evita pantallas en blanco tras nuevos depliegues)
 window.addEventListener('error', (e) => {
@@ -18,29 +42,8 @@ window.addEventListener('error', (e) => {
     if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
       sessionStorage.setItem('chunk_err_reload', now.toString());
 
-      // Limpiar cachés locales específicas que puedan causar conflictos (sin cerrar sesión del usuario)
       try {
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key) {
-            const lowerKey = key.toLowerCase();
-            const shouldRemove = 
-              lowerKey.startsWith('workshops_') || 
-              lowerKey.startsWith('modifications_count_') || 
-              lowerKey === 'agenda_visual_config' ||
-              lowerKey.startsWith('agenda_') ||
-              lowerKey.startsWith('ponentes_') ||
-              lowerKey.startsWith('salas_') ||
-              lowerKey.startsWith('categorias_') ||
-              lowerKey.startsWith('charlas_');
-
-            if (shouldRemove) {
-              keysToRemove.push(key);
-            }
-          }
-        }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
+        clearAppLocalStorageCache();
       } catch (err) {
         console.error('Error al limpiar caché local:', err);
       }

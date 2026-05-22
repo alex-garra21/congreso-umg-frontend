@@ -84,7 +84,7 @@ export default function DashboardLayout() {
           <div className="header-left">
             <h1 className="module-title">{title}</h1>
           </div>
-          <div className="header-right">
+          <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             {isPaid ? (
               <AdminBadge variant="success" dot>PAGO VALIDADO</AdminBadge>
             ) : (

@@ -72,6 +72,7 @@ export default function PaymentModule() {
         showToast(errorMessages[result.errorType || 'error'], 'error');
       }
     } catch (error) {
+       console.error('Error al validar código de pago:', error);
        showToast('Error de conexión con el servidor.', 'error');
     } finally {
       setIsSubmitting(false);
@@ -88,7 +89,7 @@ export default function PaymentModule() {
           </div>
           <h2 style={{ fontFamily: 'Source Sans 3', fontWeight: 800, fontSize: '32px', marginBottom: '1rem' }}>¡Pago Completado!</h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 2.5rem', fontSize: '16px', lineHeight: '1.6' }}>
-            Tu inscripción ha sido validada exitosamente. Ya puedes disfrutar de todos los beneficios del congreso y elegir tus talleres.
+            Tu inscripción ha sido validada exitosamente. Ya puedes disfrutar de todos los beneficios del congreso y elegir tus conferencias.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <BackButton
