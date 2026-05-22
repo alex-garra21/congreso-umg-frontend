@@ -94,7 +94,7 @@ export default function PaymentModule() {
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <BackButton
               to="/dashboard/talleres"
-              label="Ir a Selección de Talleres"
+              label="Ir a selección de conferencias"
               icon={<Icons.Calendar size={18} color="#ffffff" />}
             />
           </div>
