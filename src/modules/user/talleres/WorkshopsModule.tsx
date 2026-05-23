@@ -33,65 +33,68 @@ export default function WorkshopsModule() {
   const [selectedWorkshop, setSelectedWorkshop] = useState<AgendaItem | null>(null);
   const isPaid = user?.pagoValidado || false;
 
-  useEffect(() => {
-    if (user?.correo) {
-      if (!user.pagoValidado) {
-        // Modo Preview: Bloqueado para todos si no hay pago validado.
-        setIsConfirmed(false);
-        setEnrolledIds([]);
-        return;
-      }
+useEffect(() => {
+  if (user?.correo) {
+    if (!user.pagoValidado) {
+      // Modo Preview: Bloqueado para todos si no hay pago validado.
+      setIsConfirmed(false);
+      setEnrolledIds([]);
+      return;
+    }
 
-      // Detectar si el backend fue limpiado por un administrador
-      const hasRealWorkshops = user.talleres && user.talleres.some(t => t.category !== 'GENERAL');
-      if (!hasRealWorkshops && localStorage.getItem(`workshops_confirmed_${user.correo}`)) {
-        // El admin anuló el pago o vació las inscripciones, limpiamos el caché local
-        localStorage.removeItem(`workshops_confirmed_${user.correo}`);
-        localStorage.removeItem(`workshops_${user.correo}`);
-        localStorage.removeItem(`modifications_count_${user.correo}`);
-      }
+    //EXTRAER TALLERES REALES DE LA BASE DE DATOS
+    const dbWorkshops = user.talleres ? user.talleres.filter(t => t.category !== 'GENERAL') : [];
+    const hasRealWorkshops = dbWorkshops.length > 0;
 
-      const confirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`);
+    //Detectar si el backend fue limpiado por un administrador
+    if (!hasRealWorkshops && localStorage.getItem(`workshops_confirmed_${user.correo}`)) {
+      localStorage.removeItem(`workshops_confirmed_${user.correo}`);
+      localStorage.removeItem(`workshops_${user.correo}`);
+      localStorage.removeItem(`modifications_count_${user.correo}`);
+    }
 
-      if (confirmed === 'true' && !user.alertaChoqueHorario) {
-        setIsConfirmed(true);
-        if (user.talleres) {
-          const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
-          setEnrolledIds(onlyWorkshops);
+    //LEER CONFIRMACIÓN DEL LOCAL STORAGE O DE LA BASE DE DATOS
+    const localConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`);
+    
+    // Si el usuario ya confirmó (localmente o porque ya existen talleres en la Base de Datos) 
+    // y no hay choque de horarios, bloqueamos la pantalla de inmediato con lo que tenga.
+    if ((localConfirmed === 'true' || hasRealWorkshops) && !user.alertaChoqueHorario) {
+      setIsConfirmed(true);
+      const onlyWorkshops = dbWorkshops.map(t => t.id);
+      setEnrolledIds(onlyWorkshops);
+      return; // Bloqueo total. No permite volver a seleccionar.
+    }
+
+    // 3. LOGICA SI EL USUARIO TIENE PERMITIDO EDITAR (AÚN NO CONFIRMADO)
+    if (user.alertaChoqueHorario && hasRealWorkshops) {
+      setIsConfirmed(false);
+      const onlyWorkshops = dbWorkshops.map(t => t.id);
+      setEnrolledIds(onlyWorkshops);
+    } else {
+      const saved = localStorage.getItem(`workshops_${user.correo}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            const electivesOnly = parsed.filter((id: string) => {
+              const w = agenda.find(a => a.id === id);
+              return w?.tag?.toUpperCase().trim() !== 'GENERAL';
+            });
+            setEnrolledIds(electivesOnly);
+          } else {
+            localStorage.removeItem(`workshops_${user.correo}`);
+          }
+        } catch (e) {
+          console.error('Error parsing saved workshops:', e);
+          localStorage.removeItem(`workshops_${user.correo}`);
         }
       } else {
-        setIsConfirmed(false);
-        if (user.alertaChoqueHorario && user.talleres) {
-          // Si hay alerta, ignoramos el localStorage y mostramos el estado REAL de la base de datos
-          // para que el usuario vea exactamente cuáles conferencias están chocando.
-          const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
-          setEnrolledIds(onlyWorkshops);
-        } else {
-          const saved = localStorage.getItem(`workshops_${user.correo}`);
-          if (saved) {
-            try {
-              const parsed = JSON.parse(saved);
-              if (Array.isArray(parsed)) {
-                const electivesOnly = parsed.filter((id: string) => {
-                  const w = agenda.find(a => a.id === id);
-                  return w?.tag?.toUpperCase().trim() !== 'GENERAL';
-                });
-                setEnrolledIds(electivesOnly);
-              } else {
-                localStorage.removeItem(`workshops_${user.correo}`);
-              }
-            } catch (e) {
-              console.error('Error parsing saved workshops:', e);
-              localStorage.removeItem(`workshops_${user.correo}`);
-            }
-          } else if (user.talleres) {
-            const onlyWorkshops = user.talleres.filter(t => t.category !== 'GENERAL').map(t => t.id);
-            setEnrolledIds(onlyWorkshops);
-          }
-        }
+        const onlyWorkshops = dbWorkshops.map(t => t.id);
+        setEnrolledIds(onlyWorkshops);
       }
     }
-  }, [user?.correo, user?.talleres, user?.pagoValidado, user?.alertaChoqueHorario, agenda]);
+  }
+},[user?.correo, user?.talleres, user?.pagoValidado, user?.alertaChoqueHorario, agenda]);
 
   useEffect(() => {
     if (user?.correo) localStorage.setItem(`workshops_${user.correo}`, JSON.stringify(enrolledIds));
@@ -197,11 +200,13 @@ export default function WorkshopsModule() {
       const result = await syncUserEnrollmentsMutation(user.id, allToSave);
 
       if (result.success) {
-        // Detectamos si esto fue una modificación (si ya estaba confirmado antes de esta sesión de edición)
-        const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`) === 'true';
-        if (wasAlreadyConfirmed) {
-          localStorage.setItem(`modifications_count_${user.correo}`, '1');
-        }
+        
+      const localConfirmed = localStorage.getItem(`workshops_confirmed_${user.correo}`) === 'true';
+      const dbWorkshops = (user.talleres || []).filter(t => t.category !== 'GENERAL');
+      
+      if (localConfirmed || dbWorkshops.length > 0) {
+        localStorage.setItem(`modifications_count_${user.correo}`, '1');
+      }
 
         // Obtenemos los objetos completos para actualizar el estado local de user
         const newTalleresObjects = [
@@ -219,23 +224,6 @@ export default function WorkshopsModule() {
         showToast(result.message || 'No se pudo guardar la selección.', 'error');
         setSaveStatus('idle');
       }
-    }
-  };
-
-  const handleEdit = async () => {
-    const count = parseInt(localStorage.getItem(`modifications_count_${user?.correo}`) || '0');
-    if (count >= 1) { showToast('Ya no tienes más cambios disponibles.', 'error'); return; }
-
-    const confirmed = await showConfirm(
-      '¿Modificar selección?',
-      'Atención: Solo tienes derecho a UN cambio una vez guardes. ¿Deseas proceder?',
-      'Sí, modificar',
-      true
-    );
-
-    if (confirmed) {
-      setIsConfirmed(false);
-      setSaveStatus('idle');
     }
   };
 
@@ -440,30 +428,17 @@ export default function WorkshopsModule() {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '3rem 0' }}>
           {isPaid && (() => {
-            const modCount = parseInt(localStorage.getItem(`modifications_count_${user?.correo}`) || '0');
             const wasAlreadyConfirmed = localStorage.getItem(`workshops_confirmed_${user?.correo}`) === 'true';
 
+            //Elimiacion del botón de edición de talleres
             if (isConfirmed) {
-              return modCount >= 1
-                ? <div style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '14px', background: 'var(--bg-app)', padding: '1rem 2rem', borderRadius: '12px', border: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              return (
+                <div style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '14px', background: 'var(--bg-app)', padding: '1rem 2rem', borderRadius: '12px', border: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Icons.Shield size={16} color="var(--text-secondary)" /> Selección Definitiva Guardada
                 </div>
-                : <AdminButton
-                  onClick={handleEdit}
-                  icon={<Icons.Edit size={18} />}
-                  className="admin-btn-hover"
-                  style={{
-                    background: '#10b981',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '0.8rem 2rem',
-                    fontWeight: 800,
-                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.25)'
-                  }}
-                >
-                  Modificar Selección (1 oportunidad)
-                </AdminButton>;
+              );
             }
+
             return (
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.5rem', width: '100%' }}>
                 <AdminButton
