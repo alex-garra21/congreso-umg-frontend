@@ -81,8 +81,8 @@ function DiplomaFormSection({ user, refetchProfile, onSaveSuccess }: DiplomaForm
 
     const updatedUser: UserData = {
       ...user,
-      nombreDiploma: formData.nombreDiploma,
-      correoDiploma: formData.correoDiploma,
+      nombreDiploma: formData.nombreDiploma.trim().toUpperCase(),
+      correoDiploma: formData.correoDiploma.trim().toLowerCase(),
       diplomaEditado: true,
     };
 

@@ -127,6 +127,12 @@ export default function ReportsModule() {
     return `${u.nombres} ${u.apellidos}`.trim();
   };
 
+  const getDiplomaExportName = (u: any) =>
+    (u.nombreDiploma || getDisplayName(u)).trim().toUpperCase();
+
+  const getDiplomaExportEmail = (u: any) =>
+    (u.correoDiploma || u.correo).trim().toLowerCase();
+
   const exportExcel = async (isDiplomaList = false) => {
     if (filteredUsers.length === 0) { showToast('No hay datos para exportar.', 'warning'); return; }
 
@@ -146,8 +152,8 @@ export default function ReportsModule() {
       filteredUsers.forEach(u => {
         const realW = getRealWorkshops(u.talleres);
         worksheet.addRow({
-          name: u.nombreDiploma || getDisplayName(u),
-          email: u.correoDiploma || u.correo,
+          name: getDiplomaExportName(u),
+          email: getDiplomaExportEmail(u),
           workshops: isSingleWorkshopSelected ? workshopTitle : (realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-')
         });
       });
