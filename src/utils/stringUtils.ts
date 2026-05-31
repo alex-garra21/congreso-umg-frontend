@@ -2,6 +2,15 @@
  * Utilidades para manipulación de strings y nombres.
  */
 
+/** Nombre para reportes/diplomas: siempre MAYÚSCULAS (locale español). */
+export function toReportUppercase(value: string): string {
+  return value
+    .normalize('NFC')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleUpperCase('es');
+}
+
 const ACADEMIC_TITLES = [
   'Ing.', 'Inga.', 'Lic.', 'Licda.', 'MA.', 'MSc.', 'Dr.', 'Dra.', 'Pgo.', 'Pga.', 'Arq.', 'Arqa.', 'PhD.',
   'Mtr.', 'Mtrda.', 'M.A.', 'M.Sc.', 'M.Sc.', 'M.Sc.', 'M.Eng.', 'M.Eng.',

@@ -17,6 +17,8 @@ import { PARTICIPANT_TYPES, getParticipantLabel } from '../../../data/userTypes'
 import MultiSelectFilter from '../../../components/ui/MultiSelectFilter';
 import { Icons } from '../../../components/Icons';
 import BackButton from '../../../components/ui/BackButton';
+import type { UserData } from '../../../utils/auth';
+import { toReportUppercase } from '../../../utils/stringUtils';
 
 export default function ReportsModule() {
   const { data: users = [], isLoading: isLoadingUsers } = useGeneralReport();
@@ -123,14 +125,18 @@ export default function ReportsModule() {
 
   const paginatedUsers = filteredUsers.slice((page - 1) * 10, page * 10);
 
-  const getDisplayName = (u: any) => {
+  const getDisplayName = (u: UserData) => {
     return `${u.nombres} ${u.apellidos}`.trim();
   };
 
-  const getDiplomaExportName = (u: any) =>
-    (u.nombreDiploma || getDisplayName(u)).trim().toUpperCase();
+  /** Usa nombre_diploma de la BD; si está vacío, nombres + apellidos del perfil. */
+  const getDiplomaExportName = (u: UserData) => {
+    const fromDiploma = (u.nombreDiploma ?? '').trim();
+    const source = fromDiploma || getDisplayName(u);
+    return toReportUppercase(source);
+  };
 
-  const getDiplomaExportEmail = (u: any) =>
+  const getDiplomaExportEmail = (u: UserData) =>
     (u.correoDiploma || u.correo).trim().toLowerCase();
 
   const exportExcel = async (isDiplomaList = false) => {
@@ -151,11 +157,16 @@ export default function ReportsModule() {
       
       filteredUsers.forEach(u => {
         const realW = getRealWorkshops(u.talleres);
-        worksheet.addRow({
-          name: getDiplomaExportName(u),
+        const diplomaName = getDiplomaExportName(u);
+        const row = worksheet.addRow({
+          name: diplomaName,
           email: getDiplomaExportEmail(u),
           workshops: isSingleWorkshopSelected ? workshopTitle : (realW.map(tw => getWorkshopTitle(tw.id)).join(', ') || '-')
         });
+        // Texto explícito (@) para que Excel no reformatee el nombre al abrir el archivo
+        const nameCell = row.getCell(1);
+        nameCell.value = diplomaName;
+        nameCell.numFmt = '@';
       });
     } else {
       // Columnas Base
