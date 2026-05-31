@@ -117,8 +117,16 @@ export default function ReportsModule() {
     const matchesAttendance = attendanceFilter === 'all'
       ? true
       : attendanceFilter === 'attended'
-        ? (u.asistencias as any[] || []).some((a: any) => isSingleWorkshopSelected ? a.workshopId === singleWorkshopId : selectedWorkshopIds.includes(a.workshopId))
-        : !(u.asistencias as any[] || []).some((a: any) => isSingleWorkshopSelected ? a.workshopId === singleWorkshopId : selectedWorkshopIds.includes(a.workshopId));
+        ? (
+            selectedWorkshopIds.includes('ALL_RECORDS')
+              ? (u.asistencias as any[] || []).some((a: any) => realWorkshops.some(tw => tw.id === a.workshopId))
+              : (u.asistencias as any[] || []).some((a: any) => isSingleWorkshopSelected ? a.workshopId === singleWorkshopId : selectedWorkshopIds.includes(a.workshopId))
+          )
+        : (
+            selectedWorkshopIds.includes('ALL_RECORDS')
+              ? !(u.asistencias as any[] || []).some((a: any) => realWorkshops.some(tw => tw.id === a.workshopId))
+              : !(u.asistencias as any[] || []).some((a: any) => isSingleWorkshopSelected ? a.workshopId === singleWorkshopId : selectedWorkshopIds.includes(a.workshopId))
+          );
 
     return matchesSearch && matchesWorkshop && matchesPayment && matchesType && matchesAttendance;
   });
@@ -156,7 +164,12 @@ export default function ReportsModule() {
       ];
       
       filteredUsers.forEach(u => {
-        const realW = getRealWorkshops(u.talleres);
+        let realW = getRealWorkshops(u.talleres);
+        if (selectedWorkshopIds.includes('ALL_RECORDS') && attendanceFilter === 'attended') {
+          realW = realW.filter(tw => 
+            (u.asistencias as any[] || []).some((a: any) => a.workshopId === tw.id)
+          );
+        }
         const diplomaName = getDiplomaExportName(u);
         const row = worksheet.addRow({
           name: diplomaName,
@@ -213,7 +226,12 @@ export default function ReportsModule() {
           row.attendance = hasAttendance ? 'SÍ' : 'NO';
           row.workshop = workshopTitle;
         } else {
-          const realW = getRealWorkshops(u.talleres);
+          let realW = getRealWorkshops(u.talleres);
+          if (selectedWorkshopIds.includes('ALL_RECORDS') && attendanceFilter === 'attended') {
+            realW = realW.filter(tw => 
+              (u.asistencias as any[] || []).some((a: any) => a.workshopId === tw.id)
+            );
+          }
           if (realW.length === 0) {
             row['w1'] = '-';
           } else {
@@ -346,7 +364,12 @@ export default function ReportsModule() {
               <td style={{ maxWidth: '300px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                   {(() => {
-                    const realW = getRealWorkshops(u.talleres);
+                    let realW = getRealWorkshops(u.talleres);
+                    if (selectedWorkshopIds.includes('ALL_RECORDS') && attendanceFilter === 'attended') {
+                      realW = realW.filter(tw => 
+                        (u.asistencias as any[] || []).some((a: any) => a.workshopId === tw.id)
+                      );
+                    }
                     if (realW.length === 0) return <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Ninguno</span>;
 
                     // Si hay un solo taller seleccionado, mostrar solo ese
