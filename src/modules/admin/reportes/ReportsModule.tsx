@@ -18,7 +18,7 @@ import MultiSelectFilter from '../../../components/ui/MultiSelectFilter';
 import { Icons } from '../../../components/Icons';
 import BackButton from '../../../components/ui/BackButton';
 import type { UserData } from '../../../utils/auth';
-import { toReportUppercase } from '../../../utils/stringUtils';
+import { toReportUppercase, getDiplomaSuggestedName } from '../../../utils/stringUtils';
 
 export default function ReportsModule() {
   const { data: users = [], isLoading: isLoadingUsers } = useGeneralReport();
@@ -137,10 +137,10 @@ export default function ReportsModule() {
     return `${u.nombres} ${u.apellidos}`.trim();
   };
 
-  /** Usa nombre_diploma de la BD; si está vacío, nombres + apellidos del perfil. */
+  /** Usa nombre_diploma de la BD; si está vacío, nombres + apellidos con el helper sugerido de 25 caracteres. */
   const getDiplomaExportName = (u: UserData) => {
     const fromDiploma = (u.nombreDiploma ?? '').trim();
-    const source = fromDiploma || getDisplayName(u);
+    const source = fromDiploma || getDiplomaSuggestedName(u.nombres, u.apellidos);
     return toReportUppercase(source);
   };
 

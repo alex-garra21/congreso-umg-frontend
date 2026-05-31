@@ -44,3 +44,48 @@ export function getInitials(fullName: string): string {
 
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
+
+/**
+ * Genera el nombre sugerido para el diploma del participante, aplicando reglas de 25 caracteres.
+ */
+export function getDiplomaSuggestedName(nombres: string, apellidos: string): string {
+  const cleanNombres = (nombres || '').trim().toUpperCase();
+  const cleanApellidos = (apellidos || '').trim().toUpperCase();
+  const fullName = `${cleanNombres} ${cleanApellidos}`.trim();
+
+  // Caso Base: Menor o igual a 25 caracteres
+  if (fullName.length <= 25) {
+    return fullName;
+  }
+
+  // Segmentar nombres y apellidos en palabras
+  const namesArray = cleanNombres.split(/\s+/);
+  const surnamesArray = cleanApellidos.split(/\s+/);
+  const firstName = namesArray[0] || '';
+
+  // Restricción 1: Primer nombre + Todos los apellidos
+  const firstAndAllSurnames = `${firstName} ${cleanApellidos}`.trim();
+  if (firstAndAllSurnames.length <= 25) {
+    return firstAndAllSurnames;
+  }
+
+  // Restricción 2: Primer nombre + Apellidos completos que entren
+  let result = firstName;
+  
+  // Caso borde: Si el primer nombre por sí solo mide más de 25 caracteres
+  if (result.length > 25) {
+    return result.substring(0, 25);
+  }
+
+  for (const surname of surnamesArray) {
+    const candidate = `${result} ${surname}`.trim();
+    if (candidate.length <= 25) {
+      result = candidate;
+    } else {
+      break;
+    }
+  }
+
+  return result;
+}
+

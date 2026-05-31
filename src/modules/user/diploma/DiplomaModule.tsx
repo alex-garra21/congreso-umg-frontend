@@ -11,6 +11,7 @@ import Alert from '../../../components/ui/Alert';
 import FormField from '../../../components/ui/FormField';
 import LoadingButton from '../../../components/ui/LoadingButton';
 import BackButton from '../../../components/ui/BackButton';
+import { getDiplomaSuggestedName } from '../../../utils/stringUtils';
 
 type DiplomaFormData = {
   nombreDiploma: string;
@@ -18,13 +19,7 @@ type DiplomaFormData = {
 };
 
 function getSuggestedDiplomaName(user: Pick<UserData, 'nombres' | 'apellidos'>): string {
-  const fullName = `${user.nombres} ${user.apellidos}`.trim().toUpperCase();
-  if (fullName.length <= 25) {
-    return fullName;
-  }
-  const firstName = (user.nombres || '').trim().split(' ')[0] || '';
-  const firstSurname = (user.apellidos || '').trim().split(' ')[0] || '';
-  return `${firstName} ${firstSurname}`.trim().toUpperCase().substring(0, 25);
+  return getDiplomaSuggestedName(user.nombres, user.apellidos);
 }
 
 function buildDiplomaFormDataFromUser(user: UserData): DiplomaFormData {
