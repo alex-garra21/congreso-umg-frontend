@@ -182,63 +182,73 @@ export default function ReportsModule() {
         nameCell.numFmt = '@';
       });
     } else {
-      // Columnas Base
+      // CAMBIO PARA EL REPORTE GENERAL
       const cols: any[] = [
-        { header: 'No.', key: 'id', width: 8 },
-        { header: 'Participante', key: 'name', width: 30 },
-        { header: 'Correo', key: 'email', width: 30 },
-        { header: 'DPI', key: 'dpi', width: 20 },
-        { header: 'Género', key: 'sex', width: 15 },
-        { header: 'Teléfono', key: 'phone', width: 15 },
-        { header: isColaborador ? 'Carnet' : 'Carnet/codigo docente', key: 'identifier', width: 25 }
+        { header: 'Participante (Para Diploma)', key: 'name', width: 40 },
+        { header: 'Correo (Para Diploma)', key: 'email', width: 40 },
+        { header: 'Conferencia', key: 'workshop', width: 45 }, // Ahora es una sola columna de Conferencia
       ];
 
-      // Si es un taller específico, solo una columna de Taller
-      if (isSingleWorkshopSelected) {
-        cols.push({ header: 'Conferencia', key: 'workshop', width: 35 });
-      } else {
-        const maxWorkshops = Math.max(...filteredUsers.map(u => getRealWorkshops(u.talleres).length), 1);
-        for (let i = 1; i <= maxWorkshops; i++) cols.push({ header: `Conferencia ${i}`, key: `w${i}`, width: 35 });
-      }
-
-      cols.push({ header: 'Tipo', key: 'type', width: 25 });
       if (isSingleWorkshopSelected) {
         cols.push({ header: 'Asistencia', key: 'attendance', width: 15 });
       }
-      cols.push({ header: 'Pago', key: 'pay', width: 15 });
       worksheet.columns = cols;
 
-      filteredUsers.forEach((u, index) => {
-        const row: any = {
-          id: index + 1,
-          name: getDisplayName(u),
-          email: u.correo,
+      let rowIndex = 1; // Contador global de filas
+
+      filteredUsers.forEach((u) => {
+        let realW = getRealWorkshops(u.talleres);
+        
+        // Filtros adicionales según lo seleccionado
+        if (selectedWorkshopIds.includes('ALL_RECORDS') && attendanceFilter === 'attended') {
+          realW = realW.filter(tw => 
+            (u.asistencias as any[] || []).some((a: any) => a.workshopId === tw.id)
+          );
+        }
+        if (isSingleWorkshopSelected) {
+          realW = realW.filter(tw => tw.id === singleWorkshopId);
+        }
+
+        const diplomaName = getDiplomaExportName(u);
+
+        const baseRowData = {
+          name: diplomaName, // ASIGNAMOS EL NOMBRE DEL DIPLOMA
+          email: getDiplomaExportEmail(u), // Si también quieres usar el correo del diploma, cámbialo por getDiplomaExportEmail(u)
           dpi: u.dpi || '-',
           sex: u.sexo || '-',
           phone: u.telefono || '-',
           identifier: u.carnet || u.codigoDocente || '-',
           type: getParticipantLabel(u.tipoParticipante),
-          pay: u.pagoValidado ? 'SÍ' : 'NO'
         };
 
-        if (isSingleWorkshopSelected) {
-          const hasAttendance = (u.asistencias as any[] || []).some((a: any) => a.workshopId === singleWorkshopId);
-          row.attendance = hasAttendance ? 'SÍ' : 'NO';
-          row.workshop = workshopTitle;
+        // Lógica de separación de filas por cada conferencia
+        if (realW.length === 0) {
+          // Si el usuario no tiene talleres o se filtró "Sin Conferencias"
+          const finalRow: any = { ...baseRowData, id: rowIndex++, workshop: '-' };
+          if (isSingleWorkshopSelected) finalRow.attendance = 'NO';
+          
+          const row = worksheet.addRow(finalRow);
+          row.getCell(1).value = diplomaName;
+          row.getCell(1).numFmt = '@';
         } else {
-          let realW = getRealWorkshops(u.talleres);
-          if (selectedWorkshopIds.includes('ALL_RECORDS') && attendanceFilter === 'attended') {
-            realW = realW.filter(tw => 
-              (u.asistencias as any[] || []).some((a: any) => a.workshopId === tw.id)
-            );
-          }
-          if (realW.length === 0) {
-            row['w1'] = '-';
-          } else {
-            realW.forEach((tw, i) => row[`w${i + 1}`] = getWorkshopTitle(tw.id));
-          }
+          // Si tiene talleres, creamos UNA FILA POR CADA TALLER
+          realW.forEach((tw) => {
+            const finalRow: any = { 
+              ...baseRowData, 
+              id: rowIndex++, 
+              workshop: getWorkshopTitle(tw.id) 
+            };
+
+            if (isSingleWorkshopSelected) {
+              const hasAttendance = (u.asistencias as any[] || []).some((a: any) => a.workshopId === singleWorkshopId);
+              finalRow.attendance = hasAttendance ? 'SÍ' : 'NO';
+            }
+            
+            const row = worksheet.addRow(finalRow);
+            row.getCell(1).value = diplomaName;
+            row.getCell(1).numFmt = '@';
+          });
         }
-        worksheet.addRow(row);
       });
     }
 
